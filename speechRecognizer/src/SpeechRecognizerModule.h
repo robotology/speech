@@ -1,14 +1,18 @@
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
-// Copyright © Microsoft Corporation. All rights reserved
+/* 
+ * Copyright (C) 2011 EFAA Consortium, European Commission FP7 Project IST-270490
+ * Authors: Stephane Lallee
+ * email:   stephane.lallee@gmail.com
+ * website: http://efaa.upf.edu/ 
+ * Permission is granted to copy, distribute, and/or modify this program
+ * under the terms of the GNU General Public License, version 2 or any
+ * later version published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details
+ */
 
-/****************************************************************************
-*   SimpleDictation.h
-*       Definition of the SpeechRecognizerModule class
-*****************************************************************************/
 #include "stdafx.h"
 
 #if _MSC_VER > 1000
@@ -20,7 +24,6 @@
 
 #define WM_RECOEVENT    WM_APP      // Window message used for recognition events
 using namespace std;
-using namespace yarp;
 using namespace yarp::os;
 
 class SpeechRecognizerModule: public RFModule
@@ -106,7 +109,5 @@ public:
 
     /************************************************************************/
     bool loadGrammarFromRf(ResourceFinder &RF);
-
-
 };
 

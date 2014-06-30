@@ -1,8 +1,8 @@
-# Copyright: (C) 2011 EFAA Consortium
-# Authors: Stephane lallee
+# Copyright: (C) 2014 iCub Facility - Istituto Italiano di Tecnologia
+# Authors: Ugo Pattacini
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 set(PROJECTNAME speechRecognizer)
 project(${PROJECTNAME})
 
@@ -13,4 +13,4 @@ include_directories(${YARP_INCLUDE_DIRS} ${SpeechSDK_INCLUDE_DIR})
 add_executable(${PROJECTNAME} ${folder_source})
 target_link_libraries(${PROJECTNAME} ${YARP_LIBRARIES} ${SpeechSDK_LIBRARIES})
 install(TARGETS ${PROJECTNAME} DESTINATION bin)
-
+icubcontrib_add_uninstall_target()

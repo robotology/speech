@@ -1,11 +1,12 @@
-cmake_minimum_required(VERSION 2.6)
+# Copyright: (C) 2014 iCub Facility - Istituto Italiano di Tecnologia
+# Authors: Ugo Pattacini
+# CopyPolicy: Released under the terms of the GNU GPL v2.0.
+
+cmake_minimum_required(VERSION 2.8)
 project(speech)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
 
-find_package(YARP)
-list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
+find_package(YARP REQUIRED)
+list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
 
-find_package(SpeechSDK)
-if(SpeechSDK_FOUND)
-   add_subdirectory(speechRecognizer)
-endif(SpeechSDK_FOUND)
+find_package(SpeechSDK REQUIRED)
+add_subdirectory(speechRecognizer)

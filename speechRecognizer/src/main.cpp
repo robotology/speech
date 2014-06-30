@@ -1,14 +1,11 @@
 /* 
  * Copyright (C) 2011 EFAA Consortium, European Commission FP7 Project IST-270490
- * Authors: Ilaria Gori
- * email:   ilaria.gori@iit.it
+ * Authors: Stephane Lallee
+ * email:   stephane.lallee@gmail.com
  * website: http://efaa.upf.edu/ 
  * Permission is granted to copy, distribute, and/or modify this program
  * under the terms of the GNU General Public License, version 2 or any
  * later version published by the Free Software Foundation.
- *
- * A copy of the license can be found at
- * $EFAA_ROOT/license/gpl.txt
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,7 +16,6 @@
 /*
 \defgroup icub_speechRecognizer Process to speech recognition, 
           and online vocabulory / grammar management.
-@ingroup icub_speech
 
 \section intro_sec Description
 The module based on Microsoft Speech API. It is made to recognize speech based on runtime grammar in different formats:
@@ -96,7 +92,6 @@ Windows 7.
 This file can be edited at icub/contrib/src/interactiveObjectsLearning/speechRecognizer/program.cs.
 **/
 
-//#include <stdafx.h>
 #include "SpeechRecognizerModule.h"
 
 int main(int argc, char* argv[])
@@ -104,7 +99,6 @@ int main(int argc, char* argv[])
     if (::CoInitializeEx(NULL,COINIT_MULTITHREADED) == S_OK)
     {
         Network yarp;
-
         if (!yarp.checkNetwork())
             return -1;
 
@@ -119,3 +113,5 @@ int main(int argc, char* argv[])
     }
     ::CoUninitialize();
 }
+
+
