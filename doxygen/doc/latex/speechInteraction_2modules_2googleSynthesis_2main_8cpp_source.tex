@@ -1,0 +1,560 @@
+\doxysection{main.\+cpp}
+\label{speechInteraction_2modules_2googleSynthesis_2main_8cpp_source}\index{/home/runner/work/speech/speech/gh-\/pages/speechInteraction/modules/googleSynthesis/main.cpp@{/home/runner/work/speech/speech/gh-\/pages/speechInteraction/modules/googleSynthesis/main.cpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Copyright\ (C)\ 2018\ iCub\ Facility\ -\/\ Istituto\ Italiano\ di\ Tecnologia}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Author:\ Vadim\ Tikhanoff\ Laura\ Cavaliere\ Ilaria\ Carlini}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ email:\ \ vadim.tikhanoff@iit.it\ laura.cavaliere@iit.it\ ilaria.carlini@iit.it}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ *\ Permission\ is\ granted\ to\ copy,\ distribute,\ and/or\ modify\ this\ program}}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ *\ under\ the\ terms\ of\ the\ GNU\ General\ Public\ License,\ version\ 2\ or\ any}}
+\DoxyCodeLine{00007\ \textcolor{comment}{\ *\ later\ version\ published\ by\ the\ Free\ Software\ Foundation.}}
+\DoxyCodeLine{00008\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00009\ \textcolor{comment}{\ *\ A\ copy\ of\ the\ license\ can\ be\ found\ at}}
+\DoxyCodeLine{00010\ \textcolor{comment}{\ *\ http://www.robotcub.org/icub/license/gpl.txt}}
+\DoxyCodeLine{00011\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00012\ \textcolor{comment}{\ *\ This\ program\ is\ distributed\ in\ the\ hope\ that\ it\ will\ be\ useful,\ but}}
+\DoxyCodeLine{00013\ \textcolor{comment}{\ *\ WITHOUT\ ANY\ WARRANTY;\ without\ even\ the\ implied\ warranty\ of}}
+\DoxyCodeLine{00014\ \textcolor{comment}{\ *\ MERCHANTABILITY\ or\ FITNESS\ FOR\ A\ PARTICULAR\ PURPOSE.\ See\ the\ GNU\ General}}
+\DoxyCodeLine{00015\ \textcolor{comment}{\ *\ Public\ License\ for\ more\ details}}
+\DoxyCodeLine{00016\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#include\ <iostream>}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#include\ <deque>}}
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#include\ <cstdio>}}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#include\ <cmath>}}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \textcolor{preprocessor}{\#include\ <fstream>}}
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\#include\ <iterator>}}
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00027\ \textcolor{preprocessor}{\#include\ <map>}}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#include\ <yarp/os/BufferedPort.h>}}
+\DoxyCodeLine{00030\ \textcolor{preprocessor}{\#include\ <yarp/os/ResourceFinder.h>}}
+\DoxyCodeLine{00031\ \textcolor{preprocessor}{\#include\ <yarp/os/RFModule.h>}}
+\DoxyCodeLine{00032\ \textcolor{preprocessor}{\#include\ <yarp/os/Network.h>}}
+\DoxyCodeLine{00033\ \textcolor{preprocessor}{\#include\ <yarp/os/Time.h>}}
+\DoxyCodeLine{00034\ \textcolor{preprocessor}{\#include\ <yarp/os/Log.h>}}
+\DoxyCodeLine{00035\ \textcolor{preprocessor}{\#include\ <yarp/os/LogStream.h>}}
+\DoxyCodeLine{00036\ \textcolor{preprocessor}{\#include\ <yarp/os/Semaphore.h>}}
+\DoxyCodeLine{00037\ \textcolor{preprocessor}{\#include\ <yarp/sig/SoundFile.h>}}
+\DoxyCodeLine{00038\ \textcolor{preprocessor}{\#include\ <yarp/dev/PolyDriver.h>}}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \textcolor{preprocessor}{\#include\ <grpc++/grpc++.h>}}
+\DoxyCodeLine{00041\ \textcolor{preprocessor}{\#include\ "{}google/cloud/language/v1/language\_service.grpc.pb.h"{}}}
+\DoxyCodeLine{00042\ \textcolor{preprocessor}{\#include\ "{}google/cloud/texttospeech/v1/cloud\_tts.grpc.pb.h"{}}}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \textcolor{preprocessor}{\#include\ "{}googleSynthesis\_IDL.h"{}}}
+\DoxyCodeLine{00045\ }
+\DoxyCodeLine{00046\ \textcolor{keyword}{using\ namespace\ }google::cloud::language::v1;}
+\DoxyCodeLine{00047\ \textcolor{keyword}{using\ namespace\ }google::cloud::texttospeech::v1;}
+\DoxyCodeLine{00048\ \textcolor{keywordtype}{bool}\ \ is\_changed;}
+\DoxyCodeLine{00049\ \textcolor{keyword}{using\ namespace\ }std;}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00052\ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ std::map<grpc::StatusCode,\ std::string>\ status\_code\_to\_string\ \{}
+\DoxyCodeLine{00053\ \ \ \ \ \{grpc::OK,\ \textcolor{stringliteral}{"{}ok"{}}\},}
+\DoxyCodeLine{00054\ \ \ \ \ \{grpc::CANCELLED,\ \textcolor{stringliteral}{"{}cancelled"{}}\},}
+\DoxyCodeLine{00055\ \ \ \ \ \{grpc::UNKNOWN,\ \textcolor{stringliteral}{"{}unknown"{}}\},}
+\DoxyCodeLine{00056\ \ \ \ \ \{grpc::INVALID\_ARGUMENT,\ \textcolor{stringliteral}{"{}invalid\_argument"{}}\},}
+\DoxyCodeLine{00057\ \ \ \ \ \{grpc::DEADLINE\_EXCEEDED,\ \textcolor{stringliteral}{"{}deadline\_exceeded"{}}\},}
+\DoxyCodeLine{00058\ \ \ \ \ \{grpc::NOT\_FOUND,\ \textcolor{stringliteral}{"{}not\_found"{}}\},}
+\DoxyCodeLine{00059\ \ \ \ \ \{grpc::ALREADY\_EXISTS,\ \textcolor{stringliteral}{"{}already\_exists"{}}\},}
+\DoxyCodeLine{00060\ \ \ \ \ \{grpc::PERMISSION\_DENIED,\ \textcolor{stringliteral}{"{}permission\_denied"{}}\},}
+\DoxyCodeLine{00061\ \ \ \ \ \{grpc::UNAUTHENTICATED,\ \textcolor{stringliteral}{"{}unauthenticated"{}}\},}
+\DoxyCodeLine{00062\ \ \ \ \ \{grpc::RESOURCE\_EXHAUSTED\ ,\ \textcolor{stringliteral}{"{}resource\_exhausted"{}}\},}
+\DoxyCodeLine{00063\ \ \ \ \ \{grpc::FAILED\_PRECONDITION,\ \textcolor{stringliteral}{"{}failed\_precondition"{}}\},}
+\DoxyCodeLine{00064\ \ \ \ \ \{grpc::ABORTED,\ \textcolor{stringliteral}{"{}aborted"{}}\},}
+\DoxyCodeLine{00065\ \ \ \ \ \{grpc::OUT\_OF\_RANGE,\ \textcolor{stringliteral}{"{}out\_of\_range"{}}\},}
+\DoxyCodeLine{00066\ \ \ \ \ \{grpc::UNIMPLEMENTED,\ \textcolor{stringliteral}{"{}unimplemented"{}}\},}
+\DoxyCodeLine{00067\ \ \ \ \ \{grpc::INTERNAL,\ \textcolor{stringliteral}{"{}internal"{}}\},}
+\DoxyCodeLine{00068\ \ \ \ \ \{grpc::UNAVAILABLE,\ \textcolor{stringliteral}{"{}unavailable"{}}\},}
+\DoxyCodeLine{00069\ \ \ \ \ \{grpc::DATA\_LOSS,\ \textcolor{stringliteral}{"{}data\_loss"{}}\},}
+\DoxyCodeLine{00070\ \ \ \ \ \{grpc::DO\_NOT\_USE,\ \textcolor{stringliteral}{"{}do\_not\_use"{}}\}}
+\DoxyCodeLine{00071\ \};}
+\DoxyCodeLine{00072\ \textcolor{comment}{/********************************************************/}}
+\DoxyCodeLine{00073\ \textcolor{keyword}{class\ }Processing\ :\ \textcolor{keyword}{public}\ yarp::os::BufferedPort<yarp::os::Bottle>}
+\DoxyCodeLine{00074\ \{}
+\DoxyCodeLine{00075\ \ \ \ \ std::string\ moduleName;}
+\DoxyCodeLine{00076\ \ \ \ \ std::string\ language;}
+\DoxyCodeLine{00077\ \ \ \ \ std::string\ voice;}
+\DoxyCodeLine{00078\ \ \ \ \ std::string\ \&state;}
+\DoxyCodeLine{00079\ \ \ \ \ \textcolor{keywordtype}{double}\ speed;}
+\DoxyCodeLine{00080\ \ \ \ \ \textcolor{keywordtype}{double}\ pitch;}
+\DoxyCodeLine{00081\ \ \ \ \ yarp::os::RpcServer\ handlerPort;}
+\DoxyCodeLine{00082\ \ \ \ \ yarp::os::Port\ syncPort;}
+\DoxyCodeLine{00083\ \ \ \ \ yarp::os::Port\ soundOutputPort;}
+\DoxyCodeLine{00084\ \ \ \ \ \textcolor{keyword}{enum}\ playbackmode\_t}
+\DoxyCodeLine{00085\ \ \ \ \ \{}
+\DoxyCodeLine{00086\ \ \ \ \ \ \ \ \ playFromDisk=0,}
+\DoxyCodeLine{00087\ \ \ \ \ \ \ \ \ sendToPort\_compressed=1,}
+\DoxyCodeLine{00088\ \ \ \ \ \ \ \ \ sendToPort\_uncompressed=2}
+\DoxyCodeLine{00089\ \ \ \ \ \}\ playbackmode;}
+\DoxyCodeLine{00090\ \ \ \ \ }
+\DoxyCodeLine{00091\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00092\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00093\ }
+\DoxyCodeLine{00094\ \ \ \ \ Processing(\ \textcolor{keyword}{const}\ std::string\ \&moduleName,\ \textcolor{keyword}{const}\ std::string\ \&language,\ \textcolor{keyword}{const}\ std::string\ \&voice,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&speed,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&pitch,\ std::string\ \&state,\ \textcolor{keywordtype}{string}\ playmode\ ):\ state(state)}
+\DoxyCodeLine{00095\ \ \ \ \ \{}
+\DoxyCodeLine{00096\ \ \ \ \ \ \ \ \ this-\/>moduleName\ =\ moduleName;}
+\DoxyCodeLine{00097\ \ \ \ \ \ \ \ \ this-\/>language\ =\ language;}
+\DoxyCodeLine{00098\ \ \ \ \ \ \ \ \ this-\/>voice\ =\ voice;}
+\DoxyCodeLine{00099\ \ \ \ \ \ \ \ \ this-\/>speed\ =\ speed;}
+\DoxyCodeLine{00100\ \ \ \ \ \ \ \ \ this-\/>pitch\ =\ pitch;}
+\DoxyCodeLine{00101\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (playmode==\textcolor{stringliteral}{"{}playFromDisk"{}})\ \ \ \ \ \ \ \ \ \ \ \ \ \{playbackmode=playbackmode\_t::playFromDisk;\}}
+\DoxyCodeLine{00102\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (playmode==\textcolor{stringliteral}{"{}sendToPort\_compressed"{}})\ \ \ \ \{playbackmode=playbackmode\_t::sendToPort\_compressed;\}}
+\DoxyCodeLine{00103\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (playmode==\textcolor{stringliteral}{"{}sendToPort\_uncompressed"{}})\ \ \{playbackmode=playbackmode\_t::sendToPort\_uncompressed;\}}
+\DoxyCodeLine{00104\ \ \ \ \ \}}
+\DoxyCodeLine{00105\ }
+\DoxyCodeLine{00106\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00107\ \ \ \ \ \string~Processing()}
+\DoxyCodeLine{00108\ \ \ \ \ \{}
+\DoxyCodeLine{00109\ }
+\DoxyCodeLine{00110\ \ \ \ \ \};}
+\DoxyCodeLine{00111\ }
+\DoxyCodeLine{00112\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00113\ \ \ \ \ \textcolor{keywordtype}{bool}\ open()}
+\DoxyCodeLine{00114\ \ \ \ \ \{}
+\DoxyCodeLine{00115\ \ \ \ \ \ \ \ \ this-\/>useCallback();}
+\DoxyCodeLine{00116\ \ \ \ \ \ \ \ \ yarp::os::BufferedPort<yarp::os::Bottle\ >::open(\ \textcolor{stringliteral}{"{}/"{}}\ +\ moduleName\ +\ \textcolor{stringliteral}{"{}/text:i"{}}\ );}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ syncPort.open(\ \textcolor{stringliteral}{"{}/"{}}\ +\ moduleName\ +\ \textcolor{stringliteral}{"{}/sync:o"{}}\ );}
+\DoxyCodeLine{00118\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00119\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (playbackmode==playbackmode\_t::sendToPort\_compressed\ ||}
+\DoxyCodeLine{00120\ \ \ \ \ \ \ \ \ \ \ \ \ playbackmode==playbackmode\_t::sendToPort\_uncompressed)}
+\DoxyCodeLine{00121\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00122\ \ \ \ \ \ \ \ \ \ \ \ \ soundOutputPort.open(\textcolor{stringliteral}{"{}/"{}}+moduleName+\textcolor{stringliteral}{"{}/sound:o"{}});}
+\DoxyCodeLine{00123\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00124\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00125\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00126\ \ \ \ \ \}}
+\DoxyCodeLine{00127\ }
+\DoxyCodeLine{00128\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00129\ \ \ \ \ \textcolor{keywordtype}{void}\ close()}
+\DoxyCodeLine{00130\ \ \ \ \ \{}
+\DoxyCodeLine{00131\ \ \ \ \ \ \ \ \ yarp::os::BufferedPort<yarp::os::Bottle\ >::close();}
+\DoxyCodeLine{00132\ \ \ \ \ \ \ \ \ syncPort.close();}
+\DoxyCodeLine{00133\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (playbackmode==playbackmode\_t::sendToPort\_compressed\ ||}
+\DoxyCodeLine{00134\ \ \ \ \ \ \ \ \ \ \ \ \ playbackmode==playbackmode\_t::sendToPort\_uncompressed)}
+\DoxyCodeLine{00135\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00136\ \ \ \ \ \ \ \ \ \ \ \ \ soundOutputPort.close();}
+\DoxyCodeLine{00137\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00138\ \ \ \ \ \}}
+\DoxyCodeLine{00139\ }
+\DoxyCodeLine{00140\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00141\ \ \ \ \ \textcolor{keywordtype}{void}\ sendDone()}
+\DoxyCodeLine{00142\ \ \ \ \ \{}
+\DoxyCodeLine{00143\ \ \ \ \ \ \ \ \ yarp::os::Bottle\ syncBot;}
+\DoxyCodeLine{00144\ \ \ \ \ \ \ \ \ syncBot.addString(\textcolor{stringliteral}{"{}done"{}});}
+\DoxyCodeLine{00145\ \ \ \ \ \ \ \ \ syncPort.write(syncBot);}
+\DoxyCodeLine{00146\ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}done\ querying\ google"{}};}
+\DoxyCodeLine{00147\ \ \ \ \ \}}
+\DoxyCodeLine{00148\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00149\ \ \ \ \ \textcolor{keywordtype}{void}\ onRead(\ yarp::os::Bottle\ \&bot\ )}
+\DoxyCodeLine{00150\ \ \ \ \ \{}
+\DoxyCodeLine{00151\ \ \ \ \ \ \ \ \ queryGoogleSynthesis(bot);}
+\DoxyCodeLine{00152\ \ \ \ \ \ \ \ \ sendDone();}
+\DoxyCodeLine{00153\ \ \ \ \ \}}
+\DoxyCodeLine{00154\ }
+\DoxyCodeLine{00155\ \textcolor{comment}{\ \ \ /********************************************************/}}
+\DoxyCodeLine{00156\ \ \ \ \textcolor{keywordtype}{void}\ queryGoogleSynthesis(yarp::os::Bottle\&\ text)}
+\DoxyCodeLine{00157\ \ \ \ \{}
+\DoxyCodeLine{00158\ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}in\ queryGoogleSynthesis"{}};}
+\DoxyCodeLine{00159\ }
+\DoxyCodeLine{00160\ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}Phrase\ is\ "{}}\ <<\ text.toString().c\_str();}
+\DoxyCodeLine{00161\ }
+\DoxyCodeLine{00162\ \ \ \ \ \ \ \ std::string\ tmp\ =\ text.toString();}
+\DoxyCodeLine{00163\ }
+\DoxyCodeLine{00164\ \ \ \ \ \ \ \ tmp.erase(std::remove(tmp.begin(),tmp.end(),\textcolor{charliteral}{'\(\backslash\)"{}'}),tmp.end());}
+\DoxyCodeLine{00165\ }
+\DoxyCodeLine{00166\ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}Phrase\ is\ now\ "{}}\ <<\ tmp.c\_str();}
+\DoxyCodeLine{00167\ }
+\DoxyCodeLine{00168\ \ \ \ \ \ \ \ std::string\ content\ =\ tmp;}
+\DoxyCodeLine{00169\ }
+\DoxyCodeLine{00170\ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (content.size()>0)}
+\DoxyCodeLine{00171\ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00172\ \ \ \ \ \ \ \ \ \ \ \ SynthesizeSpeechRequest\ request;}
+\DoxyCodeLine{00173\ \ \ \ \ \ \ \ \ \ \ \ SynthesizeSpeechResponse\ response;}
+\DoxyCodeLine{00174\ }
+\DoxyCodeLine{00175\ \ \ \ \ \ \ \ \ \ \ \ grpc::Status\ status;}
+\DoxyCodeLine{00176\ \ \ \ \ \ \ \ \ \ \ \ grpc::ClientContext\ context;}
+\DoxyCodeLine{00177\ }
+\DoxyCodeLine{00178\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{auto}\ creds\ =\ grpc::GoogleDefaultCredentials();}
+\DoxyCodeLine{00179\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{auto}\ channel\ =\ grpc::CreateChannel(\textcolor{stringliteral}{"{}texttospeech.googleapis.com"{}},\ creds);}
+\DoxyCodeLine{00180\ \ \ \ \ \ \ \ \ \ \ \ std::unique\_ptr<TextToSpeech::Stub>\ tts(TextToSpeech::NewStub(channel));}
+\DoxyCodeLine{00181\ }
+\DoxyCodeLine{00182\ \ \ \ \ \ \ \ \ \ \ \ AudioConfig\ audio\_config;}
+\DoxyCodeLine{00183\ \ \ \ \ \ \ \ \ \ \ \ VoiceSelectionParams\ params;}
+\DoxyCodeLine{00184\ }
+\DoxyCodeLine{00185\ \ \ \ \ \ \ \ \ \ \ \ SynthesisInput\ input;}
+\DoxyCodeLine{00186\ \ \ \ \ \ \ \ \ \ \ \ input.set\_text(content);}
+\DoxyCodeLine{00187\ }
+\DoxyCodeLine{00188\ \ \ \ \ \ \ \ \ \ \ \ audio\_config.set\_audio\_encoding(MP3);}
+\DoxyCodeLine{00189\ \ \ \ \ \ \ \ \ \ \ \ params.set\_language\_code(language);}
+\DoxyCodeLine{00190\ \ \ \ \ \ \ \ \ \ \ \ params.set\_ssml\_gender(NEUTRAL);}
+\DoxyCodeLine{00191\ \ \ \ \ \ \ \ \ \ \ \ params.set\_name(voice);}
+\DoxyCodeLine{00192\ \ \ \ \ \ \ \ \ \ \ \ audio\_config.set\_speaking\_rate(speed);}
+\DoxyCodeLine{00193\ \ \ \ \ \ \ \ \ \ \ \ audio\_config.set\_pitch(pitch);}
+\DoxyCodeLine{00194\ }
+\DoxyCodeLine{00195\ \ \ \ \ \ \ \ \ \ \ \ request.set\_allocated\_input(\&input);}
+\DoxyCodeLine{00196\ \ \ \ \ \ \ \ \ \ \ \ request.set\_allocated\_voice(\&params);}
+\DoxyCodeLine{00197\ \ \ \ \ \ \ \ \ \ \ \ request.set\_allocated\_audio\_config(\&audio\_config);}
+\DoxyCodeLine{00198\ }
+\DoxyCodeLine{00199\ \ \ \ \ \ \ \ \ \ \ \ checkState(\textcolor{stringliteral}{"{}Busy"{}});}
+\DoxyCodeLine{00200\ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Time::delay(0.2);}
+\DoxyCodeLine{00201\ \ \ \ \ \ \ \ \ \ \ \ grpc::Status\ tts\_status\ =\ tts-\/>SynthesizeSpeech(\&context,\ request,\ \&response);}
+\DoxyCodeLine{00202\ \ \ \ \ \ \ \ \ \ \ \ std::string\ status\_string\ =\ status\_code\_to\_string.at(tts\_status.error\_code());}
+\DoxyCodeLine{00203\ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Status\ string:"{}}\ <<\ status\_string;}
+\DoxyCodeLine{00204\ \ \ \ \ \ \ \ \ \ \ \ checkState(\textcolor{stringliteral}{"{}Done"{}});}
+\DoxyCodeLine{00205\ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00206\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\ tts\_status.ok()\ )}
+\DoxyCodeLine{00207\ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00208\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Status\ returned\ OK"{}};}
+\DoxyCodeLine{00209\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n-\/-\/-\/-\/-\/-\/Response-\/-\/-\/-\/-\/-\/\(\backslash\)n"{}};}
+\DoxyCodeLine{00210\ }
+\DoxyCodeLine{00211\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (playbackmode==playbackmode\_t::playFromDisk)}
+\DoxyCodeLine{00212\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00213\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ file\ =\ \textcolor{stringliteral}{"{}test.mp3"{}};}
+\DoxyCodeLine{00214\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::ofstream\ mp3File(file,\ std::ios::out\ |\ std::ios::binary);}
+\DoxyCodeLine{00215\ }
+\DoxyCodeLine{00216\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ mp3File.write(\ response.audio\_content().data(),\ response.audio\_content().size());}
+\DoxyCodeLine{00217\ }
+\DoxyCodeLine{00218\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ command\ =\ \textcolor{stringliteral}{"{}play\ test.mp3"{}};\textcolor{comment}{//\ +\ file;}}
+\DoxyCodeLine{00219\ }
+\DoxyCodeLine{00220\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ system(command.c\_str());}
+\DoxyCodeLine{00221\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00222\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (playbackmode==playbackmode\_t::sendToPort\_compressed)}
+\DoxyCodeLine{00223\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00224\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Value\ v\ (response.audio\_content().data(),\ response.audio\_content().size());}
+\DoxyCodeLine{00225\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ bot;\ bot.add(v);}
+\DoxyCodeLine{00226\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ soundOutputPort.write(bot);}
+\DoxyCodeLine{00227\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00228\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (playbackmode==playbackmode\_t::sendToPort\_uncompressed)}
+\DoxyCodeLine{00229\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00230\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yarp::sig::Sound\ snd;}
+\DoxyCodeLine{00231\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yarp::sig::file::read\_bytestream(snd,\ response.audio\_content().data(),\ response.audio\_content().size(),\ \textcolor{stringliteral}{"{}.mp3"{}});}
+\DoxyCodeLine{00232\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ soundOutputPort.write(snd);}
+\DoxyCodeLine{00233\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00234\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00235\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00236\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yError()\ <<\ \textcolor{stringliteral}{"{}Invalid\ playbackmode"{}};}
+\DoxyCodeLine{00237\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00238\ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00239\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00240\ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00241\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yError()\ <<\ \textcolor{stringliteral}{"{}Status\ Returned\ Cancelled"{}};}
+\DoxyCodeLine{00242\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ checkState(\textcolor{stringliteral}{"{}Failure\_"{}}\ +\ status\_string);\ }
+\DoxyCodeLine{00243\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ tts\_status.error\_message();}
+\DoxyCodeLine{00244\ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00245\ }
+\DoxyCodeLine{00246\ \ \ \ \ \ \ \ \ \ \ \ request.release\_input();}
+\DoxyCodeLine{00247\ \ \ \ \ \ \ \ \ \ \ \ request.release\_voice();}
+\DoxyCodeLine{00248\ \ \ \ \ \ \ \ \ \ \ \ request.release\_audio\_config();}
+\DoxyCodeLine{00249\ }
+\DoxyCodeLine{00250\ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n-\/-\/-\/-\/-\/-\/finished\ google\ query-\/-\/-\/-\/-\/-\/\(\backslash\)n"{}};}
+\DoxyCodeLine{00251\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00252\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (content.size()==0)}
+\DoxyCodeLine{00253\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00254\ \ \ \ \ \ \ \ \ \ \ \ \ checkState(\textcolor{stringliteral}{"{}Empty\_input"{}});}
+\DoxyCodeLine{00255\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00256\ \ \ \ \ \}}
+\DoxyCodeLine{00257\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00258\ \ \ \ \ \textcolor{keywordtype}{bool}\ start\_acquisition()}
+\DoxyCodeLine{00259\ \ \ \ \ \{}
+\DoxyCodeLine{00260\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00261\ \ \ \ \ \}}
+\DoxyCodeLine{00262\ }
+\DoxyCodeLine{00263\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00264\ \ \ \ \ \textcolor{keywordtype}{bool}\ stop\_acquisition()}
+\DoxyCodeLine{00265\ \ \ \ \ \{}
+\DoxyCodeLine{00266\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00267\ \ \ \ \ \}}
+\DoxyCodeLine{00268\ }
+\DoxyCodeLine{00269\ }
+\DoxyCodeLine{00270\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00271\ \ \ \ \ \textcolor{keywordtype}{bool}\ setLanguageCode(\textcolor{keyword}{const}\ std::string\ \&languageCode)}
+\DoxyCodeLine{00272\ \ \ \ \ \{}
+\DoxyCodeLine{00273\ \ \ \ \ \ \ \ \ language\ =\ languageCode;}
+\DoxyCodeLine{00274\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00275\ \ \ \ \ \}}
+\DoxyCodeLine{00276\ }
+\DoxyCodeLine{00277\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00278\ \ \ \ \ \textcolor{keywordtype}{bool}\ setVoiceCode(\textcolor{keyword}{const}\ std::string\ \&voiceCode)}
+\DoxyCodeLine{00279\ \ \ \ \ \{}
+\DoxyCodeLine{00280\ \ \ \ \ \ \ \ \ voice\ =\ voiceCode;}
+\DoxyCodeLine{00281\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00282\ \ \ \ \ \}}
+\DoxyCodeLine{00283\ }
+\DoxyCodeLine{00284\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00285\ \ \ \ \ \textcolor{keywordtype}{bool}\ setPitch(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ pitchVal)}
+\DoxyCodeLine{00286\ \ \ \ \ \{}
+\DoxyCodeLine{00287\ \ \ \ \ \ \ \ \ pitch\ =\ pitchVal;}
+\DoxyCodeLine{00288\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00289\ \ \ \ \ \}}
+\DoxyCodeLine{00290\ }
+\DoxyCodeLine{00291\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00292\ \ \ \ \ \textcolor{keywordtype}{bool}\ setSpeed(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ speedVal)}
+\DoxyCodeLine{00293\ \ \ \ \ \{}
+\DoxyCodeLine{00294\ \ \ \ \ \ \ \ \ speed\ =\ speedVal;}
+\DoxyCodeLine{00295\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00296\ \ \ \ \ \}}
+\DoxyCodeLine{00297\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00298\ \ \ \ \ std::string\ getLanguageCode()}
+\DoxyCodeLine{00299\ \ \ \ \ \{}
+\DoxyCodeLine{00300\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ language;}
+\DoxyCodeLine{00301\ \ \ \ \ \}}
+\DoxyCodeLine{00302\ }
+\DoxyCodeLine{00303\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00304\ \ \ \ \ std::string\ getVoiceCode()}
+\DoxyCodeLine{00305\ \ \ \ \ \{}
+\DoxyCodeLine{00306\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ voice;}
+\DoxyCodeLine{00307\ \ \ \ \ \}}
+\DoxyCodeLine{00308\ }
+\DoxyCodeLine{00309\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00310\ \ \ \ \ \textcolor{keywordtype}{double}\ getPitch()}
+\DoxyCodeLine{00311\ \ \ \ \ \{}
+\DoxyCodeLine{00312\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ pitch;}
+\DoxyCodeLine{00313\ \ \ \ \ \}}
+\DoxyCodeLine{00314\ }
+\DoxyCodeLine{00315\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00316\ \ \ \ \ \textcolor{keywordtype}{double}\ getSpeed()}
+\DoxyCodeLine{00317\ \ \ \ \ \{}
+\DoxyCodeLine{00318\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ speed;}
+\DoxyCodeLine{00319\ \ \ \ \ \}}
+\DoxyCodeLine{00320\ }
+\DoxyCodeLine{00321\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00322\ \ \ \ \ \textcolor{keywordtype}{bool}\ checkState(std::string\ new\_state)}
+\DoxyCodeLine{00323\ \ \ \ \ \{\ \ \ }
+\DoxyCodeLine{00324\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(new\_state!=state)\{}
+\DoxyCodeLine{00325\ \ \ \ \ \ \ \ \ \ \ \ \ is\_changed=\textcolor{keyword}{true};}
+\DoxyCodeLine{00326\ \ \ \ \ \ \ \ \ \ \ \ \ state=new\_state;}
+\DoxyCodeLine{00327\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00328\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\{}
+\DoxyCodeLine{00329\ \ \ \ \ \ \ \ \ \ \ \ \ is\_changed=\textcolor{keyword}{false};}
+\DoxyCodeLine{00330\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00331\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ is\_changed;}
+\DoxyCodeLine{00332\ \ \ \ \ \}}
+\DoxyCodeLine{00333\ \};}
+\DoxyCodeLine{00334\ }
+\DoxyCodeLine{00335\ \textcolor{comment}{/********************************************************/}}
+\DoxyCodeLine{00336\ \textcolor{keyword}{class\ }Module\ :\ \textcolor{keyword}{public}\ yarp::os::RFModule,\ \textcolor{keyword}{public}\ googleSynthesis\_IDL}
+\DoxyCodeLine{00337\ \{}
+\DoxyCodeLine{00338\ \ \ \ \ yarp::os::ResourceFinder\ \ \ \ *rf;}
+\DoxyCodeLine{00339\ \ \ \ \ yarp::os::RpcServer\ \ \ \ \ \ \ \ \ rpcPort;}
+\DoxyCodeLine{00340\ \ \ \ \ yarp::os::BufferedPort<yarp::os::Bottle>\ statePort;}
+\DoxyCodeLine{00341\ \ \ \ \ std::string\ state;}
+\DoxyCodeLine{00342\ }
+\DoxyCodeLine{00343\ \ \ \ \ Processing\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ *processing;}
+\DoxyCodeLine{00344\ \ \ \ \ \textcolor{keyword}{friend}\ \textcolor{keyword}{class\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }processing;}
+\DoxyCodeLine{00345\ }
+\DoxyCodeLine{00346\ \ \ \ \ \textcolor{keywordtype}{bool}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ closing;}
+\DoxyCodeLine{00347\ }
+\DoxyCodeLine{00348\ \ \ \ \ std::vector<std::string>\ \ \ \ allLanguageCodes;}
+\DoxyCodeLine{00349\ \ \ \ \ std::vector<std::string>\ \ \ \ allVoiceCodes;}
+\DoxyCodeLine{00350\ }
+\DoxyCodeLine{00351\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00352\ }
+\DoxyCodeLine{00353\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00354\ }
+\DoxyCodeLine{00355\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00356\ \ \ \ \ \textcolor{keywordtype}{bool}\ configure(yarp::os::ResourceFinder\ \&rf)}
+\DoxyCodeLine{00357\ \ \ \ \ \{}
+\DoxyCodeLine{00358\ \ \ \ \ \ \ \ \ this-\/>rf=\&rf;}
+\DoxyCodeLine{00359\ \ \ \ \ \ \ \ \ this-\/>state=\textcolor{stringliteral}{"{}Ready"{}};}
+\DoxyCodeLine{00360\ \ \ \ \ \ \ \ \ std::string\ moduleName\ =\ rf.check(\textcolor{stringliteral}{"{}name"{}},\ yarp::os::Value(\textcolor{stringliteral}{"{}googleSynthesis"{}}),\ \textcolor{stringliteral}{"{}module\ name\ (string)"{}}).asString();}
+\DoxyCodeLine{00361\ }
+\DoxyCodeLine{00362\ \ \ \ \ \ \ \ \ std::string\ language\ =\ rf.check(\textcolor{stringliteral}{"{}language"{}},\ yarp::os::Value(\textcolor{stringliteral}{"{}en-\/US"{}}),\ \textcolor{stringliteral}{"{}language\ to\ use\ (string)"{}}).asString();}
+\DoxyCodeLine{00363\ \ \ \ \ \ \ \ \ std::string\ voice\ =\ rf.check(\textcolor{stringliteral}{"{}voice"{}},\ yarp::os::Value(\textcolor{stringliteral}{"{}en-\/US-\/Wavenet-\/D"{}}),\ \textcolor{stringliteral}{"{}voice\ to\ use\ (string)"{}}).asString();}
+\DoxyCodeLine{00364\ }
+\DoxyCodeLine{00365\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ speed\ =\ rf.check(\textcolor{stringliteral}{"{}speed"{}},\ yarp::os::Value(1.0),\ \textcolor{stringliteral}{"{}speed\ to\ use\ (double)"{}}).asFloat64();}
+\DoxyCodeLine{00366\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ pitch\ =\ rf.check(\textcolor{stringliteral}{"{}pitch"{}},\ yarp::os::Value(0.0),\ \textcolor{stringliteral}{"{}pitch\ to\ use\ (double)"{}}).asFloat64();}
+\DoxyCodeLine{00367\ }
+\DoxyCodeLine{00368\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ playmode\_string\ =\ rf.check(\textcolor{stringliteral}{"{}playbackmode"{}},\ yarp::os::Value(\textcolor{stringliteral}{"{}playFromDisk"{}}),\ \textcolor{stringliteral}{"{}can\ be\ one\ of\ the\ following:\ \`{}playFromDisk`(default),\ \`{}sendToPort\_compressed`,\ \`{}sendToPort\_uncompressed`"{}}).asString();}
+\DoxyCodeLine{00369\ }
+\DoxyCodeLine{00370\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (rf.check(\textcolor{stringliteral}{"{}languageCodes"{}},\ \textcolor{stringliteral}{"{}Getting\ language\ codes"{}}))}
+\DoxyCodeLine{00371\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00372\ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&grp=rf.findGroup(\textcolor{stringliteral}{"{}languageCodes"{}});}
+\DoxyCodeLine{00373\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ sz=grp.size()-\/1;}
+\DoxyCodeLine{00374\ }
+\DoxyCodeLine{00375\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i=0;\ i<sz;\ i++)}
+\DoxyCodeLine{00376\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ allLanguageCodes.push\_back(grp.get(1+i).asString());}
+\DoxyCodeLine{00377\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00378\ }
+\DoxyCodeLine{00379\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (rf.check(\textcolor{stringliteral}{"{}voiceCodes"{}},\ \textcolor{stringliteral}{"{}Getting\ voice\ codes"{}}))}
+\DoxyCodeLine{00380\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00381\ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&grp=rf.findGroup(\textcolor{stringliteral}{"{}voiceCodes"{}});}
+\DoxyCodeLine{00382\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ sz=grp.size()-\/1;}
+\DoxyCodeLine{00383\ }
+\DoxyCodeLine{00384\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i=0;\ i<sz;\ i++)}
+\DoxyCodeLine{00385\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ allVoiceCodes.push\_back(grp.get(1+i).asString());}
+\DoxyCodeLine{00386\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00387\ }
+\DoxyCodeLine{00388\ \ \ \ \ \ \ \ \ setName(moduleName.c\_str());}
+\DoxyCodeLine{00389\ }
+\DoxyCodeLine{00390\ \ \ \ \ \ \ \ \ rpcPort.open((\textcolor{stringliteral}{"{}/"{}}+getName(\textcolor{stringliteral}{"{}/rpc"{}})).c\_str());}
+\DoxyCodeLine{00391\ \ \ \ \ \ \ \ \ statePort.open(\textcolor{stringliteral}{"{}/"{}}+\ moduleName\ +\ \textcolor{stringliteral}{"{}/state:o"{}});}
+\DoxyCodeLine{00392\ }
+\DoxyCodeLine{00393\ \ \ \ \ \ \ \ \ closing\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00394\ }
+\DoxyCodeLine{00395\ \ \ \ \ \ \ \ \ processing\ =\ \textcolor{keyword}{new}\ Processing(\ moduleName,\ language,\ voice,\ speed,\ pitch,\ state,\ playmode\_string);}
+\DoxyCodeLine{00396\ }
+\DoxyCodeLine{00397\ \ \ \ \ \ \ \ \ \textcolor{comment}{/*\ now\ start\ the\ thread\ to\ do\ the\ work\ */}}
+\DoxyCodeLine{00398\ \ \ \ \ \ \ \ \ processing-\/>open();}
+\DoxyCodeLine{00399\ }
+\DoxyCodeLine{00400\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(!attach(rpcPort))\ \{}
+\DoxyCodeLine{00401\ \ \ \ \ \ \ \ \ \ \ \ \ yError()<<\textcolor{stringliteral}{"{}Cannot\ attach\ to\ rpc\ port"{}};}
+\DoxyCodeLine{00402\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00403\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00404\ }
+\DoxyCodeLine{00405\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00406\ \ \ \ \ \}}
+\DoxyCodeLine{00407\ }
+\DoxyCodeLine{00408\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00409\ \ \ \ \ \textcolor{keywordtype}{bool}\ attach(yarp::os::RpcServer\ \&source)}
+\DoxyCodeLine{00410\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00411\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ this-\/>yarp().attachAsServer(source);}
+\DoxyCodeLine{00412\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00413\ }
+\DoxyCodeLine{00414\ \textcolor{comment}{\ \ \ \ /**********************************************************/}}
+\DoxyCodeLine{00415\ \ \ \ \ \textcolor{keywordtype}{bool}\ close()}
+\DoxyCodeLine{00416\ \ \ \ \ \{}
+\DoxyCodeLine{00417\ \ \ \ \ \ \ \ \ statePort.close();}
+\DoxyCodeLine{00418\ \ \ \ \ \ \ \ \ processing-\/>close();}
+\DoxyCodeLine{00419\ \ \ \ \ \ \ \ \ \textcolor{keyword}{delete}\ processing;}
+\DoxyCodeLine{00420\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00421\ \ \ \ \ \}}
+\DoxyCodeLine{00422\ }
+\DoxyCodeLine{00423\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00424\ \ \ \ \ \textcolor{keywordtype}{double}\ getPeriod()}
+\DoxyCodeLine{00425\ \ \ \ \ \{}
+\DoxyCodeLine{00426\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 0.1;}
+\DoxyCodeLine{00427\ \ \ \ \ \}}
+\DoxyCodeLine{00428\ }
+\DoxyCodeLine{00429\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00430\ \ \ \ \ \textcolor{keywordtype}{bool}\ say(\textcolor{keyword}{const}\ std::string\&\ phrase)}
+\DoxyCodeLine{00431\ \ \ \ \ \{}
+\DoxyCodeLine{00432\ \ \ \ \ \ \ \ \ yarp::os::Bottle\ bot;}
+\DoxyCodeLine{00433\ \ \ \ \ \ \ \ \ bot.addString(phrase);}
+\DoxyCodeLine{00434\ \ \ \ \ \ \ \ \ processing-\/>queryGoogleSynthesis(bot);}
+\DoxyCodeLine{00435\ \ \ \ \ \ \ \ \ processing-\/>sendDone();}
+\DoxyCodeLine{00436\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00437\ \ \ \ \ \}}
+\DoxyCodeLine{00438\ }
+\DoxyCodeLine{00439\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00440\ \ \ \ \ std::string\ setLanguage(\textcolor{keyword}{const}\ std::string\&\ languageCode,\ \textcolor{keyword}{const}\ std::string\&\ voiceCode)}
+\DoxyCodeLine{00441\ \ \ \ \ \{}
+\DoxyCodeLine{00442\ \ \ \ \ \ \ \ \ std::string\ returnVal\ =\ \textcolor{stringliteral}{"{}Error,\ wrong\ language\ or\ voice\ code\ (eg:\ en-\/US\ en-\/US-\/Wavenet-\/A)"{}};}
+\DoxyCodeLine{00443\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00444\ \ \ \ \ \ \ \ \ std::string\ language,\ voice;}
+\DoxyCodeLine{00445\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00446\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ 0;\ i\ <\ allLanguageCodes.size();\ i++)}
+\DoxyCodeLine{00447\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00448\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (languageCode\ ==\ allLanguageCodes[i])}
+\DoxyCodeLine{00449\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00450\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ v\ =\ 0;\ v\ <\ allVoiceCodes.size();\ v++)}
+\DoxyCodeLine{00451\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00452\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (voiceCode\ ==\ allVoiceCodes[v])}
+\DoxyCodeLine{00453\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00454\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ language\ =\ languageCode;}
+\DoxyCodeLine{00455\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ voice\ =\ voiceCode;}
+\DoxyCodeLine{00456\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ returnVal\ =\ \textcolor{stringliteral}{"{}[ok]"{}};}
+\DoxyCodeLine{00457\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00458\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00459\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00460\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00461\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00462\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00463\ }
+\DoxyCodeLine{00464\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(returnVal\ ==\textcolor{stringliteral}{"{}[ok]"{}})}
+\DoxyCodeLine{00465\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00466\ \ \ \ \ \ \ \ \ \ \ \ \ processing-\/>setLanguageCode(languageCode);}
+\DoxyCodeLine{00467\ \ \ \ \ \ \ \ \ \ \ \ \ processing-\/>setVoiceCode(voiceCode);}
+\DoxyCodeLine{00468\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00469\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ returnVal;}
+\DoxyCodeLine{00470\ \ \ \ \ \}}
+\DoxyCodeLine{00471\ }
+\DoxyCodeLine{00472\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00473\ \ \ \ \ \textcolor{keywordtype}{bool}\ setPitch(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ pitchVal)}
+\DoxyCodeLine{00474\ \ \ \ \ \{}
+\DoxyCodeLine{00475\ \ \ \ \ \ \ \ \ processing-\/>setPitch(pitchVal);}
+\DoxyCodeLine{00476\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00477\ \ \ \ \ \}}
+\DoxyCodeLine{00478\ }
+\DoxyCodeLine{00479\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00480\ \ \ \ \ \textcolor{keywordtype}{bool}\ setSpeed(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ speedVal)}
+\DoxyCodeLine{00481\ \ \ \ \ \{}
+\DoxyCodeLine{00482\ \ \ \ \ \ \ \ \ processing-\/>setSpeed(speedVal);}
+\DoxyCodeLine{00483\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00484\ \ \ \ \ \}}
+\DoxyCodeLine{00485\ }
+\DoxyCodeLine{00486\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00487\ \ \ \ \ std::string\ getLanguageCode()}
+\DoxyCodeLine{00488\ \ \ \ \ \{}
+\DoxyCodeLine{00489\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ processing-\/>getLanguageCode();}
+\DoxyCodeLine{00490\ \ \ \ \ \}}
+\DoxyCodeLine{00491\ }
+\DoxyCodeLine{00492\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00493\ \ \ \ \ std::string\ getVoiceCode()}
+\DoxyCodeLine{00494\ \ \ \ \ \{}
+\DoxyCodeLine{00495\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ processing-\/>getVoiceCode();}
+\DoxyCodeLine{00496\ \ \ \ \ \}}
+\DoxyCodeLine{00497\ }
+\DoxyCodeLine{00498\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00499\ \ \ \ \ \textcolor{keywordtype}{double}\ getPitch()}
+\DoxyCodeLine{00500\ \ \ \ \ \{}
+\DoxyCodeLine{00501\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ processing-\/>getPitch();}
+\DoxyCodeLine{00502\ \ \ \ \ \}}
+\DoxyCodeLine{00503\ }
+\DoxyCodeLine{00504\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00505\ \ \ \ \ \textcolor{keywordtype}{double}\ getSpeed()}
+\DoxyCodeLine{00506\ \ \ \ \ \{}
+\DoxyCodeLine{00507\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ processing-\/>getSpeed();}
+\DoxyCodeLine{00508\ \ \ \ \ \}}
+\DoxyCodeLine{00509\ }
+\DoxyCodeLine{00510\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00511\ \ \ \ \ \textcolor{keywordtype}{bool}\ quit()}
+\DoxyCodeLine{00512\ \ \ \ \ \{}
+\DoxyCodeLine{00513\ \ \ \ \ \ \ \ \ closing=\textcolor{keyword}{true};}
+\DoxyCodeLine{00514\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00515\ \ \ \ \ \}}
+\DoxyCodeLine{00516\ }
+\DoxyCodeLine{00517\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00518\ \ \ \ \ \textcolor{keywordtype}{bool}\ updateModule()}
+\DoxyCodeLine{00519\ \ \ \ \ \{}
+\DoxyCodeLine{00520\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(is\_changed)\{}
+\DoxyCodeLine{00521\ \ \ \ \ \ \ \ \ \ \ \ \ is\_changed=\textcolor{keyword}{false};}
+\DoxyCodeLine{00522\ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&outTargets\ =\ statePort.prepare();\ \ \ }
+\DoxyCodeLine{00523\ \ \ \ \ \ \ \ \ \ \ \ \ outTargets.clear();\ \ }
+\DoxyCodeLine{00524\ \ \ \ \ \ \ \ \ \ \ \ \ outTargets.addString(state);}
+\DoxyCodeLine{00525\ \ \ \ \ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}outTarget:"{}}\ <<\ outTargets.toString().c\_str();}
+\DoxyCodeLine{00526\ \ \ \ \ \ \ \ \ \ \ \ \ statePort.write();}
+\DoxyCodeLine{00527\ \ \ \ \ \ \ \ \ \}\ \ }
+\DoxyCodeLine{00528\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ !closing;}
+\DoxyCodeLine{00529\ \ \ \ \ \}}
+\DoxyCodeLine{00530\ \};}
+\DoxyCodeLine{00531\ }
+\DoxyCodeLine{00532\ \textcolor{comment}{/********************************************************/}}
+\DoxyCodeLine{00533\ \textcolor{keywordtype}{int}\ main(\textcolor{keywordtype}{int}\ argc,\ \textcolor{keywordtype}{char}\ *argv[])}
+\DoxyCodeLine{00534\ \{}
+\DoxyCodeLine{00535\ \ \ \ \ yarp::os::Network::init();}
+\DoxyCodeLine{00536\ }
+\DoxyCodeLine{00537\ \ \ \ \ yarp::os::Network\ yarp;}
+\DoxyCodeLine{00538\ \ \ \ \ \textcolor{keywordflow}{if}\ (!yarp.checkNetwork())}
+\DoxyCodeLine{00539\ \ \ \ \ \{}
+\DoxyCodeLine{00540\ \ \ \ \ \ \ \ \ yError(\textcolor{stringliteral}{"{}YARP\ server\ not\ available!"{}});}
+\DoxyCodeLine{00541\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 1;}
+\DoxyCodeLine{00542\ \ \ \ \ \}}
+\DoxyCodeLine{00543\ }
+\DoxyCodeLine{00544\ \ \ \ \ Module\ \textcolor{keyword}{module};}
+\DoxyCodeLine{00545\ \ \ \ \ yarp::os::ResourceFinder\ rf;}
+\DoxyCodeLine{00546\ }
+\DoxyCodeLine{00547\ \ \ \ \ rf.setVerbose(\ \textcolor{keyword}{true}\ );}
+\DoxyCodeLine{00548\ \ \ \ \ rf.setDefaultContext(\ \textcolor{stringliteral}{"{}googleSynthesis"{}}\ );}
+\DoxyCodeLine{00549\ \ \ \ \ rf.setDefaultConfigFile(\ \textcolor{stringliteral}{"{}config.ini"{}}\ );}
+\DoxyCodeLine{00550\ \ \ \ \ rf.setDefault(\textcolor{stringliteral}{"{}name"{}},\textcolor{stringliteral}{"{}googleSynthesis"{}});}
+\DoxyCodeLine{00551\ \ \ \ \ rf.configure(argc,argv);}
+\DoxyCodeLine{00552\ }
+\DoxyCodeLine{00553\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{module}.runModule(rf);}
+\DoxyCodeLine{00554\ \}}
+
+\end{DoxyCode}

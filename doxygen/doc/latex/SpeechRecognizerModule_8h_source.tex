@@ -1,0 +1,155 @@
+\doxysection{Speech\+Recognizer\+Module.\+h}
+\label{SpeechRecognizerModule_8h_source}\index{/home/runner/work/speech/speech/gh-\/pages/speechRecognizer/src/SpeechRecognizerModule.h@{/home/runner/work/speech/speech/gh-\/pages/speechRecognizer/src/SpeechRecognizerModule.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*\ }}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Copyright\ (C)\ 2011\ EFAA\ Consortium,\ European\ Commission\ FP7\ Project\ IST-\/270490}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Authors:\ Stephane\ Lallee}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ email:\ \ \ stephane.lallee@gmail.com}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ *\ website:\ http://efaa.upf.edu/\ }}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ *\ Permission\ is\ granted\ to\ copy,\ distribute,\ and/or\ modify\ this\ program}}
+\DoxyCodeLine{00007\ \textcolor{comment}{\ *\ under\ the\ terms\ of\ the\ GNU\ General\ Public\ License,\ version\ 2\ or\ any}}
+\DoxyCodeLine{00008\ \textcolor{comment}{\ *\ later\ version\ published\ by\ the\ Free\ Software\ Foundation.}}
+\DoxyCodeLine{00009\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00010\ \textcolor{comment}{\ *\ This\ program\ is\ distributed\ in\ the\ hope\ that\ it\ will\ be\ useful,\ but}}
+\DoxyCodeLine{00011\ \textcolor{comment}{\ *\ WITHOUT\ ANY\ WARRANTY;\ without\ even\ the\ implied\ warranty\ of}}
+\DoxyCodeLine{00012\ \textcolor{comment}{\ *\ MERCHANTABILITY\ or\ FITNESS\ FOR\ A\ PARTICULAR\ PURPOSE.\ See\ the\ GNU\ General}}
+\DoxyCodeLine{00013\ \textcolor{comment}{\ *\ Public\ License\ for\ more\ details}}
+\DoxyCodeLine{00014\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#include\ "{}stdafx.h"{}}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#if\ \_MSC\_VER\ >\ 1000}}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ \_MSC\_VER\ >\ 1000}}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#define\ MAX\_EDIT\_TEXT\ \ \ 1000}}
+\DoxyCodeLine{00023\ \textcolor{preprocessor}{\#define\ GID\_DICTATION\ \ \ 0\ \ \ \ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Dictation\ grammar\ has\ grammar\ ID\ 0}}
+\DoxyCodeLine{00024\ }
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\#define\ WM\_RECOEVENT\ \ \ \ WM\_APP\ \ \ \ \ \ }\textcolor{comment}{//\ Window\ message\ used\ for\ recognition\ events}}
+\DoxyCodeLine{00026\ \textcolor{keyword}{using\ namespace\ }std;}
+\DoxyCodeLine{00027\ \textcolor{keyword}{using\ namespace\ }yarp::os;}
+\DoxyCodeLine{00028\ \textcolor{keyword}{using\ namespace\ }yarp::sig;}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \textcolor{keyword}{class\ }SpeechRecognizerModule:\ \textcolor{keyword}{public}\ RFModule}
+\DoxyCodeLine{00031\ \{}
+\DoxyCodeLine{00032\ \ \ \ \ \textcolor{comment}{//Yarp\ related}}
+\DoxyCodeLine{00033\ \ \ \ \ Port\ m\_portRPC;}
+\DoxyCodeLine{00034\ \ \ \ \ Port\ m\_portContinuousRecognition;}
+\DoxyCodeLine{00035\ \ \ \ \ Port\ m\_portContinuousRecognitionGrammar;}
+\DoxyCodeLine{00036\ \ \ \ \ Port\ m\_port2iSpeak;}
+\DoxyCodeLine{00037\ \ \ \ \ Port\ m\_port2iSpeakRpc;}
+\DoxyCodeLine{00038\ \ \ \ \ BufferedPort<Sound>\ m\_portSound;}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \ \ \ \ \textcolor{comment}{//SAPI\ related}}
+\DoxyCodeLine{00041\ \ \ \ \ CComPtr<ISpAudio>\ \ \ \ \ \ \ \ \ \ \ m\_cpAudio;\ \ \ \ }
+\DoxyCodeLine{00042\ \ \ \ \ CComPtr<ISpRecognizer>\ \ \ \ \ \ m\_cpRecoEngine;}
+\DoxyCodeLine{00043\ \ \ \ \ CComPtr<ISpRecoContext>\ \ \ \ \ m\_cpRecoCtxt;}
+\DoxyCodeLine{00044\ \ \ \ \ CComPtr<ISpRecoGrammar>\ \ \ \ \ m\_cpGrammarFromFile;\ \ }
+\DoxyCodeLine{00045\ \ \ \ \ CComPtr<ISpRecoGrammar>\ \ \ \ \ m\_cpGrammarRuntime;\ }
+\DoxyCodeLine{00046\ \ \ \ \ CComPtr<ISpRecoGrammar>\ \ \ \ \ m\_cpGrammarDictation;\ \ \ }
+\DoxyCodeLine{00047\ \ \ \ \ BOOL\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ m\_bInSound;}
+\DoxyCodeLine{00048\ \ \ \ \ BOOL\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ m\_bGotReco;}
+\DoxyCodeLine{00049\ \ \ \ \ CSpStreamFormat\ \ \ \ \ \ \ \ \ \ \ \ \ m\_cAudioFmt;}
+\DoxyCodeLine{00050\ \ \ \ \ CComPtr\ <ISpStream>\ \ \ \ \ \ \ \ \ m\_streamFormat;}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00052\ \ \ \ \ \textcolor{comment}{//My\ Grammar\ management\ related}}
+\DoxyCodeLine{00053\ \ \ \ \ \textcolor{keywordtype}{int}\ m\_timeout;\ \textcolor{comment}{//ms}}
+\DoxyCodeLine{00054\ \ \ \ \ map<string,\ list<string>\ >\ \ m\_vocabulories;}
+\DoxyCodeLine{00055\ \ \ \ \ \textcolor{keywordtype}{bool}\ \ \ \ m\_useTalkBack;}
+\DoxyCodeLine{00056\ \ \ \ \ \textcolor{keywordtype}{bool}\ \ \ \ USE\_LEGACY;}
+\DoxyCodeLine{00057\ \ \ \ \ \textcolor{keywordtype}{bool}\ \ \ \ m\_forwardSound;}
+\DoxyCodeLine{00058\ \ \ \ \ \textcolor{keywordtype}{bool}\ \ \ \ interruptRecognition;}
+\DoxyCodeLine{00059\ \ \ \ \ \textcolor{keywordtype}{string}\ \ m\_tmpFileFolder;}
+\DoxyCodeLine{00060\ }
+\DoxyCodeLine{00061\ }
+\DoxyCodeLine{00062\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00063\ }
+\DoxyCodeLine{00064\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00065\ \ \ \ \ \textcolor{keywordtype}{bool}\ configure(ResourceFinder\ \&rf);}
+\DoxyCodeLine{00066\ }
+\DoxyCodeLine{00067\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00068\ \ \ \ \ \textcolor{keywordtype}{bool}\ updateModule();}
+\DoxyCodeLine{00069\ }
+\DoxyCodeLine{00070\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00071\ \ \ \ \ \textcolor{keywordtype}{bool}\ handleInterrupt(\textcolor{keyword}{const}\ Bottle\&\ cmd,\ Bottle\&\ reply);}
+\DoxyCodeLine{00072\ }
+\DoxyCodeLine{00073\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00074\ \ \ \ \ \textcolor{keywordtype}{bool}\ handleRGMCmd(\textcolor{keyword}{const}\ Bottle\&\ cmd,\ Bottle\&\ reply);}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00076\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00077\ \ \ \ \ \textcolor{keywordtype}{bool}\ handleAsyncRecognitionCmd(\textcolor{keyword}{const}\ Bottle\&\ cmd,\ Bottle\&\ reply);}
+\DoxyCodeLine{00078\ }
+\DoxyCodeLine{00079\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00080\ \ \ \ \ \textcolor{keywordtype}{bool}\ refreshFromVocabulories(CComPtr<ISpRecoGrammar>\ grammarToModify);}
+\DoxyCodeLine{00081\ }
+\DoxyCodeLine{00082\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00083\ \ \ \ \ \textcolor{keywordtype}{bool}\ handleVocabuloryCmd(\textcolor{keyword}{const}\ Bottle\&\ cmd,\ Bottle\&\ reply);}
+\DoxyCodeLine{00084\ }
+\DoxyCodeLine{00085\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00086\ \ \ \ \ \textcolor{keywordtype}{bool}\ handleRecognitionCmd(\textcolor{keyword}{const}\ Bottle\&\ cmd,\ Bottle\&\ reply);}
+\DoxyCodeLine{00087\ }
+\DoxyCodeLine{00088\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00089\ \ \ \ \ \textcolor{keywordtype}{bool}\ setGrammarCustom(CComPtr<ISpRecoGrammar>\ grammarToModify,\ \textcolor{keywordtype}{string}\ grammar,\ \textcolor{keywordtype}{bool}\ append);}
+\DoxyCodeLine{00090\ }
+\DoxyCodeLine{00091\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00092\ \ \ \ \ \textcolor{keywordtype}{string}\ getFromDictaction(\textcolor{keywordtype}{int}\ timeout,\ LPCWSTR\ options=NULL);}
+\DoxyCodeLine{00093\ }
+\DoxyCodeLine{00094\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00095\ \ \ \ \ list<\ pair<string,\ double>\ >\ waitNextRecognitionLEGACY(\textcolor{keywordtype}{int}\ timeout);}
+\DoxyCodeLine{00096\ \ \ \ \ }
+\DoxyCodeLine{00097\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00098\ \ \ \ \ Bottle\ waitNextRecognition(\textcolor{keywordtype}{int}\ timeout);}
+\DoxyCodeLine{00099\ }
+\DoxyCodeLine{00100\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00101\ \ \ \ \ \textcolor{keywordtype}{void}\ say(\textcolor{keywordtype}{string}\ s,\ \textcolor{keywordtype}{bool}\ wait=\textcolor{keyword}{true});}
+\DoxyCodeLine{00102\ }
+\DoxyCodeLine{00103\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00104\ \ \ \ \ Bottle\ toBottle(SPPHRASE*\ pPhrase,\ \textcolor{keyword}{const}\ SPPHRASERULE*\ pRule\ );}
+\DoxyCodeLine{00105\ }
+\DoxyCodeLine{00106\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00107\ \ \ \ \ \textcolor{keywordtype}{bool}\ respond(\textcolor{keyword}{const}\ Bottle\&\ cmd,\ Bottle\&\ reply);}
+\DoxyCodeLine{00108\ }
+\DoxyCodeLine{00109\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00110\ \ \ \ \ \textcolor{keywordtype}{bool}\ interruptModule()}
+\DoxyCodeLine{00111\ \ \ \ \ \{}
+\DoxyCodeLine{00112\ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Interrupting\ ports..."{}};}
+\DoxyCodeLine{00113\ \ \ \ \ \ \ \ \ m\_portRPC.interrupt();}
+\DoxyCodeLine{00114\ \ \ \ \ \ \ \ \ m\_portContinuousRecognition.interrupt();}
+\DoxyCodeLine{00115\ \ \ \ \ \ \ \ \ m\_portContinuousRecognitionGrammar.interrupt();}
+\DoxyCodeLine{00116\ \ \ \ \ \ \ \ \ m\_port2iSpeak.interrupt();}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ m\_port2iSpeakRpc.interrupt();}
+\DoxyCodeLine{00118\ \ \ \ \ \ \ \ \ m\_portSound.interrupt();}
+\DoxyCodeLine{00119\ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}ok"{}};}
+\DoxyCodeLine{00120\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00121\ \ \ \ \ \}}
+\DoxyCodeLine{00122\ }
+\DoxyCodeLine{00123\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00124\ \ \ \ \ \textcolor{keywordtype}{bool}\ close()}
+\DoxyCodeLine{00125\ \ \ \ \ \{\ \ \ \ \ \ \ }
+\DoxyCodeLine{00126\ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Closing\ ports..."{}};\ }
+\DoxyCodeLine{00127\ \ \ \ \ \ \ \ \ m\_portRPC.close();}
+\DoxyCodeLine{00128\ \ \ \ \ \ \ \ \ m\_portContinuousRecognition.close();}
+\DoxyCodeLine{00129\ \ \ \ \ \ \ \ \ m\_portContinuousRecognitionGrammar.close();}
+\DoxyCodeLine{00130\ \ \ \ \ \ \ \ \ m\_port2iSpeak.close();}
+\DoxyCodeLine{00131\ \ \ \ \ \ \ \ \ m\_port2iSpeakRpc.close();}
+\DoxyCodeLine{00132\ \ \ \ \ \ \ \ \ m\_portSound.close();}
+\DoxyCodeLine{00133\ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}ok"{}};}
+\DoxyCodeLine{00134\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00135\ \ \ \ \ \}}
+\DoxyCodeLine{00136\ }
+\DoxyCodeLine{00137\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00138\ \ \ \ \ \textcolor{keywordtype}{double}\ getPeriod()}
+\DoxyCodeLine{00139\ \ \ \ \ \{}
+\DoxyCodeLine{00140\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 0.1;}
+\DoxyCodeLine{00141\ \ \ \ \ \}}
+\DoxyCodeLine{00142\ }
+\DoxyCodeLine{00143\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00144\ \ \ \ \ \textcolor{keywordtype}{bool}\ loadGrammarFromRf(ResourceFinder\ \&RF);}
+\DoxyCodeLine{00145\ }
+\DoxyCodeLine{00146\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00147\ \ \ \ \ yarp::sig::Sound\ toSound(CComPtr<ISpRecoResult>\ cpRecoResult);}
+\DoxyCodeLine{00148\ \};}
+\DoxyCodeLine{00149\ }
+
+\end{DoxyCode}

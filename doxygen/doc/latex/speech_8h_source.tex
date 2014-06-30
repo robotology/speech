@@ -1,0 +1,99 @@
+\doxysection{speech.\+h}
+\label{speech_8h_source}\index{/home/runner/work/speech/speech/gh-\/pages/svox-\/speech/speech.h@{/home/runner/work/speech/speech/gh-\/pages/svox-\/speech/speech.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Copyright\ (C)\ 2014\ iCub\ Facility}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Authors:\ Ali\ Paikan}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ CopyPolicy:\ Released\ under\ the\ terms\ of\ the\ LGPLv2.1\ or\ later,\ see\ LGPL.TXT}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <yarp/dev/DeviceDriver.h>}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <yarp/os/Thread.h>}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ <yarp/os/Stamp.h>}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ <yarp/os/Property.h>}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ <yarp/os/RpcServer.h>}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ <yarp/os/ResourceFinder.h>}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ <yarp/dev/PolyDriver.h>}}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#include\ <Speech\_IDL.h>}}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#include\ <picoapi.h>}}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#include\ <picoapid.h>}}
+\DoxyCodeLine{00023\ \textcolor{preprocessor}{\#include\ <picoos.h>}}
+\DoxyCodeLine{00024\ }
+\DoxyCodeLine{00025\ \textcolor{keyword}{namespace\ }yarp\{}
+\DoxyCodeLine{00026\ \ \ \ \ \textcolor{keyword}{namespace\ }dev\{}
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ \textcolor{keyword}{class\ }Speech;}
+\DoxyCodeLine{00028\ \ \ \ \ \}}
+\DoxyCodeLine{00029\ \}}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \textcolor{comment}{/****************************************************************}}
+\DoxyCodeLine{00034\ \textcolor{comment}{\ *\ @brief\ The\ yarp::dev::Speech\ class}}
+\DoxyCodeLine{00035\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00036\ \textcolor{keyword}{class\ }yarp::dev::Speech\ :\ \textcolor{keyword}{public}\ yarp::dev::DeviceDriver,}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{public}\ yarp::os::Thread,}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{public}\ Speech\_IDL\ \{}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00041\ \ \ \ \ Speech();}
+\DoxyCodeLine{00042\ \ \ \ \ \string~Speech();}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \ \ \ \ \textcolor{comment}{//\ Device\ Driver\ interface}}
+\DoxyCodeLine{00045\ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ open(yarp::os::Searchable\ \&config);}
+\DoxyCodeLine{00046\ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ close();}
+\DoxyCodeLine{00047\ }
+\DoxyCodeLine{00048\ \ \ \ \ \textcolor{comment}{//\ Speech\_IDL}}
+\DoxyCodeLine{00049\ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ setLanguage(\textcolor{keyword}{const}\ std::string\&\ language);}
+\DoxyCodeLine{00050\ \ \ \ \ \textcolor{keyword}{virtual}\ std::vector<std::string>\ \ getSupportedLang();}
+\DoxyCodeLine{00051\ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ say(\textcolor{keyword}{const}\ std::string\&\ text);}
+\DoxyCodeLine{00052\ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ setSpeed(\textcolor{keyword}{const}\ int16\_t\ speed);}
+\DoxyCodeLine{00053\ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ setPitch(\textcolor{keyword}{const}\ int16\_t\ pitch);}
+\DoxyCodeLine{00054\ \ \ \ \ \textcolor{keyword}{virtual}\ int16\_t\ getSpeed();}
+\DoxyCodeLine{00055\ \ \ \ \ \textcolor{keyword}{virtual}\ int16\_t\ getPitch();}
+\DoxyCodeLine{00056\ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ play();}
+\DoxyCodeLine{00057\ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ pause();}
+\DoxyCodeLine{00058\ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ stop();}
+\DoxyCodeLine{00059\ }
+\DoxyCodeLine{00060\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00061\ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ threadInit();}
+\DoxyCodeLine{00062\ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ run();}
+\DoxyCodeLine{00063\ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ threadRelease();}
+\DoxyCodeLine{00064\ }
+\DoxyCodeLine{00065\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00071\ \ \ \ \ \textcolor{keyword}{const}\ std::string\ renderSpeech(\textcolor{keyword}{const}\ std::string\&\ text);}
+\DoxyCodeLine{00072\ \ \ \ \ \textcolor{keywordtype}{bool}\ playWav(\textcolor{keyword}{const}\ std::string\&\ filename);}
+\DoxyCodeLine{00073\ \ \ \ \ \textcolor{keywordtype}{void}\ releasePico();}
+\DoxyCodeLine{00074\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00075\ \ \ \ \ yarp::os::Property\ config;}
+\DoxyCodeLine{00076\ \ \ \ \ yarp::os::RpcServer\ rpcPort;}
+\DoxyCodeLine{00077\ \ \ \ \ std::string\ language;}
+\DoxyCodeLine{00078\ \ \ \ \ std::string\ pcmDevice;}
+\DoxyCodeLine{00079\ \ \ \ \ \textcolor{keywordtype}{int}\ pitch,\ speed;}
+\DoxyCodeLine{00080\ \ \ \ \ std::vector<std::string>\ supportedLangs;}
+\DoxyCodeLine{00081\ }
+\DoxyCodeLine{00082\ \textcolor{keyword}{private}:\ \textcolor{comment}{//\ picotts}}
+\DoxyCodeLine{00083\ \ \ \ \ \textcolor{comment}{/*\ adapation\ layer\ global\ variables\ */}}
+\DoxyCodeLine{00084\ \ \ \ \ \textcolor{keywordtype}{void}\ *\ \ \ \ \ \ \ \ \ \ picoMemArea;}
+\DoxyCodeLine{00085\ \ \ \ \ pico\_System\ \ \ \ \ picoSystem;}
+\DoxyCodeLine{00086\ \ \ \ \ pico\_Resource\ \ \ picoTaResource;}
+\DoxyCodeLine{00087\ \ \ \ \ pico\_Resource\ \ \ picoSgResource;}
+\DoxyCodeLine{00088\ \ \ \ \ pico\_Resource\ \ \ picoUtppResource;}
+\DoxyCodeLine{00089\ \ \ \ \ pico\_Engine\ \ \ \ \ picoEngine;}
+\DoxyCodeLine{00090\ \ \ \ \ pico\_Char\ *\ \ \ \ \ picoTaFileName;}
+\DoxyCodeLine{00091\ \ \ \ \ pico\_Char\ *\ \ \ \ \ picoSgFileName;}
+\DoxyCodeLine{00092\ \ \ \ \ pico\_Char\ *\ \ \ \ \ picoUtppFileName;}
+\DoxyCodeLine{00093\ \ \ \ \ pico\_Char\ *\ \ \ \ \ picoTaResourceName;}
+\DoxyCodeLine{00094\ \ \ \ \ pico\_Char\ *\ \ \ \ \ picoSgResourceName;}
+\DoxyCodeLine{00095\ \ \ \ \ pico\_Char\ *\ \ \ \ \ picoUtppResourceName;}
+\DoxyCodeLine{00096\ \ \ \ \ \textcolor{keywordtype}{int}\ picoSynthAbort;}
+\DoxyCodeLine{00097\ \ \ \ \ yarp::os::ResourceFinder\ lingwareRF;}
+\DoxyCodeLine{00098\ \};}
+
+\end{DoxyCode}

@@ -1,0 +1,492 @@
+\doxysection{main.\+cpp}
+\label{iSpeak_2main_8cpp_source}\index{/home/runner/work/speech/speech/gh-\/pages/iSpeak/main.cpp@{/home/runner/work/speech/speech/gh-\/pages/iSpeak/main.cpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Copyright\ (C)\ 2015\ iCub\ Facility\ -\/\ Istituto\ Italiano\ di\ Tecnologia}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Author:\ Ugo\ Pattacini}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ email:\ \ ugo.pattacini@iit.it}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ *\ Permission\ is\ granted\ to\ copy,\ distribute,\ and/or\ modify\ this\ program}}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ *\ under\ the\ terms\ of\ the\ GNU\ General\ Public\ License,\ version\ 2\ or\ any}}
+\DoxyCodeLine{00007\ \textcolor{comment}{\ *\ later\ version\ published\ by\ the\ Free\ Software\ Foundation.}}
+\DoxyCodeLine{00008\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00009\ \textcolor{comment}{\ *\ A\ copy\ of\ the\ license\ can\ be\ found\ at}}
+\DoxyCodeLine{00010\ \textcolor{comment}{\ *\ http://www.robotcub.org/icub/license/gpl.txt}}
+\DoxyCodeLine{00011\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00012\ \textcolor{comment}{\ *\ This\ program\ is\ distributed\ in\ the\ hope\ that\ it\ will\ be\ useful,\ but}}
+\DoxyCodeLine{00013\ \textcolor{comment}{\ *\ WITHOUT\ ANY\ WARRANTY;\ without\ even\ the\ implied\ warranty\ of}}
+\DoxyCodeLine{00014\ \textcolor{comment}{\ *\ MERCHANTABILITY\ or\ FITNESS\ FOR\ A\ PARTICULAR\ PURPOSE.\ See\ the\ GNU\ General}}
+\DoxyCodeLine{00015\ \textcolor{comment}{\ *\ Public\ License\ for\ more\ details}}
+\DoxyCodeLine{00016\ \textcolor{comment}{*/}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00091\ \textcolor{preprocessor}{\#include\ <cstdlib>}}
+\DoxyCodeLine{00092\ \textcolor{preprocessor}{\#include\ <mutex>}}
+\DoxyCodeLine{00093\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00094\ \textcolor{preprocessor}{\#include\ <deque>}}
+\DoxyCodeLine{00095\ \textcolor{preprocessor}{\#include\ <algorithm>}}
+\DoxyCodeLine{00096\ }
+\DoxyCodeLine{00097\ \textcolor{preprocessor}{\#include\ <yarp/os/all.h>}}
+\DoxyCodeLine{00098\ }
+\DoxyCodeLine{00099\ \textcolor{keyword}{using\ namespace\ }std;}
+\DoxyCodeLine{00100\ \textcolor{keyword}{using\ namespace\ }yarp::os;}
+\DoxyCodeLine{00101\ }
+\DoxyCodeLine{00102\ }
+\DoxyCodeLine{00103\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00104\ \textcolor{keyword}{class\ }MouthHandler\ :\ \textcolor{keyword}{public}\ PeriodicThread}
+\DoxyCodeLine{00105\ \{}
+\DoxyCodeLine{00106\ \ \ \ \ \textcolor{keywordtype}{string}\ state;}
+\DoxyCodeLine{00107\ \ \ \ \ RpcClient\ emotions,r1;}
+\DoxyCodeLine{00108\ \ \ \ \ mutex\ mtx;}
+\DoxyCodeLine{00109\ \ \ \ \ \textcolor{keywordtype}{double}\ t0,\ duration,\ equalize\_time;}
+\DoxyCodeLine{00110\ \ \ \ \ \textcolor{keywordtype}{bool}\ equalize;}
+\DoxyCodeLine{00111\ }
+\DoxyCodeLine{00112\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00113\ \ \ \ \ \textcolor{keywordtype}{void}\ send()}
+\DoxyCodeLine{00114\ \ \ \ \ \{}
+\DoxyCodeLine{00115\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (emotions.getOutputCount()>0)}
+\DoxyCodeLine{00116\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ \ \ \ \ Bottle\ cmd,\ reply;}
+\DoxyCodeLine{00118\ \ \ \ \ \ \ \ \ \ \ \ \ cmd.addVocab32(\textcolor{stringliteral}{"{}set"{}});}
+\DoxyCodeLine{00119\ \ \ \ \ \ \ \ \ \ \ \ \ cmd.addVocab32(\textcolor{stringliteral}{"{}mou"{}});}
+\DoxyCodeLine{00120\ \ \ \ \ \ \ \ \ \ \ \ \ cmd.addVocab32(state);}
+\DoxyCodeLine{00121\ \ \ \ \ \ \ \ \ \ \ \ \ emotions.write(cmd,reply);}
+\DoxyCodeLine{00122\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00123\ \ \ \ \ \}}
+\DoxyCodeLine{00124\ }
+\DoxyCodeLine{00125\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00126\ \ \ \ \ \textcolor{keywordtype}{void}\ run()}
+\DoxyCodeLine{00127\ \ \ \ \ \{}
+\DoxyCodeLine{00128\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (equalize)}
+\DoxyCodeLine{00129\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00130\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (equalize\_time>0.)}
+\DoxyCodeLine{00131\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ Time::delay(equalize\_time);}
+\DoxyCodeLine{00132\ \ \ \ \ \ \ \ \ \ \ \ \ equalize=\textcolor{keyword}{false};}
+\DoxyCodeLine{00133\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00134\ }
+\DoxyCodeLine{00135\ \ \ \ \ \ \ \ \ mtx.lock();}
+\DoxyCodeLine{00136\ }
+\DoxyCodeLine{00137\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (state==\textcolor{stringliteral}{"{}sur"{}})}
+\DoxyCodeLine{00138\ \ \ \ \ \ \ \ \ \ \ \ \ state=\textcolor{stringliteral}{"{}hap"{}};}
+\DoxyCodeLine{00139\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00140\ \ \ \ \ \ \ \ \ \ \ \ \ state=\textcolor{stringliteral}{"{}sur"{}};}
+\DoxyCodeLine{00141\ }
+\DoxyCodeLine{00142\ \ \ \ \ \ \ \ \ send();}
+\DoxyCodeLine{00143\ }
+\DoxyCodeLine{00144\ \ \ \ \ \ \ \ \ mtx.unlock();}
+\DoxyCodeLine{00145\ }
+\DoxyCodeLine{00146\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (duration>=0.0)}
+\DoxyCodeLine{00147\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (Time::now()-\/t0>=duration)}
+\DoxyCodeLine{00148\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ suspend();}
+\DoxyCodeLine{00149\ \ \ \ \ \}}
+\DoxyCodeLine{00150\ }
+\DoxyCodeLine{00151\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00152\ \ \ \ \ \textcolor{keywordtype}{bool}\ threadInit()}
+\DoxyCodeLine{00153\ \ \ \ \ \{}
+\DoxyCodeLine{00154\ \ \ \ \ \ \ \ \ equalize=\textcolor{keyword}{true};}
+\DoxyCodeLine{00155\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (r1.getOutputCount()>0)}
+\DoxyCodeLine{00156\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00157\ \ \ \ \ \ \ \ \ \ \ \ \ Bottle\ cmd,rep;}
+\DoxyCodeLine{00158\ \ \ \ \ \ \ \ \ \ \ \ \ cmd.addVocab32(\textcolor{stringliteral}{"{}tstart"{}});}
+\DoxyCodeLine{00159\ \ \ \ \ \ \ \ \ \ \ \ \ r1.write(cmd,rep);}
+\DoxyCodeLine{00160\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00161\ }
+\DoxyCodeLine{00162\ \ \ \ \ \ \ \ \ t0=Time::now();}
+\DoxyCodeLine{00163\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00164\ \ \ \ \ \}}
+\DoxyCodeLine{00165\ }
+\DoxyCodeLine{00166\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00167\ \ \ \ \ \textcolor{keywordtype}{void}\ threadRelease()}
+\DoxyCodeLine{00168\ \ \ \ \ \{}
+\DoxyCodeLine{00169\ \ \ \ \ \ \ \ \ emotions.interrupt();}
+\DoxyCodeLine{00170\ \ \ \ \ \ \ \ \ r1.interrupt();}
+\DoxyCodeLine{00171\ \ \ \ \ \ \ \ \ emotions.close();}
+\DoxyCodeLine{00172\ \ \ \ \ \ \ \ \ r1.close();}
+\DoxyCodeLine{00173\ \ \ \ \ \}}
+\DoxyCodeLine{00174\ }
+\DoxyCodeLine{00175\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00176\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00177\ \ \ \ \ MouthHandler()\ :\ PeriodicThread(1.0),\ duration(-\/1.0),\ equalize(false)\ \{\ \}}
+\DoxyCodeLine{00178\ }
+\DoxyCodeLine{00179\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00180\ \ \ \ \ \textcolor{keywordtype}{void}\ configure(ResourceFinder\ \&rf)}
+\DoxyCodeLine{00181\ \ \ \ \ \{}
+\DoxyCodeLine{00182\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ name=rf.find(\textcolor{stringliteral}{"{}name"{}}).asString();}
+\DoxyCodeLine{00183\ \ \ \ \ \ \ \ \ equalize\_time=rf.check(\textcolor{stringliteral}{"{}equalize\_time"{}},Value(0.)).asFloat64();}
+\DoxyCodeLine{00184\ \ \ \ \ \ \ \ \ equalize\_time=std::max(0.,equalize\_time);}
+\DoxyCodeLine{00185\ \ \ \ \ \ \ \ \ emotions.open(\textcolor{stringliteral}{"{}/"{}}+name+\textcolor{stringliteral}{"{}/emotions:o"{}});}
+\DoxyCodeLine{00186\ \ \ \ \ \ \ \ \ r1.open(\textcolor{stringliteral}{"{}/"{}}+name+\textcolor{stringliteral}{"{}/r1:rpc"{}});}
+\DoxyCodeLine{00187\ }
+\DoxyCodeLine{00188\ \ \ \ \ \ \ \ \ state=\textcolor{stringliteral}{"{}sur"{}};}
+\DoxyCodeLine{00189\ \ \ \ \ \ \ \ \ setPeriod((\textcolor{keywordtype}{double})rf.check(\textcolor{stringliteral}{"{}period"{}},Value(200)).asInt32()/1000.0);}
+\DoxyCodeLine{00190\ \ \ \ \ \}}
+\DoxyCodeLine{00191\ }
+\DoxyCodeLine{00192\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00193\ \ \ \ \ \textcolor{keywordtype}{void}\ setAutoSuspend(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ duration)}
+\DoxyCodeLine{00194\ \ \ \ \ \{}
+\DoxyCodeLine{00195\ \ \ \ \ \ \ \ \ this-\/>duration=duration;}
+\DoxyCodeLine{00196\ \ \ \ \ \}}
+\DoxyCodeLine{00197\ }
+\DoxyCodeLine{00198\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00199\ \ \ \ \ \textcolor{keywordtype}{void}\ resume()}
+\DoxyCodeLine{00200\ \ \ \ \ \{}
+\DoxyCodeLine{00201\ \ \ \ \ \ \ \ \ equalize=\textcolor{keyword}{true};}
+\DoxyCodeLine{00202\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (r1.getOutputCount()>0)}
+\DoxyCodeLine{00203\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00204\ \ \ \ \ \ \ \ \ \ \ \ \ Bottle\ cmd,rep;}
+\DoxyCodeLine{00205\ \ \ \ \ \ \ \ \ \ \ \ \ cmd.addVocab32(\textcolor{stringliteral}{"{}tstart"{}});}
+\DoxyCodeLine{00206\ \ \ \ \ \ \ \ \ \ \ \ \ r1.write(cmd,rep);}
+\DoxyCodeLine{00207\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00208\ }
+\DoxyCodeLine{00209\ \ \ \ \ \ \ \ \ t0=Time::now();}
+\DoxyCodeLine{00210\ \ \ \ \ \ \ \ \ PeriodicThread::resume();}
+\DoxyCodeLine{00211\ \ \ \ \ \}}
+\DoxyCodeLine{00212\ }
+\DoxyCodeLine{00213\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00214\ \ \ \ \ \textcolor{keywordtype}{void}\ suspend()}
+\DoxyCodeLine{00215\ \ \ \ \ \{}
+\DoxyCodeLine{00216\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (isSuspended())}
+\DoxyCodeLine{00217\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{00218\ }
+\DoxyCodeLine{00219\ \ \ \ \ \ \ \ \ PeriodicThread::suspend();}
+\DoxyCodeLine{00220\ }
+\DoxyCodeLine{00221\ \ \ \ \ \ \ \ \ lock\_guard<mutex>\ lg(mtx);}
+\DoxyCodeLine{00222\ \ \ \ \ \ \ \ \ state=\textcolor{stringliteral}{"{}hap"{}};}
+\DoxyCodeLine{00223\ \ \ \ \ \ \ \ \ send();}
+\DoxyCodeLine{00224\ }
+\DoxyCodeLine{00225\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (r1.getOutputCount()>0)}
+\DoxyCodeLine{00226\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00227\ \ \ \ \ \ \ \ \ \ \ \ \ Bottle\ cmd,rep;}
+\DoxyCodeLine{00228\ \ \ \ \ \ \ \ \ \ \ \ \ cmd.addVocab32(\textcolor{stringliteral}{"{}tstop"{}});}
+\DoxyCodeLine{00229\ \ \ \ \ \ \ \ \ \ \ \ \ r1.write(cmd,rep);}
+\DoxyCodeLine{00230\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00231\ \ \ \ \ \}}
+\DoxyCodeLine{00232\ \};}
+\DoxyCodeLine{00233\ }
+\DoxyCodeLine{00234\ }
+\DoxyCodeLine{00235\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00236\ \textcolor{keyword}{class\ }iSpeak\ :\ \textcolor{keyword}{protected}\ BufferedPort<Bottle>,}
+\DoxyCodeLine{00237\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{public}\ \ \ \ PeriodicThread,}
+\DoxyCodeLine{00238\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{public}\ \ \ \ PortReport}
+\DoxyCodeLine{00239\ \{}
+\DoxyCodeLine{00240\ \ \ \ \ \textcolor{keywordtype}{string}\ name;}
+\DoxyCodeLine{00241\ \ \ \ \ \textcolor{keywordtype}{string}\ package;}
+\DoxyCodeLine{00242\ \ \ \ \ \textcolor{keywordtype}{string}\ package\_options;}
+\DoxyCodeLine{00243\ \ \ \ \ deque<Bottle>\ buffer;}
+\DoxyCodeLine{00244\ \ \ \ \ mutex\ mtx;}
+\DoxyCodeLine{00245\ }
+\DoxyCodeLine{00246\ \ \ \ \ \textcolor{keywordtype}{bool}\ speaking;}
+\DoxyCodeLine{00247\ \ \ \ \ MouthHandler\ mouth;}
+\DoxyCodeLine{00248\ \ \ \ \ RpcClient\ speechdev;}
+\DoxyCodeLine{00249\ \ \ \ \ \textcolor{keywordtype}{int}\ initSpeechDev;}
+\DoxyCodeLine{00250\ }
+\DoxyCodeLine{00251\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00252\ \ \ \ \ \textcolor{keywordtype}{void}\ report(\textcolor{keyword}{const}\ PortInfo\ \&info)}
+\DoxyCodeLine{00253\ \ \ \ \ \{}
+\DoxyCodeLine{00254\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (info.created\ \&\&\ !info.incoming)}
+\DoxyCodeLine{00255\ \ \ \ \ \ \ \ \ \ \ \ \ initSpeechDev++;}
+\DoxyCodeLine{00256\ \ \ \ \ \}}
+\DoxyCodeLine{00257\ }
+\DoxyCodeLine{00258\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00259\ \ \ \ \ \textcolor{keywordtype}{void}\ onRead(Bottle\ \&request)}
+\DoxyCodeLine{00260\ \ \ \ \ \{}
+\DoxyCodeLine{00261\ \ \ \ \ \ \ \ \ lock\_guard<mutex>\ lg(mtx);}
+\DoxyCodeLine{00262\ \ \ \ \ \ \ \ \ buffer.push\_back(request);}
+\DoxyCodeLine{00263\ \ \ \ \ \ \ \ \ speaking=\textcolor{keyword}{true};}
+\DoxyCodeLine{00264\ \ \ \ \ \}}
+\DoxyCodeLine{00265\ }
+\DoxyCodeLine{00266\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00267\ \ \ \ \ \textcolor{keywordtype}{bool}\ threadInit()}
+\DoxyCodeLine{00268\ \ \ \ \ \{}
+\DoxyCodeLine{00269\ \ \ \ \ \ \ \ \ open(\textcolor{stringliteral}{"{}/"{}}+name);}
+\DoxyCodeLine{00270\ \ \ \ \ \ \ \ \ useCallback();}
+\DoxyCodeLine{00271\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00272\ \ \ \ \ \}}
+\DoxyCodeLine{00273\ }
+\DoxyCodeLine{00274\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00275\ \ \ \ \ \textcolor{keywordtype}{void}\ threadRelease()}
+\DoxyCodeLine{00276\ \ \ \ \ \{}
+\DoxyCodeLine{00277\ \ \ \ \ \ \ \ \ mouth.stop();}
+\DoxyCodeLine{00278\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (speechdev.asPort().isOpen())}
+\DoxyCodeLine{00279\ \ \ \ \ \ \ \ \ \ \ \ \ speechdev.close();}
+\DoxyCodeLine{00280\ \ \ \ \ \ \ \ \ interrupt();}
+\DoxyCodeLine{00281\ \ \ \ \ \ \ \ \ close();}
+\DoxyCodeLine{00282\ \ \ \ \ \}}
+\DoxyCodeLine{00283\ }
+\DoxyCodeLine{00284\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00285\ \ \ \ \ \textcolor{keywordtype}{void}\ execSpeechDevOptions()}
+\DoxyCodeLine{00286\ \ \ \ \ \{}
+\DoxyCodeLine{00287\ \ \ \ \ \ \ \ \ lock\_guard<mutex>\ lg(mtx);}
+\DoxyCodeLine{00288\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (speechdev.getOutputCount()>0)}
+\DoxyCodeLine{00289\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00290\ \ \ \ \ \ \ \ \ \ \ \ \ Bottle\ options(package\_options);}
+\DoxyCodeLine{00291\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i=0;\ i<options.size();\ i++)}
+\DoxyCodeLine{00292\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00293\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (Bottle\ *opt=options.get(i).asList())}
+\DoxyCodeLine{00294\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00295\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ Bottle\ cmd,rep;}
+\DoxyCodeLine{00296\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ cmd=*opt;}
+\DoxyCodeLine{00297\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}Setting\ option:\ \%s"{}},cmd.toString().c\_str());}
+\DoxyCodeLine{00298\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ speechdev.write(cmd,rep);}
+\DoxyCodeLine{00299\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}Received\ reply:\ \%s"{}},rep.toString().c\_str());}
+\DoxyCodeLine{00300\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00301\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00302\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00303\ \ \ \ \ \}}
+\DoxyCodeLine{00304\ }
+\DoxyCodeLine{00305\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00306\ \ \ \ \ \textcolor{keywordtype}{void}\ speak(\textcolor{keyword}{const}\ \textcolor{keywordtype}{string}\ \&phrase)}
+\DoxyCodeLine{00307\ \ \ \ \ \{}
+\DoxyCodeLine{00308\ \ \ \ \ \ \ \ \ lock\_guard<mutex>\ lg(mtx);}
+\DoxyCodeLine{00309\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (speechdev.asPort().isOpen())}
+\DoxyCodeLine{00310\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00311\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (speechdev.getOutputCount()>0)}
+\DoxyCodeLine{00312\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00313\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ Bottle\ cmd,rep;}
+\DoxyCodeLine{00314\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ cmd.addString(\textcolor{stringliteral}{"{}say"{}});}
+\DoxyCodeLine{00315\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ cmd.addString(phrase);}
+\DoxyCodeLine{00316\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ speechdev.write(cmd,rep);}
+\DoxyCodeLine{00317\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00318\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00319\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00320\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00321\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ command(\textcolor{stringliteral}{"{}echo\ \(\backslash\)"{}"{}});}
+\DoxyCodeLine{00322\ \ \ \ \ \ \ \ \ \ \ \ \ command+=phrase;}
+\DoxyCodeLine{00323\ \ \ \ \ \ \ \ \ \ \ \ \ command+=\textcolor{stringliteral}{"{}\(\backslash\)"{}\ |\ "{}};}
+\DoxyCodeLine{00324\ \ \ \ \ \ \ \ \ \ \ \ \ command+=package;}
+\DoxyCodeLine{00325\ \ \ \ \ \ \ \ \ \ \ \ \ command+=\textcolor{stringliteral}{"{}\ "{}};}
+\DoxyCodeLine{00326\ }
+\DoxyCodeLine{00327\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (package==\textcolor{stringliteral}{"{}festival"{}})}
+\DoxyCodeLine{00328\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ command+=\textcolor{stringliteral}{"{}-\/-\/tts\ "{}};}
+\DoxyCodeLine{00329\ }
+\DoxyCodeLine{00330\ \ \ \ \ \ \ \ \ \ \ \ \ command+=package\_options;}
+\DoxyCodeLine{00331\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ ret=system(command.c\_str());}
+\DoxyCodeLine{00332\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00333\ \ \ \ \ \}}
+\DoxyCodeLine{00334\ }
+\DoxyCodeLine{00335\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00336\ \ \ \ \ \textcolor{keywordtype}{void}\ run()}
+\DoxyCodeLine{00337\ \ \ \ \ \{}
+\DoxyCodeLine{00338\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ phrase;}
+\DoxyCodeLine{00339\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ time;}
+\DoxyCodeLine{00340\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ onlyMouth=\textcolor{keyword}{false};}
+\DoxyCodeLine{00341\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ rate=(int)(1000.0*mouth.getPeriod());}
+\DoxyCodeLine{00342\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ resetRate=\textcolor{keyword}{false};}
+\DoxyCodeLine{00343\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ duration=-\/1.0;}
+\DoxyCodeLine{00344\ }
+\DoxyCodeLine{00345\ \ \ \ \ \ \ \ \ mtx.lock();}
+\DoxyCodeLine{00346\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (buffer.size()>0)\ \ \ \ \textcolor{comment}{//\ protect\ also\ the\ access\ to\ the\ size()\ method}}
+\DoxyCodeLine{00347\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00348\ \ \ \ \ \ \ \ \ \ \ \ \ Bottle\ request=buffer.front();}
+\DoxyCodeLine{00349\ \ \ \ \ \ \ \ \ \ \ \ \ buffer.pop\_front();}
+\DoxyCodeLine{00350\ }
+\DoxyCodeLine{00351\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (request.size()>0)}
+\DoxyCodeLine{00352\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00353\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (request.get(0).isString())}
+\DoxyCodeLine{00354\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ phrase=request.get(0).asString();}
+\DoxyCodeLine{00355\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (request.get(0).isFloat64()\ ||\ request.get(0).isInt32())}
+\DoxyCodeLine{00356\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00357\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ time=request.get(0).asFloat64();}
+\DoxyCodeLine{00358\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ onlyMouth=\textcolor{keyword}{true};}
+\DoxyCodeLine{00359\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00360\ }
+\DoxyCodeLine{00361\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (request.size()>1)}
+\DoxyCodeLine{00362\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00363\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (request.get(1).isInt32())}
+\DoxyCodeLine{00364\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00365\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ newRate=request.get(1).asInt32();}
+\DoxyCodeLine{00366\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (newRate>0)}
+\DoxyCodeLine{00367\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00368\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ mouth.setPeriod((\textcolor{keywordtype}{double})newRate/1000.0);}
+\DoxyCodeLine{00369\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ resetRate=\textcolor{keyword}{true};}
+\DoxyCodeLine{00370\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00371\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00372\ }
+\DoxyCodeLine{00373\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ ((request.size()>2)\ \&\&\ request.get(0).isString())}
+\DoxyCodeLine{00374\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (request.get(2).isFloat64()\ ||\ request.get(2).isInt32())}
+\DoxyCodeLine{00375\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ duration=request.get(2).asFloat64();}
+\DoxyCodeLine{00376\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00377\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00378\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00379\ \ \ \ \ \ \ \ \ mtx.unlock();}
+\DoxyCodeLine{00380\ }
+\DoxyCodeLine{00381\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (speaking)}
+\DoxyCodeLine{00382\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00383\ \ \ \ \ \ \ \ \ \ \ \ \ mouth.setAutoSuspend(duration);}
+\DoxyCodeLine{00384\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (mouth.isSuspended())}
+\DoxyCodeLine{00385\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ mouth.resume();}
+\DoxyCodeLine{00386\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00387\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ mouth.start();}
+\DoxyCodeLine{00388\ }
+\DoxyCodeLine{00389\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (onlyMouth)}
+\DoxyCodeLine{00390\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ Time::delay(time);}
+\DoxyCodeLine{00391\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00392\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ speak(phrase);}
+\DoxyCodeLine{00393\ }
+\DoxyCodeLine{00394\ \ \ \ \ \ \ \ \ \ \ \ \ mouth.suspend();}
+\DoxyCodeLine{00395\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (resetRate)}
+\DoxyCodeLine{00396\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ mouth.setPeriod((\textcolor{keywordtype}{double})rate/1000.0);}
+\DoxyCodeLine{00397\ }
+\DoxyCodeLine{00398\ \ \ \ \ \ \ \ \ \ \ \ \ lock\_guard<mutex>\ lg(mtx);}
+\DoxyCodeLine{00399\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (buffer.size()==0)}
+\DoxyCodeLine{00400\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ speaking=\textcolor{keyword}{false};}
+\DoxyCodeLine{00401\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00402\ }
+\DoxyCodeLine{00403\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (initSpeechDev>0)}
+\DoxyCodeLine{00404\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00405\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}Setting\ options\ at\ connection\ time"{}});}
+\DoxyCodeLine{00406\ \ \ \ \ \ \ \ \ \ \ \ \ execSpeechDevOptions();}
+\DoxyCodeLine{00407\ \ \ \ \ \ \ \ \ \ \ \ \ initSpeechDev=0;}
+\DoxyCodeLine{00408\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00409\ \ \ \ \ \}}
+\DoxyCodeLine{00410\ }
+\DoxyCodeLine{00411\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00412\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00413\ \ \ \ \ iSpeak()\ :\ PeriodicThread(0.2)}
+\DoxyCodeLine{00414\ \ \ \ \ \{}
+\DoxyCodeLine{00415\ \ \ \ \ \ \ \ \ speaking=\textcolor{keyword}{false};}
+\DoxyCodeLine{00416\ \ \ \ \ \ \ \ \ initSpeechDev=0;}
+\DoxyCodeLine{00417\ \ \ \ \ \}}
+\DoxyCodeLine{00418\ }
+\DoxyCodeLine{00419\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00420\ \ \ \ \ \textcolor{keywordtype}{void}\ configure(ResourceFinder\ \&rf)}
+\DoxyCodeLine{00421\ \ \ \ \ \{}
+\DoxyCodeLine{00422\ \ \ \ \ \ \ \ \ name=rf.find(\textcolor{stringliteral}{"{}name"{}}).asString();}
+\DoxyCodeLine{00423\ \ \ \ \ \ \ \ \ package=rf.find(\textcolor{stringliteral}{"{}package"{}}).asString();}
+\DoxyCodeLine{00424\ \ \ \ \ \ \ \ \ package\_options=rf.find(\textcolor{stringliteral}{"{}package\_options"{}}).asString();}
+\DoxyCodeLine{00425\ }
+\DoxyCodeLine{00426\ \ \ \ \ \ \ \ \ mouth.configure(rf);}
+\DoxyCodeLine{00427\ }
+\DoxyCodeLine{00428\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (package==\textcolor{stringliteral}{"{}speech-\/dev"{}})}
+\DoxyCodeLine{00429\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00430\ \ \ \ \ \ \ \ \ \ \ \ \ speechdev.open(\textcolor{stringliteral}{"{}/"{}}+name+\textcolor{stringliteral}{"{}/speech-\/dev/rpc"{}});}
+\DoxyCodeLine{00431\ \ \ \ \ \ \ \ \ \ \ \ \ speechdev.setReporter(*\textcolor{keyword}{this});}
+\DoxyCodeLine{00432\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00433\ }
+\DoxyCodeLine{00434\ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}iSpeak\ wraps\ around\ \(\backslash\)"{}\%s\(\backslash\)"{}\ speech\ synthesizer"{}},package.c\_str());}
+\DoxyCodeLine{00435\ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}starting\ command-\/line\ options:\ \(\backslash\)"{}\%s\(\backslash\)"{}"{}},package\_options.c\_str());}
+\DoxyCodeLine{00436\ \ \ \ \ \}}
+\DoxyCodeLine{00437\ }
+\DoxyCodeLine{00438\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00439\ \ \ \ \ \textcolor{keywordtype}{bool}\ isSpeaking()}
+\DoxyCodeLine{00440\ \ \ \ \ \{}
+\DoxyCodeLine{00441\ \ \ \ \ \ \ \ \ lock\_guard<mutex>\ lg(mtx);}
+\DoxyCodeLine{00442\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ speaking;}
+\DoxyCodeLine{00443\ \ \ \ \ \}}
+\DoxyCodeLine{00444\ }
+\DoxyCodeLine{00445\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00446\ \ \ \ \ \textcolor{keywordtype}{string}\ get\_package\_options()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00447\ \textcolor{keyword}{\ \ \ \ }\{}
+\DoxyCodeLine{00448\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ package\_options;}
+\DoxyCodeLine{00449\ \ \ \ \ \}}
+\DoxyCodeLine{00450\ }
+\DoxyCodeLine{00451\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00452\ \ \ \ \ \textcolor{keywordtype}{void}\ set\_package\_options(\textcolor{keyword}{const}\ \textcolor{keywordtype}{string}\ \&package\_options)}
+\DoxyCodeLine{00453\ \ \ \ \ \{}
+\DoxyCodeLine{00454\ \ \ \ \ \ \ \ \ this-\/>package\_options=package\_options;}
+\DoxyCodeLine{00455\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (speechdev.asPort().isOpen())}
+\DoxyCodeLine{00456\ \ \ \ \ \ \ \ \ \ \ \ \ execSpeechDevOptions();}
+\DoxyCodeLine{00457\ \ \ \ \ \}}
+\DoxyCodeLine{00458\ \};}
+\DoxyCodeLine{00459\ }
+\DoxyCodeLine{00460\ }
+\DoxyCodeLine{00461\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00462\ \textcolor{keyword}{class\ }Launcher:\ \textcolor{keyword}{public}\ RFModule}
+\DoxyCodeLine{00463\ \{}
+\DoxyCodeLine{00464\ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00465\ \ \ \ \ iSpeak\ speaker;}
+\DoxyCodeLine{00466\ \ \ \ \ RpcServer\ rpc;}
+\DoxyCodeLine{00467\ }
+\DoxyCodeLine{00468\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00469\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00470\ \ \ \ \ \textcolor{keywordtype}{bool}\ configure(ResourceFinder\ \&rf)}
+\DoxyCodeLine{00471\ \ \ \ \ \{}
+\DoxyCodeLine{00472\ \ \ \ \ \ \ \ \ speaker.configure(rf);}
+\DoxyCodeLine{00473\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!speaker.start())}
+\DoxyCodeLine{00474\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00475\ }
+\DoxyCodeLine{00476\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ name=rf.find(\textcolor{stringliteral}{"{}name"{}}).asString();}
+\DoxyCodeLine{00477\ \ \ \ \ \ \ \ \ rpc.open(\textcolor{stringliteral}{"{}/"{}}+name+\textcolor{stringliteral}{"{}/rpc"{}});}
+\DoxyCodeLine{00478\ \ \ \ \ \ \ \ \ attach(rpc);}
+\DoxyCodeLine{00479\ }
+\DoxyCodeLine{00480\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00481\ \ \ \ \ \}}
+\DoxyCodeLine{00482\ }
+\DoxyCodeLine{00483\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00484\ \ \ \ \ \textcolor{keywordtype}{bool}\ close()}
+\DoxyCodeLine{00485\ \ \ \ \ \{}
+\DoxyCodeLine{00486\ \ \ \ \ \ \ \ \ rpc.close();}
+\DoxyCodeLine{00487\ \ \ \ \ \ \ \ \ speaker.stop();}
+\DoxyCodeLine{00488\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00489\ \ \ \ \ \}}
+\DoxyCodeLine{00490\ }
+\DoxyCodeLine{00491\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00492\ \ \ \ \ \textcolor{keywordtype}{bool}\ respond(\textcolor{keyword}{const}\ Bottle\ \&command,\ Bottle\ \&reply)}
+\DoxyCodeLine{00493\ \ \ \ \ \{}
+\DoxyCodeLine{00494\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ cmd0=command.get(0).asVocab32();}
+\DoxyCodeLine{00495\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (cmd0==Vocab32::encode(\textcolor{stringliteral}{"{}stat"{}}))}
+\DoxyCodeLine{00496\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00497\ \ \ \ \ \ \ \ \ \ \ \ \ reply.addString(speaker.isSpeaking()?\textcolor{stringliteral}{"{}speaking"{}}:\textcolor{stringliteral}{"{}quiet"{}});}
+\DoxyCodeLine{00498\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00499\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00500\ }
+\DoxyCodeLine{00501\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (command.size()>1)}
+\DoxyCodeLine{00502\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00503\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ cmd1=command.get(1).asVocab32();}
+\DoxyCodeLine{00504\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (cmd1==Vocab32::encode(\textcolor{stringliteral}{"{}opt"{}}))}
+\DoxyCodeLine{00505\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00506\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (cmd0==Vocab32::encode(\textcolor{stringliteral}{"{}set"{}}))}
+\DoxyCodeLine{00507\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00508\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (command.size()>2)}
+\DoxyCodeLine{00509\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00510\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ cmd2=command.get(2).asString();}
+\DoxyCodeLine{00511\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ speaker.set\_package\_options(cmd2);}
+\DoxyCodeLine{00512\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}ack"{}});}
+\DoxyCodeLine{00513\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00514\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00515\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00516\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (cmd0==Vocab32::encode(\textcolor{stringliteral}{"{}get"{}}))}
+\DoxyCodeLine{00517\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00518\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ reply.addString(speaker.get\_package\_options());}
+\DoxyCodeLine{00519\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00520\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00521\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00522\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00523\ }
+\DoxyCodeLine{00524\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ RFModule::respond(command,reply);}
+\DoxyCodeLine{00525\ \ \ \ \ \}}
+\DoxyCodeLine{00526\ }
+\DoxyCodeLine{00527\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00528\ \ \ \ \ \textcolor{keywordtype}{double}\ getPeriod()}
+\DoxyCodeLine{00529\ \ \ \ \ \{}
+\DoxyCodeLine{00530\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 1.0;}
+\DoxyCodeLine{00531\ \ \ \ \ \}}
+\DoxyCodeLine{00532\ }
+\DoxyCodeLine{00533\ \textcolor{comment}{\ \ \ \ /************************************************************************/}}
+\DoxyCodeLine{00534\ \ \ \ \ \textcolor{keywordtype}{bool}\ updateModule()}
+\DoxyCodeLine{00535\ \ \ \ \ \{}
+\DoxyCodeLine{00536\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00537\ \ \ \ \ \}}
+\DoxyCodeLine{00538\ \};}
+\DoxyCodeLine{00539\ }
+\DoxyCodeLine{00540\ }
+\DoxyCodeLine{00541\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00542\ \textcolor{keywordtype}{int}\ main(\textcolor{keywordtype}{int}\ argc,\ \textcolor{keywordtype}{char}\ *argv[])}
+\DoxyCodeLine{00543\ \{}
+\DoxyCodeLine{00544\ \ \ \ \ Network\ yarp;}
+\DoxyCodeLine{00545\ \ \ \ \ \textcolor{keywordflow}{if}\ (!yarp.checkNetwork())}
+\DoxyCodeLine{00546\ \ \ \ \ \{}
+\DoxyCodeLine{00547\ \ \ \ \ \ \ \ \ yError(\textcolor{stringliteral}{"{}YARP\ server\ not\ available!"{}});}
+\DoxyCodeLine{00548\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 1;}
+\DoxyCodeLine{00549\ \ \ \ \ \}}
+\DoxyCodeLine{00550\ }
+\DoxyCodeLine{00551\ \ \ \ \ ResourceFinder\ rf;}
+\DoxyCodeLine{00552\ \ \ \ \ rf.setDefault(\textcolor{stringliteral}{"{}name"{}},\textcolor{stringliteral}{"{}iSpeak"{}});}
+\DoxyCodeLine{00553\ \ \ \ \ rf.setDefault(\textcolor{stringliteral}{"{}package"{}},\textcolor{stringliteral}{"{}speech-\/dev"{}});}
+\DoxyCodeLine{00554\ \ \ \ \ rf.setDefault(\textcolor{stringliteral}{"{}package\_options"{}},\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00555\ \ \ \ \ rf.configure(argc,argv);}
+\DoxyCodeLine{00556\ }
+\DoxyCodeLine{00557\ \ \ \ \ Launcher\ launcher;}
+\DoxyCodeLine{00558\ \ \ \ \ \textcolor{keywordflow}{return}\ launcher.runModule(rf);}
+\DoxyCodeLine{00559\ \}}
+
+\end{DoxyCode}

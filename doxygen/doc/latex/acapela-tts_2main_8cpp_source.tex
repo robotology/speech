@@ -1,0 +1,93 @@
+\doxysection{main.\+cpp}
+\label{acapela-tts_2main_8cpp_source}\index{/home/runner/work/speech/speech/gh-\/pages/acapela-\/tts/main.cpp@{/home/runner/work/speech/speech/gh-\/pages/acapela-\/tts/main.cpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ AcaTTS\ Sample}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ Copyright\ (c)\ 2010\ Acapela\ Group}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ *\ All\ rights\ reserved.}}
+\DoxyCodeLine{00007\ \textcolor{comment}{\ *\ PERMISSION\ IS\ HEREBY\ DENIED\ TO\ USE,\ COPY,\ MODIFY,\ OR\ DISTRIBUTE\ THIS}}
+\DoxyCodeLine{00008\ \textcolor{comment}{\ *\ SOFTWARE\ OR\ ITS\ DOCUMENTATION\ FOR\ ANY\ PURPOSE\ WITHOUT\ WRITTEN}}
+\DoxyCodeLine{00009\ \textcolor{comment}{\ *\ AGREEMENT\ OR\ ROYALTY\ FEES.}}
+\DoxyCodeLine{00010\ \textcolor{comment}{*/}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#include\ <iostream>}}
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#include\ <iomanip>}}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#include\ <windows.h>}}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \textcolor{preprocessor}{\#include\ "{}ioBabTts.h"{}}}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#define\ \_BABTTSDYN\_IMPL\_}}
+\DoxyCodeLine{00027\ \textcolor{preprocessor}{\#include\ "{}ifBabTtsDyn.h"{}}}
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\#undef\ \_BABTTSDYN\_IMPL\_}}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ \textcolor{keywordtype}{int}\ main(\textcolor{keywordtype}{int}\ argc,\ \textcolor{keywordtype}{char}\ *argv[])}
+\DoxyCodeLine{00032\ \{}
+\DoxyCodeLine{00033\ \ \ \ \ std::string\ voice=\textcolor{stringliteral}{"{}iCub\_eng"{}};}
+\DoxyCodeLine{00034\ \ \ \ \ \textcolor{keywordflow}{if}\ (argc>1)}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ voice=argv[1];}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \ \ \ \ std::cout<<\textcolor{stringliteral}{"{}Voice\ is:\ "{}}<<voice<<std::endl;}
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00039\ \ \ \ \ std::string\ textInput;}
+\DoxyCodeLine{00040\ \ \ \ \ std::getline(std::cin,textInput);}
+\DoxyCodeLine{00041\ \ \ \ \ std::cout<<\textcolor{stringliteral}{"{}Text\ is:\ "{}}<<textInput<<std::endl;}
+\DoxyCodeLine{00042\ }
+\DoxyCodeLine{00043\ \ \ \ \ LPBABTTS\ lpEngine;}
+\DoxyCodeLine{00044\ \ \ \ \ \textcolor{keywordflow}{if}\ (BabTtsInitDllEx(\_T(\textcolor{stringliteral}{"{}."{}}))==NULL)}
+\DoxyCodeLine{00045\ \ \ \ \ \{}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ std::cerr<<\textcolor{stringliteral}{"{}Error:\ Could\ not\ load\ AcaTTS"{}}<<std::endl;}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ exit(-\/1);}
+\DoxyCodeLine{00048\ \ \ \ \ \}}
+\DoxyCodeLine{00049\ }
+\DoxyCodeLine{00050\ \ \ \ \ \textcolor{keywordflow}{if}\ (!BabTTS\_Init())}
+\DoxyCodeLine{00051\ \ \ \ \ \{}
+\DoxyCodeLine{00052\ \ \ \ \ \ \ \ \ std::cerr<<\textcolor{stringliteral}{"{}Error:\ Could\ not\ initialize\ AcaTTS"{}}<<std::endl;}
+\DoxyCodeLine{00053\ \ \ \ \ \ \ \ \ BabTtsUninitDll();}
+\DoxyCodeLine{00054\ \ \ \ \ \ \ \ \ exit(-\/1);}
+\DoxyCodeLine{00055\ \ \ \ \ \}}
+\DoxyCodeLine{00056\ }
+\DoxyCodeLine{00057\ \ \ \ \ lpEngine=BabTTS\_Create();}
+\DoxyCodeLine{00058\ \ \ \ \ \textcolor{keywordflow}{if}\ (lpEngine==NULL)}
+\DoxyCodeLine{00059\ \ \ \ \ \{}
+\DoxyCodeLine{00060\ \ \ \ \ \ \ \ \ std::cerr<<\textcolor{stringliteral}{"{}Error:\ Could\ not\ create\ AcaTTS\ context"{}}<<std::endl;}
+\DoxyCodeLine{00061\ \ \ \ \ \ \ \ \ BabTTS\_Uninit();}
+\DoxyCodeLine{00062\ \ \ \ \ \ \ \ \ BabTtsUninitDll();}
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ \ exit(-\/1);}
+\DoxyCodeLine{00064\ \ \ \ \ \}}
+\DoxyCodeLine{00065\ }
+\DoxyCodeLine{00066\ \ \ \ \ \textcolor{keywordflow}{if}\ (BabTTS\_Open(lpEngine,voice.c\_str(),0)!=E\_BABTTS\_NOERROR)}
+\DoxyCodeLine{00067\ \ \ \ \ \{}
+\DoxyCodeLine{00068\ \ \ \ \ \ \ \ \ std::cerr<<\textcolor{stringliteral}{"{}Error:\ Could\ not\ open\ "{}}<<voice<<std::endl;}
+\DoxyCodeLine{00069\ \ \ \ \ \ \ \ \ BabTTS\_Close(lpEngine);}
+\DoxyCodeLine{00070\ \ \ \ \ \ \ \ \ BabTTS\_Uninit();}
+\DoxyCodeLine{00071\ \ \ \ \ \ \ \ \ BabTtsUninitDll();}
+\DoxyCodeLine{00072\ \ \ \ \ \ \ \ \ exit(-\/1);}
+\DoxyCodeLine{00073\ \ \ \ \ \}}
+\DoxyCodeLine{00074\ }
+\DoxyCodeLine{00075\ \ \ \ \ \textcolor{keywordflow}{if}\ (argc>2)}
+\DoxyCodeLine{00076\ \ \ \ \ \{}
+\DoxyCodeLine{00077\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ speed=atoi(argv[2]);}
+\DoxyCodeLine{00078\ \ \ \ \ \ \ \ \ BabTTS\_SetSettings(lpEngine,BABTTS\_PARAM\_SPEED,speed);}
+\DoxyCodeLine{00079\ \ \ \ \ \}}
+\DoxyCodeLine{00080\ }
+\DoxyCodeLine{00081\ \ \ \ \ \textcolor{keywordflow}{if}\ (argc>3)}
+\DoxyCodeLine{00082\ \ \ \ \ \{}
+\DoxyCodeLine{00083\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ pitchMultiplier=atoi(argv[3]);}
+\DoxyCodeLine{00084\ \ \ \ \ \ \ \ \ BabTTS\_SetSettings(lpEngine,BABTTS\_PARAM\_PITCH,pitchMultiplier);}
+\DoxyCodeLine{00085\ \ \ \ \ \}}
+\DoxyCodeLine{00086\ }
+\DoxyCodeLine{00087\ \ \ \ \ BabTTS\_Speak(lpEngine,textInput.c\_str(),BABTTS\_SYNC|BABTTS\_TAG\_SAPI);}
+\DoxyCodeLine{00088\ }
+\DoxyCodeLine{00089\ \ \ \ \ BabTTS\_Close(lpEngine);}
+\DoxyCodeLine{00090\ \ \ \ \ BabTTS\_Uninit();}
+\DoxyCodeLine{00091\ \ \ \ \ BabTtsUninitDll();}
+\DoxyCodeLine{00092\ }
+\DoxyCodeLine{00093\ \ \ \ \ \textcolor{keywordflow}{return}\ 0;}
+\DoxyCodeLine{00094\ \}}
+
+\end{DoxyCode}

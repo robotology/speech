@@ -1,0 +1,75 @@
+\doxysection{stdafx.\+h}
+\label{speechRecognizer_2src_2stdafx_8h_source}\index{/home/runner/work/speech/speech/gh-\/pages/speechRecognizer/src/stdafx.h@{/home/runner/work/speech/speech/gh-\/pages/speechRecognizer/src/stdafx.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ THIS\ CODE\ AND\ INFORMATION\ IS\ PROVIDED\ "{}AS\ IS"{}\ WITHOUT\ WARRANTY\ OF}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ ANY\ KIND,\ EITHER\ EXPRESSED\ OR\ IMPLIED,\ INCLUDING\ BUT\ NOT\ LIMITED\ TO}}
+\DoxyCodeLine{00003\ \textcolor{comment}{//\ THE\ IMPLIED\ WARRANTIES\ OF\ MERCHANTABILITY\ AND/OR\ FITNESS\ FOR\ A}}
+\DoxyCodeLine{00004\ \textcolor{comment}{//\ PARTICULAR\ PURPOSE.}}
+\DoxyCodeLine{00005\ \textcolor{comment}{//}}
+\DoxyCodeLine{00006\ \textcolor{comment}{//\ Copyright\ ©\ Microsoft\ Corporation.\ All\ rights\ reserved}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{comment}{//\ stdafx.h\ :\ include\ file\ for\ standard\ system\ include\ files,}}
+\DoxyCodeLine{00009\ \textcolor{comment}{//\ \ or\ project\ specific\ include\ files\ that\ are\ used\ frequently,\ but}}
+\DoxyCodeLine{00010\ \textcolor{comment}{//\ \ \ \ \ \ are\ changed\ infrequently}}
+\DoxyCodeLine{00011\ \textcolor{comment}{//}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#if\ !defined(AFX\_STDAFX\_H\_\_A9DB83DB\_A9FD\_11D0\_BFD1\_444553540000\_\_INCLUDED\_)}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#define\ AFX\_STDAFX\_H\_\_A9DB83DB\_A9FD\_11D0\_BFD1\_444553540000\_\_INCLUDED\_}}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#if\ \_MSC\_VER\ >\ 1000}}
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ \_MSC\_VER\ >\ 1000}}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \textcolor{comment}{//\ Disable\ the\ false\ warnings\ caused\ by\ the\ wrong\ definitions\ of\ SetWindowLongPtr}}
+\DoxyCodeLine{00021\ \textcolor{comment}{//\ and\ GetWindowLongPtr\ macros.}}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#pragma\ warning\ (\ disable\ :\ 4244\ )}}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \textcolor{preprocessor}{\#ifndef\ WIN32\_LEAN\_AND\_MEAN}}
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\#define\ WIN32\_LEAN\_AND\_MEAN\ \ \ \ \ }\textcolor{comment}{//\ Exclude\ rarely-\/used\ stuff\ from\ Windows\ headers}}
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ WIN32\_LEAN\_AND\_MEAN}}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \textcolor{comment}{//\ Windows\ Header\ Files:}}
+\DoxyCodeLine{00030\ \textcolor{preprocessor}{\#include\ <windows.h>}}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \textcolor{comment}{//\ C\ RunTime\ Header\ Files}}
+\DoxyCodeLine{00033\ \textcolor{preprocessor}{\#include\ <stdlib.h>}}
+\DoxyCodeLine{00034\ \textcolor{preprocessor}{\#include\ <malloc.h>}}
+\DoxyCodeLine{00035\ \textcolor{preprocessor}{\#include\ <memory.h>}}
+\DoxyCodeLine{00036\ \textcolor{preprocessor}{\#include\ <tchar.h>}}
+\DoxyCodeLine{00037\ \textcolor{preprocessor}{\#include\ <atlbase.h>}}
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00039\ \textcolor{preprocessor}{\#ifdef\ \_WIN32\_WCE}}
+\DoxyCodeLine{00040\ \textcolor{preprocessor}{\#include<WinCEStub.h>}}
+\DoxyCodeLine{00041\ \textcolor{preprocessor}{\#define\ ICON\_BIG\ \ \ \ \ \ \ \ \ \ \ \ 1}}
+\DoxyCodeLine{00042\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ }
+\DoxyCodeLine{00045\ \textcolor{comment}{//\ Local\ Header\ Files}}
+\DoxyCodeLine{00046\ \textcolor{preprocessor}{\#include\ <sapi.h>}}
+\DoxyCodeLine{00047\ \textcolor{preprocessor}{\#include\ <sphelper.h>}}
+\DoxyCodeLine{00048\ \textcolor{preprocessor}{\#include\ <sperror.h>}}
+\DoxyCodeLine{00049\ \textcolor{preprocessor}{\#include\ <atlstr.h>}}
+\DoxyCodeLine{00050\ \textcolor{preprocessor}{\#include\ <atlconv.h>}}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00052\ \textcolor{comment}{//STD}}
+\DoxyCodeLine{00053\ \textcolor{preprocessor}{\#include\ <map>}}
+\DoxyCodeLine{00054\ \textcolor{preprocessor}{\#include\ <list>}}
+\DoxyCodeLine{00055\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00056\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00057\ \textcolor{preprocessor}{\#include\ <iostream>}}
+\DoxyCodeLine{00058\ \textcolor{preprocessor}{\#include\ <fstream>}}
+\DoxyCodeLine{00059\ \textcolor{preprocessor}{\#include\ <sstream>}}
+\DoxyCodeLine{00060\ }
+\DoxyCodeLine{00061\ \textcolor{comment}{//YARP}}
+\DoxyCodeLine{00062\ \textcolor{preprocessor}{\#include\ <yarp/os/all.h>}}
+\DoxyCodeLine{00063\ \textcolor{preprocessor}{\#include\ <yarp/sig/Sound.h>}}
+\DoxyCodeLine{00064\ \textcolor{preprocessor}{\#include\ <yarp/sig/SoundFile.h>}}
+\DoxyCodeLine{00065\ }
+\DoxyCodeLine{00066\ \textcolor{comment}{//\{\{AFX\_INSERT\_LOCATION\}\}}}
+\DoxyCodeLine{00067\ \textcolor{comment}{//\ Microsoft\ Visual\ C++\ will\ insert\ additional\ declarations\ immediately\ before\ the\ previous\ line.}}
+\DoxyCodeLine{00068\ }
+\DoxyCodeLine{00069\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ !defined(AFX\_STDAFX\_H\_\_A9DB83DB\_A9FD\_11D0\_BFD1\_444553540000\_\_INCLUDED\_)}}
+
+\end{DoxyCode}

@@ -1,0 +1,1042 @@
+\doxysection{Speech\+Recognizer\+Module.\+cpp}
+\label{SpeechRecognizerModule_8cpp_source}\index{/home/runner/work/speech/speech/gh-\/pages/speechRecognizer/src/SpeechRecognizerModule.cpp@{/home/runner/work/speech/speech/gh-\/pages/speechRecognizer/src/SpeechRecognizerModule.cpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*\ }}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Copyright\ (C)\ 2011\ EFAA\ Consortium,\ European\ Commission\ FP7\ Project\ IST-\/270490}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Authors:\ Stephane\ Lallee}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ email:\ \ \ stephane.lallee@gmail.com}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ *\ website:\ http://efaa.upf.edu/\ }}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ *\ Permission\ is\ granted\ to\ copy,\ distribute,\ and/or\ modify\ this\ program}}
+\DoxyCodeLine{00007\ \textcolor{comment}{\ *\ under\ the\ terms\ of\ the\ GNU\ General\ Public\ License,\ version\ 2\ or\ any}}
+\DoxyCodeLine{00008\ \textcolor{comment}{\ *\ later\ version\ published\ by\ the\ Free\ Software\ Foundation.}}
+\DoxyCodeLine{00009\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00010\ \textcolor{comment}{\ *\ This\ program\ is\ distributed\ in\ the\ hope\ that\ it\ will\ be\ useful,\ but}}
+\DoxyCodeLine{00011\ \textcolor{comment}{\ *\ WITHOUT\ ANY\ WARRANTY;\ without\ even\ the\ implied\ warranty\ of}}
+\DoxyCodeLine{00012\ \textcolor{comment}{\ *\ MERCHANTABILITY\ or\ FITNESS\ FOR\ A\ PARTICULAR\ PURPOSE.\ See\ the\ GNU\ General}}
+\DoxyCodeLine{00013\ \textcolor{comment}{\ *\ Public\ License\ for\ more\ details}}
+\DoxyCodeLine{00014\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#include\ "{}SpeechRecognizerModule.h"{}}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00019\ \textcolor{comment}{//Helpers\ for\ dealing\ with\ the\ weird\ strings\ of\ windows...\ }}
+\DoxyCodeLine{00020\ std::wstring\ s2ws(\textcolor{keyword}{const}\ std::string\&\ s)}
+\DoxyCodeLine{00021\ \{}
+\DoxyCodeLine{00022\ \ \ \ \ \textcolor{keywordtype}{int}\ len;}
+\DoxyCodeLine{00023\ \ \ \ \ \textcolor{keywordtype}{int}\ slength\ =\ (int)s.length()\ +\ 1;}
+\DoxyCodeLine{00024\ \ \ \ \ len\ =\ MultiByteToWideChar(CP\_ACP,\ 0,\ s.c\_str(),\ slength,\ 0,\ 0);\ }
+\DoxyCodeLine{00025\ \ \ \ \ \textcolor{keywordtype}{wchar\_t}*\ buf\ =\ \textcolor{keyword}{new}\ \textcolor{keywordtype}{wchar\_t}[len];}
+\DoxyCodeLine{00026\ \ \ \ \ MultiByteToWideChar(CP\_ACP,\ 0,\ s.c\_str(),\ slength,\ buf,\ len);}
+\DoxyCodeLine{00027\ \ \ \ \ std::wstring\ r(buf);}
+\DoxyCodeLine{00028\ \ \ \ \ \textcolor{keyword}{delete}[]\ buf;}
+\DoxyCodeLine{00029\ \ \ \ \ \textcolor{keywordflow}{return}\ r;}
+\DoxyCodeLine{00030\ \}}
+\DoxyCodeLine{00031\ std::string\ ws2s(LPCWSTR\ s)}
+\DoxyCodeLine{00032\ \{}
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordtype}{char}\ \ \ \ *pmbbuf\ \ \ =\ (\textcolor{keywordtype}{char}\ *)malloc(\ 100\ );}
+\DoxyCodeLine{00034\ \ \ \ \ wcstombs(\ pmbbuf,\ s,\ 100\ );}
+\DoxyCodeLine{00035\ \ \ \ \ \textcolor{keywordflow}{return}\ pmbbuf;}
+\DoxyCodeLine{00036\ \}}
+\DoxyCodeLine{00037\ std::vector<std::string>\ \&split(\textcolor{keyword}{const}\ std::string\ \&s,\ \textcolor{keywordtype}{char}\ delim,\ std::vector<std::string>\ \&elems)\ \{}
+\DoxyCodeLine{00038\ \ \ \ \ std::stringstream\ ss(s);}
+\DoxyCodeLine{00039\ \ \ \ \ std::string\ item;}
+\DoxyCodeLine{00040\ \ \ \ \ \textcolor{keywordflow}{while}\ (std::getline(ss,\ item,\ delim))\ \{}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ elems.push\_back(item);}
+\DoxyCodeLine{00042\ \ \ \ \ \}}
+\DoxyCodeLine{00043\ \ \ \ \ \textcolor{keywordflow}{return}\ elems;}
+\DoxyCodeLine{00044\ \}}
+\DoxyCodeLine{00045\ std::vector<std::string>\ split(\textcolor{keyword}{const}\ std::string\ \&s,\ \textcolor{keywordtype}{char}\ delim)\ \{}
+\DoxyCodeLine{00046\ \ \ \ \ std::vector<std::string>\ elems;}
+\DoxyCodeLine{00047\ \ \ \ \ split(s,\ delim,\ elems);}
+\DoxyCodeLine{00048\ \ \ \ \ \textcolor{keywordflow}{return}\ elems;}
+\DoxyCodeLine{00049\ \}}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00052\ \textcolor{comment}{//Module\ implementation}}
+\DoxyCodeLine{00053\ \textcolor{keywordtype}{bool}\ SpeechRecognizerModule::configure(ResourceFinder\ \&rf\ )}
+\DoxyCodeLine{00054\ \{}
+\DoxyCodeLine{00055\ \ \ \ \ setName(\ rf.check(\textcolor{stringliteral}{"{}name"{}},Value(\textcolor{stringliteral}{"{}speechRecognizer"{}})).asString().c\_str()\ );}
+\DoxyCodeLine{00056\ \ \ \ \ m\_timeout\ =\ rf.check(\textcolor{stringliteral}{"{}timeout"{}},Value(10000)).asInt32();}
+\DoxyCodeLine{00057\ \ \ \ \ USE\_LEGACY\ =\ !rf.check(\textcolor{stringliteral}{"{}noLegacy"{}});}
+\DoxyCodeLine{00058\ \ \ \ \ m\_forwardSound\ =\ rf.check(\textcolor{stringliteral}{"{}forwardSound"{}});}
+\DoxyCodeLine{00059\ \ \ \ \ m\_tmpFileFolder\ =\ rf.getHomeContextPath();}
+\DoxyCodeLine{00060\ \ \ \ \ interruptRecognition\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00061\ }
+\DoxyCodeLine{00062\ \ \ \ \ \textcolor{comment}{//Deal\ with\ speech\ recognition}}
+\DoxyCodeLine{00063\ \ \ \ \ \textcolor{keywordtype}{string}\ grammarFile\ =\ rf.check(\textcolor{stringliteral}{"{}grammarFile"{}},Value(\textcolor{stringliteral}{"{}defaultGrammar.grxml"{}})).asString();}
+\DoxyCodeLine{00064\ \ \ \ \ grammarFile\ =\ rf.findFile(grammarFile);}
+\DoxyCodeLine{00065\ }
+\DoxyCodeLine{00066\ \ \ \ \ std::wstring\ tmp\ =\ s2ws(grammarFile);}
+\DoxyCodeLine{00067\ \ \ \ \ LPCWSTR\ cwgrammarfile\ =\ tmp.c\_str();}
+\DoxyCodeLine{00068\ }
+\DoxyCodeLine{00069\ \ \ \ \ m\_useTalkBack\ =\ rf.check(\textcolor{stringliteral}{"{}talkback"{}});}
+\DoxyCodeLine{00070\ }
+\DoxyCodeLine{00071\ \ \ \ \ \textcolor{comment}{//Initialise\ the\ speech\ crap}}
+\DoxyCodeLine{00072\ \ \ \ \ \textcolor{keywordtype}{bool}\ everythingIsFine\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00073\ \ \ \ \ HRESULT\ hr;}
+\DoxyCodeLine{00074\ \ \ \ \ everythingIsFine\ =\ SUCCEEDED(\ m\_cpRecoEngine.CoCreateInstance(CLSID\_SpInprocRecognizer));}
+\DoxyCodeLine{00075\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ SpCreateDefaultObjectFromCategoryId(SPCAT\_AUDIOIN,\ \&m\_cpAudio));}
+\DoxyCodeLine{00076\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpRecoEngine-\/>CreateRecoContext(\ \&m\_cpRecoCtxt\ ));}
+\DoxyCodeLine{00077\ }
+\DoxyCodeLine{00078\ \ \ \ \ \textcolor{comment}{//\ Here,\ all\ we\ are\ interested\ in\ is\ the\ beginning\ and\ ends\ of\ sounds,\ as\ well\ as}}
+\DoxyCodeLine{00079\ \ \ \ \ \textcolor{comment}{//\ when\ the\ engine\ has\ recognized\ something}}
+\DoxyCodeLine{00080\ \ \ \ \ \textcolor{keyword}{const}\ ULONGLONG\ ullInterest\ =\ SPFEI(SPEI\_RECOGNITION);}
+\DoxyCodeLine{00081\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpRecoCtxt-\/>SetInterest(ullInterest,\ ullInterest));}
+\DoxyCodeLine{00082\ }
+\DoxyCodeLine{00083\ \ \ \ \ \textcolor{comment}{//\ set\ the\ input\ for\ the\ engine}}
+\DoxyCodeLine{00084\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpRecoEngine-\/>SetInput(m\_cpAudio,\ TRUE));}
+\DoxyCodeLine{00085\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpRecoEngine-\/>SetRecoState(\ SPRST\_ACTIVE\ ));}
+\DoxyCodeLine{00086\ }
+\DoxyCodeLine{00087\ \ \ \ \ \textcolor{comment}{//Load\ grammar\ from\ file}}
+\DoxyCodeLine{00088\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpRecoCtxt-\/>CreateGrammar(\ 1,\ \&m\_cpGrammarFromFile\ ));}
+\DoxyCodeLine{00089\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpGrammarFromFile-\/>SetGrammarState(SPGS\_DISABLED));}
+\DoxyCodeLine{00090\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpGrammarFromFile-\/>LoadCmdFromFile(cwgrammarfile,\ SPLO\_DYNAMIC));}
+\DoxyCodeLine{00091\ \textcolor{comment}{//\ \ everythingIsFine\ \&=\ loadGrammarFromRf(rf);}}
+\DoxyCodeLine{00092\ }
+\DoxyCodeLine{00093\ \ \ \ \ \textcolor{comment}{//Create\ a\ runtime\ grammar}}
+\DoxyCodeLine{00094\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpRecoCtxt-\/>CreateGrammar(\ 2,\ \&m\_cpGrammarRuntime\ ));}
+\DoxyCodeLine{00095\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpGrammarRuntime-\/>SetGrammarState(SPGS\_DISABLED));}
+\DoxyCodeLine{00096\ }
+\DoxyCodeLine{00097\ \ \ \ \ \textcolor{comment}{//Create\ a\ dictation\ grammar}}
+\DoxyCodeLine{00098\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpRecoCtxt-\/>CreateGrammar(\ GID\_DICTATION,\ \&m\_cpGrammarDictation\ ));}
+\DoxyCodeLine{00099\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarDictation-\/>LoadDictation(NULL,\ SPLO\_STATIC));}
+\DoxyCodeLine{00100\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarDictation-\/>SetDictationState(SPRS\_INACTIVE));}
+\DoxyCodeLine{00101\ \ \ \ \ }
+\DoxyCodeLine{00102\ \ \ \ \ \textcolor{comment}{//Setup\ thing\ for\ the\ raw\ audio\ processing}}
+\DoxyCodeLine{00103\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cAudioFmt.AssignFormat(SPSF\_22kHz16BitMono));}
+\DoxyCodeLine{00104\ \ \ \ \ hr\ =\ m\_cpRecoCtxt-\/>SetAudioOptions(SPAO\_RETAIN\_AUDIO,\ \&m\_cAudioFmt.FormatId(),\ m\_cAudioFmt.WaveFormatExPtr());}
+\DoxyCodeLine{00105\ \ \ \ \ \textcolor{comment}{//everythingIsFine\ \&=\ SUCCEEDED(hr\ =\ SPBindToFile((const\ WCHAR\ *)"{}C:\(\backslash\)\(\backslash\)temp.wav"{},\ SPFM\_CREATE\_ALWAYS,\ \&m\_streamFormat,\ \&m\_cAudioFmt.FormatId(),\ m\_cAudioFmt.WaveFormatExPtr()));}}
+\DoxyCodeLine{00106\ }
+\DoxyCodeLine{00107\ \ \ \ \ \textcolor{comment}{//CComPtr\ <ISpStream>\ \ \ \ \ cpStream\ =\ NULL;}}
+\DoxyCodeLine{00108\ \ \ \ \ \textcolor{comment}{//CSpStreamFormat\ \ \ \ \ \ \ \ \ cAudioFmt;}}
+\DoxyCodeLine{00109\ \ \ \ \ \textcolor{comment}{//hr\ =\ cAudioFmt.AssignFormat(SPSF\_22kHz16BitMono);}}
+\DoxyCodeLine{00110\ \ \ \ \ \textcolor{comment}{//hr\ =\ SPBindToFile((const\ WCHAR\ *)"{}c:\(\backslash\)\(\backslash\)ttstemp.wav"{},\ SPFM\_CREATE\_ALWAYS,\ \&cpStream,\ \ \&cAudioFmt.FormatId(),\ cAudioFmt.WaveFormatExPtr());}}
+\DoxyCodeLine{00111\ }
+\DoxyCodeLine{00112\ \ \ \ \ \textcolor{keywordflow}{if}(\ everythingIsFine\ )}
+\DoxyCodeLine{00113\ \ \ \ \ \{}
+\DoxyCodeLine{00114\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ pName\ =\ \textcolor{stringliteral}{"{}/"{}};}
+\DoxyCodeLine{00115\ \ \ \ \ \ \ \ \ pName\ +=\ getName();}
+\DoxyCodeLine{00116\ \ \ \ \ \ \ \ \ pName\ +=\ \textcolor{stringliteral}{"{}/recog/continuous:o"{}};}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ m\_portContinuousRecognition.open(\ pName\ );}
+\DoxyCodeLine{00118\ }
+\DoxyCodeLine{00119\ \ \ \ \ \ \ \ \ pName\ =\ \textcolor{stringliteral}{"{}/"{}};}
+\DoxyCodeLine{00120\ \ \ \ \ \ \ \ \ pName\ +=\ getName();}
+\DoxyCodeLine{00121\ \ \ \ \ \ \ \ \ pName\ +=\ \textcolor{stringliteral}{"{}/recog/continuousGrammar:o"{}};}
+\DoxyCodeLine{00122\ \ \ \ \ \ \ \ \ m\_portContinuousRecognitionGrammar.open(\ pName\ );}
+\DoxyCodeLine{00123\ }
+\DoxyCodeLine{00124\ \ \ \ \ \ \ \ \ pName\ =\ \textcolor{stringliteral}{"{}/"{}};}
+\DoxyCodeLine{00125\ \ \ \ \ \ \ \ \ pName\ +=\ getName();}
+\DoxyCodeLine{00126\ \ \ \ \ \ \ \ \ pName\ +=\ \textcolor{stringliteral}{"{}/recog/sound:o"{}};\ \ \ }
+\DoxyCodeLine{00127\ \ \ \ \ \ \ \ \ m\_portSound.open(\ pName\ );}
+\DoxyCodeLine{00128\ }
+\DoxyCodeLine{00129\ \ \ \ \ \ \ \ \ \textcolor{comment}{//iSpeak}}
+\DoxyCodeLine{00130\ \ \ \ \ \ \ \ \ pName\ =\ \textcolor{stringliteral}{"{}/"{}};}
+\DoxyCodeLine{00131\ \ \ \ \ \ \ \ \ pName\ +=\ getName();}
+\DoxyCodeLine{00132\ \ \ \ \ \ \ \ \ pName\ +=\ \textcolor{stringliteral}{"{}/tts/iSpeak:o"{}};\ }
+\DoxyCodeLine{00133\ \ \ \ \ \ \ \ \ m\_port2iSpeak.open(\ pName\ );}
+\DoxyCodeLine{00134\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00135\ \ \ \ \ \ \ \ \ pName\ =\ \textcolor{stringliteral}{"{}/"{}};}
+\DoxyCodeLine{00136\ \ \ \ \ \ \ \ \ pName\ +=\ getName();}
+\DoxyCodeLine{00137\ \ \ \ \ \ \ \ \ pName\ +=\ \textcolor{stringliteral}{"{}/tts/iSpeak/rpc"{}};\ }
+\DoxyCodeLine{00138\ \ \ \ \ \ \ \ \ m\_port2iSpeakRpc.open(\ pName\ );}
+\DoxyCodeLine{00139\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (Network::connect(m\_port2iSpeak.getName(),\textcolor{stringliteral}{"{}/iSpeak"{}})\&\&Network::connect(m\_port2iSpeakRpc.getName(),\textcolor{stringliteral}{"{}/iSpeak/rpc"{}}))}
+\DoxyCodeLine{00140\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Connection\ to\ iSpeak\ succesfull"{}}\ ;}
+\DoxyCodeLine{00141\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00142\ \ \ \ \ \ \ \ \ \ \ \ \ yWarning()\ <<\textcolor{stringliteral}{"{}Unable\ to\ connect\ to\ iSpeak.\ Connect\ manually."{}}\ ;}
+\DoxyCodeLine{00143\ }
+\DoxyCodeLine{00144\ \ \ \ \ \ \ \ \ pName\ =\ \textcolor{stringliteral}{"{}/"{}};}
+\DoxyCodeLine{00145\ \ \ \ \ \ \ \ \ pName\ +=\ getName();}
+\DoxyCodeLine{00146\ \ \ \ \ \ \ \ \ pName\ +=\ \textcolor{stringliteral}{"{}/rpc"{}};}
+\DoxyCodeLine{00147\ \ \ \ \ \ \ \ \ m\_portRPC.open(\ pName\ );}
+\DoxyCodeLine{00148\ \ \ \ \ \ \ \ \ attach(m\_portRPC);}
+\DoxyCodeLine{00149\ }
+\DoxyCodeLine{00150\ \ \ \ \ \ \ \ \ \textcolor{comment}{//Start\ recognition}}
+\DoxyCodeLine{00151\ \ \ \ \ \ \ \ \ \textcolor{comment}{//everythingIsFine\ \&=\ SUCCEEDED(m\_cpRecoEngine-\/>SetRecoState(SPRST\_ACTIVE\_ALWAYS));}}
+\DoxyCodeLine{00152\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarFromFile-\/>SetRuleState(NULL,\ NULL,\ SPRS\_ACTIVE));}
+\DoxyCodeLine{00153\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpGrammarFromFile-\/>SetGrammarState(SPGS\_ENABLED));}
+\DoxyCodeLine{00154\ \ \ \ \ \}}
+\DoxyCodeLine{00155\ }
+\DoxyCodeLine{00156\ \ \ \ \ \textcolor{keywordflow}{return}\ (everythingIsFine);}
+\DoxyCodeLine{00157\ \}}
+\DoxyCodeLine{00158\ yarp::sig::Sound\ SpeechRecognizerModule::toSound(CComPtr<ISpRecoResult>\ cpRecoResult)}
+\DoxyCodeLine{00159\ \{}
+\DoxyCodeLine{00160\ \ \ \ \ HRESULT\ hr\ =\ S\_OK;}
+\DoxyCodeLine{00161\ \ \ \ \ CComPtr<ISpStreamFormat>\ \ \ \ \ \ cpStreamFormat\ =\ NULL;}
+\DoxyCodeLine{00162\ \ \ \ \ SPPHRASE*\ pPhrase;}
+\DoxyCodeLine{00163\ \ \ \ \ \textcolor{keywordtype}{bool}\ successGetPhrase\ =\ SUCCEEDED(cpRecoResult-\/>GetPhrase(\&pPhrase));}
+\DoxyCodeLine{00164\ \ \ \ \ hr\ =\ cpRecoResult-\/>GetAudio(0,\ pPhrase-\/>Rule.ulCountOfElements,\ \&cpStreamFormat);}
+\DoxyCodeLine{00165\ }
+\DoxyCodeLine{00166\ \ \ \ \ CComPtr<ISpStream>\ cpStream;}
+\DoxyCodeLine{00167\ \ \ \ \ ULONG\ cbWritten\ =\ 0;\ }
+\DoxyCodeLine{00168\ \ \ \ }
+\DoxyCodeLine{00169\ \ \ \ \ \textcolor{keywordtype}{string}\ sPath\ =\ m\_tmpFileFolder\ +\ \textcolor{stringliteral}{"{}//tmp.wav"{}};}
+\DoxyCodeLine{00170\ \ \ \ \ \textcolor{comment}{//static\ const\ WCHAR\ path[]\ =\ L"{}C://tmpSnd.wav"{};}}
+\DoxyCodeLine{00171\ }
+\DoxyCodeLine{00172\ \ \ \ \ \textcolor{comment}{//\ create\ file\ on\ hard-\/disk\ for\ storing\ recognized\ audio,\ and\ specify\ audio\ format\ as\ the\ retained\ audio\ format}}
+\DoxyCodeLine{00173\ \ \ \ \ hr\ =\ SPBindToFile(s2ws(sPath).c\_str(),\ SPFM\_CREATE\_ALWAYS,\ \&cpStream,\ \&m\_cAudioFmt.FormatId(),\ m\_cAudioFmt.WaveFormatExPtr(),\ SPFEI\_ALL\_EVENTS);}
+\DoxyCodeLine{00174\ }
+\DoxyCodeLine{00175\ \ \ \ \ \textcolor{comment}{//Continuously\ transfer\ data\ between\ the\ two\ streams\ until\ no\ more\ data\ is\ found\ (i.e.\ end\ of\ stream)}}
+\DoxyCodeLine{00176\ \ \ \ \ \textcolor{comment}{//Note\ only\ transfer\ 1000\ bytes\ at\ a\ time\ to\ creating\ large\ chunks\ of\ data\ at\ one\ time}}
+\DoxyCodeLine{00177\ \ \ \ \ \textcolor{keywordflow}{while}\ (TRUE)}
+\DoxyCodeLine{00178\ \ \ \ \ \{}
+\DoxyCodeLine{00179\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ for\ logging\ purposes,\ the\ app\ can\ retrieve\ the\ recognized\ audio\ stream\ length\ in\ bytes}}
+\DoxyCodeLine{00180\ \ \ \ \ \ \ \ \ STATSTG\ stats;}
+\DoxyCodeLine{00181\ \ \ \ \ \ \ \ \ hr\ =\ cpStreamFormat-\/>Stat(\&stats,\ NULL);}
+\DoxyCodeLine{00182\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Check\ hr}}
+\DoxyCodeLine{00183\ }
+\DoxyCodeLine{00184\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ create\ a\ 1000-\/byte\ buffer\ for\ transferring}}
+\DoxyCodeLine{00185\ \ \ \ \ \ \ \ \ BYTE\ bBuffer[1000];}
+\DoxyCodeLine{00186\ \ \ \ \ \ \ \ \ ULONG\ cbRead;}
+\DoxyCodeLine{00187\ }
+\DoxyCodeLine{00188\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ request\ 1000\ bytes\ of\ data\ from\ the\ input\ stream}}
+\DoxyCodeLine{00189\ \ \ \ \ \ \ \ \ hr\ =\ cpStreamFormat-\/>Read(bBuffer,\ 1000,\ \&cbRead);}
+\DoxyCodeLine{00190\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ if\ data\ was\ returned{\ucr}}}
+\DoxyCodeLine{00191\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (SUCCEEDED(hr)\ \&\&\ cbRead\ >\ 0)}
+\DoxyCodeLine{00192\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00193\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//then\ transfer/write\ the\ audio\ to\ the\ file-\/based\ stream}}
+\DoxyCodeLine{00194\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ hr\ =\ cpStream-\/>Write(bBuffer,\ cbRead,\ \&cbWritten);}
+\DoxyCodeLine{00195\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Check\ hr}}
+\DoxyCodeLine{00196\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00197\ }
+\DoxyCodeLine{00198\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ since\ there\ is\ no\ more\ data\ being\ added\ to\ the\ input\ stream,\ if\ the\ read\ request\ returned\ less\ than\ expected,\ the\ end\ of\ stream\ was\ reached,\ so\ break\ data\ transfer\ loop}}
+\DoxyCodeLine{00199\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (cbRead\ <\ 1000)}
+\DoxyCodeLine{00200\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00201\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00202\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00203\ \ \ \ \ \}}
+\DoxyCodeLine{00204\ \ \ \ \ cpStream-\/>Close();}
+\DoxyCodeLine{00205\ \ \ \ \ cpStream.Release();}
+\DoxyCodeLine{00206\ }
+\DoxyCodeLine{00207\ \ \ \ \ yarp::sig::Sound\ s;}
+\DoxyCodeLine{00208\ \ \ \ \ yarp::sig::file::read(s,\ sPath.c\_str());}
+\DoxyCodeLine{00209\ \ \ \ \ \textcolor{keywordflow}{return}\ s;}
+\DoxyCodeLine{00210\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00211\ \}}
+\DoxyCodeLine{00212\ }
+\DoxyCodeLine{00213\ }
+\DoxyCodeLine{00214\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00215\ \textcolor{keywordtype}{bool}\ SpeechRecognizerModule::updateModule()}
+\DoxyCodeLine{00216\ \{}
+\DoxyCodeLine{00217\ \ \ \ \ cout<<\textcolor{stringliteral}{"{}."{}};}
+\DoxyCodeLine{00218\ \ \ \ \ USES\_CONVERSION;}
+\DoxyCodeLine{00219\ \ \ \ \ CSpEvent\ event;}
+\DoxyCodeLine{00220\ }
+\DoxyCodeLine{00221\ \ \ \ \ \textcolor{comment}{//\ Process\ all\ of\ the\ recognition\ events}}
+\DoxyCodeLine{00222\ \ \ \ \ \textcolor{keywordflow}{while}\ (event.GetFrom(m\_cpRecoCtxt)\ ==\ S\_OK)}
+\DoxyCodeLine{00223\ \ \ \ \ \{}
+\DoxyCodeLine{00224\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{switch}\ (event.eEventId)}
+\DoxyCodeLine{00225\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00226\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{case}\ SPEI\_SOUND\_START:}
+\DoxyCodeLine{00227\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00228\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ m\_bInSound\ =\ TRUE;}
+\DoxyCodeLine{00229\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Sound\ in..."{}};}
+\DoxyCodeLine{00230\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00231\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00232\ }
+\DoxyCodeLine{00233\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{case}\ SPEI\_SOUND\_END:}
+\DoxyCodeLine{00234\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_bInSound)}
+\DoxyCodeLine{00235\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00236\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ m\_bInSound\ =\ FALSE;}
+\DoxyCodeLine{00237\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!m\_bGotReco)}
+\DoxyCodeLine{00238\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00239\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ The\ sound\ has\ started\ and\ ended,\ }}
+\DoxyCodeLine{00240\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ but\ the\ engine\ has\ not\ succeeded\ in\ recognizing\ anything}}
+\DoxyCodeLine{00241\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yWarning()\ <<\ \textcolor{stringliteral}{"{}Chunk\ of\ sound\ detected:\ Recognition\ is\ null"{}};}
+\DoxyCodeLine{00242\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00243\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ m\_bGotReco\ =\ FALSE;}
+\DoxyCodeLine{00244\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00245\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00246\ }
+\DoxyCodeLine{00247\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{case}\ SPEI\_RECOGNITION:}
+\DoxyCodeLine{00248\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ There\ may\ be\ multiple\ recognition\ results,\ so\ get\ all\ of\ them}}
+\DoxyCodeLine{00249\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00250\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ m\_bGotReco\ =\ TRUE;}
+\DoxyCodeLine{00251\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ WCHAR\ wszUnrecognized[]\ =\ L\textcolor{stringliteral}{"{}<Unrecognized>"{}};}
+\DoxyCodeLine{00252\ }
+\DoxyCodeLine{00253\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ CSpDynamicString\ dstrText;}
+\DoxyCodeLine{00254\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (SUCCEEDED(event.RecoResult()-\/>GetText(SP\_GETWHOLEPHRASE,\ SP\_GETWHOLEPHRASE,\ TRUE,\ }
+\DoxyCodeLine{00255\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \&dstrText,\ NULL)))}
+\DoxyCodeLine{00256\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00257\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ SPPHRASE*\ pPhrase\ =\ NULL;}
+\DoxyCodeLine{00258\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ successGetPhrase\ =\ SUCCEEDED(event.RecoResult()-\/>GetPhrase(\&pPhrase));\ \ }
+\DoxyCodeLine{00259\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ confidence=pPhrase-\/>Rule.Confidence;}
+\DoxyCodeLine{00260\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00261\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ fullSentence\ =\ ws2s(dstrText);}
+\DoxyCodeLine{00262\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Recognized\ "{}}<<fullSentence<<\textcolor{stringliteral}{"{}\ with\ confidence\ "{}}<<confidence\ ;}
+\DoxyCodeLine{00263\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00264\ }
+\DoxyCodeLine{00265\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//Send\ over\ yarp}}
+\DoxyCodeLine{00266\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ Bottle\ bOut;}
+\DoxyCodeLine{00267\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ bOut.addString(fullSentence);}
+\DoxyCodeLine{00268\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ bOut.addInt32(confidence);}
+\DoxyCodeLine{00269\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ m\_portContinuousRecognition.write(bOut);}
+\DoxyCodeLine{00270\ }
+\DoxyCodeLine{00271\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//Treat\ the\ semantic}}
+\DoxyCodeLine{00272\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (successGetPhrase)}
+\DoxyCodeLine{00273\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00274\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//Send\ sound}}
+\DoxyCodeLine{00275\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_forwardSound)}
+\DoxyCodeLine{00276\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00277\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yarp::sig::Sound\&\ rawSnd\ =\ m\_portSound.prepare();}
+\DoxyCodeLine{00278\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ rawSnd\ =\ toSound(event.RecoResult());}
+\DoxyCodeLine{00279\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ m\_portSound.write();}
+\DoxyCodeLine{00280\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00281\ }
+\DoxyCodeLine{00282\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\ 1.\ 1st\ subBottle\ :\ raw\ Sentence\ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\///}}
+\DoxyCodeLine{00283\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ wordCount\ =\ pPhrase-\/>Rule.ulCountOfElements;}
+\DoxyCodeLine{00284\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ rawPhrase\ =\ \textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{00285\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(\textcolor{keywordtype}{int}\ i=0;\ i<\ wordCount;\ i++)\{}
+\DoxyCodeLine{00286\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ rawPhrase\ +=\ ws2s(pPhrase-\/>pElements[i].pszDisplayText)\ +\ \textcolor{stringliteral}{"{}\ "{}};}
+\DoxyCodeLine{00287\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}word\ :\ "{}}\ <<\ \ ws2s(pPhrase-\/>pElements[i].pszDisplayText)\ ;}
+\DoxyCodeLine{00288\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00289\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Raw\ sentence:\ "{}}<<rawPhrase\ ;}
+\DoxyCodeLine{00290\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\&pPhrase-\/>Rule\ ==\ NULL)}
+\DoxyCodeLine{00291\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00292\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yError()\ <<\textcolor{stringliteral}{"{}Cannot\ parse\ the\ sentence!"{}};}
+\DoxyCodeLine{00293\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00294\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00295\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\ 2.\ 2nd\ subottle\ :\ Word/Role\ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\///}}
+\DoxyCodeLine{00296\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ Bottle\ bOutGrammar;}
+\DoxyCodeLine{00297\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ bOutGrammar.addString(rawPhrase);}
+\DoxyCodeLine{00298\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ bOutGrammar.addList()=toBottle(pPhrase,\&pPhrase-\/>Rule);}
+\DoxyCodeLine{00299\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Sending\ semantic\ bottle\ :\ "{}}\ <<\ bOutGrammar.toString();}
+\DoxyCodeLine{00300\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ m\_portContinuousRecognitionGrammar.write(bOutGrammar);}
+\DoxyCodeLine{00301\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ::CoTaskMemFree(pPhrase);}
+\DoxyCodeLine{00302\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00303\ }
+\DoxyCodeLine{00304\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_useTalkBack)}
+\DoxyCodeLine{00305\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ say(fullSentence);}
+\DoxyCodeLine{00306\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00307\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00308\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00309\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00310\ \ \ \ \ \}}
+\DoxyCodeLine{00311\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00312\ \}}
+\DoxyCodeLine{00313\ }
+\DoxyCodeLine{00314\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00315\ Bottle\ SpeechRecognizerModule::toBottle(SPPHRASE*\ pPhrase,\ \textcolor{keyword}{const}\ SPPHRASERULE*\ pRule)}
+\DoxyCodeLine{00316\ \{}
+\DoxyCodeLine{00317\ \ \ \ \ Bottle\ bCurrentLevelGlobal;}
+\DoxyCodeLine{00318\ }
+\DoxyCodeLine{00319\ \ \ \ \ \textcolor{keyword}{const}\ SPPHRASERULE*\ siblingRule\ =\ pRule;}
+\DoxyCodeLine{00320\ \ \ \ \ \textcolor{keywordflow}{while}\ (siblingRule\ !=\ NULL)}
+\DoxyCodeLine{00321\ \ \ \ \ \{\ \ \ }
+\DoxyCodeLine{00322\ \ \ \ \ \ \ \ \ Bottle\ bCurrentSubLevel;}
+\DoxyCodeLine{00323\ \ \ \ \ \ \ \ \ bCurrentSubLevel.addString(ws2s(siblingRule-\/>pszName));}
+\DoxyCodeLine{00324\ }
+\DoxyCodeLine{00325\ \ \ \ \ \ \ \ \ \textcolor{comment}{//we\ backtrack}}
+\DoxyCodeLine{00326\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(siblingRule-\/>pFirstChild\ !=\ NULL\ )}
+\DoxyCodeLine{00327\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00328\ \ \ \ \ \ \ \ \ \ \ \ \ bCurrentSubLevel.addList()=toBottle(pPhrase,\ siblingRule-\/>pFirstChild);}
+\DoxyCodeLine{00329\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00330\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00331\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00332\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ nodeString\ =\ \textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{00333\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(\textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ i=0;\ i<siblingRule-\/>ulCountOfElements;\ i++)}
+\DoxyCodeLine{00334\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00335\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ nodeString\ +=\ ws2s(pPhrase-\/>pElements[siblingRule-\/>ulFirstElement\ +\ i].pszDisplayText);}
+\DoxyCodeLine{00336\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (i<siblingRule-\/>ulCountOfElements-\/1)}
+\DoxyCodeLine{00337\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ nodeString\ +=\ \textcolor{stringliteral}{"{}\ "{}};}
+\DoxyCodeLine{00338\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00339\ \ \ \ \ \ \ \ \ \ \ \ \ bCurrentSubLevel.addString(nodeString);}
+\DoxyCodeLine{00340\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00341\ \ \ \ \ \ \ \ \ siblingRule\ =\ siblingRule-\/>pNextSibling;}
+\DoxyCodeLine{00342\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (pRule-\/>pNextSibling\ !=NULL)}
+\DoxyCodeLine{00343\ \ \ \ \ \ \ \ \ \ \ \ \ bCurrentLevelGlobal.addList()\ =\ bCurrentSubLevel;}
+\DoxyCodeLine{00344\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00345\ \ \ \ \ \ \ \ \ \ \ \ \ bCurrentLevelGlobal\ =\ bCurrentSubLevel;}
+\DoxyCodeLine{00346\ }
+\DoxyCodeLine{00347\ \ \ \ \ \}}
+\DoxyCodeLine{00348\ \ \ \ \ \textcolor{keywordflow}{return}\ bCurrentLevelGlobal;}
+\DoxyCodeLine{00349\ \}}
+\DoxyCodeLine{00350\ }
+\DoxyCodeLine{00351\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00352\ \textcolor{keywordtype}{bool}\ SpeechRecognizerModule::respond(\textcolor{keyword}{const}\ Bottle\&\ cmd,\ Bottle\&\ reply)\ }
+\DoxyCodeLine{00353\ \{}
+\DoxyCodeLine{00354\ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}ACK"{}});}
+\DoxyCodeLine{00355\ \ \ \ \ \textcolor{keywordtype}{string}\ firstVocab\ =\ cmd.get(0).asString();}
+\DoxyCodeLine{00356\ }
+\DoxyCodeLine{00357\ \ \ \ \ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}tts"{}})}
+\DoxyCodeLine{00358\ \ \ \ \ \{}
+\DoxyCodeLine{00359\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ sentence\ =\ cmd.get(1).asString();}
+\DoxyCodeLine{00360\ \ \ \ \ \ \ \ \ say(sentence);}
+\DoxyCodeLine{00361\ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}OK"{}});}
+\DoxyCodeLine{00362\ \ \ \ \ \}}
+\DoxyCodeLine{00363\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}RGM"{}}\ ||\ firstVocab\ ==\ \textcolor{stringliteral}{"{}rgm"{}}\ )}
+\DoxyCodeLine{00364\ \ \ \ \ \{\ \ \ \ }
+\DoxyCodeLine{00365\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ secondVocab\ =\ cmd.get(1).asString();}
+\DoxyCodeLine{00366\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (secondVocab==\textcolor{stringliteral}{"{}vocabulory"{}})}
+\DoxyCodeLine{00367\ \ \ \ \ \ \ \ \ \ \ \ \ handleRGMCmd(cmd.tail().tail(),\ reply);}
+\DoxyCodeLine{00368\ \ \ \ \ \}}
+\DoxyCodeLine{00369\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}recog"{}})}
+\DoxyCodeLine{00370\ \ \ \ \ \{}
+\DoxyCodeLine{00371\ \ \ \ \ \ \ \ \ handleRecognitionCmd(cmd.tail(),\ reply);}
+\DoxyCodeLine{00372\ \ \ \ \ \}}
+\DoxyCodeLine{00373\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}asyncrecog"{}})}
+\DoxyCodeLine{00374\ \ \ \ \ \{}
+\DoxyCodeLine{00375\ \ \ \ \ \ \ \ \ handleAsyncRecognitionCmd(cmd.tail(),\ reply);}
+\DoxyCodeLine{00376\ \ \ \ \ \}}
+\DoxyCodeLine{00377\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}interrupt"{}})}
+\DoxyCodeLine{00378\ \ \ \ \ \{}
+\DoxyCodeLine{00379\ \ \ \ \ \ \ \ \ handleInterrupt(cmd.tail(),\ reply);}
+\DoxyCodeLine{00380\ \ \ \ \ \}}
+\DoxyCodeLine{00381\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00382\ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}UNKNOWN"{}});}
+\DoxyCodeLine{00383\ }
+\DoxyCodeLine{00384\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00385\ \}}
+\DoxyCodeLine{00386\ }
+\DoxyCodeLine{00387\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00388\ \textcolor{keywordtype}{bool}\ SpeechRecognizerModule::handleInterrupt(\textcolor{keyword}{const}\ Bottle\&\ cmd,\ Bottle\&\ reply)}
+\DoxyCodeLine{00389\ \{}
+\DoxyCodeLine{00390\ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Grammar\ interrupted"{}};}
+\DoxyCodeLine{00391\ \ \ \ \ interruptRecognition\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00392\ \ \ \ \ yarp::os::Time::delay(0.5);}
+\DoxyCodeLine{00393\ \ \ \ \ interruptRecognition\ =\ \textcolor{keyword}{true};\ \textcolor{comment}{//\ just\ in\ case\ of\ a\ previous\ race\ condition}}
+\DoxyCodeLine{00394\ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}OK"{}});}
+\DoxyCodeLine{00395\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00396\ \}}
+\DoxyCodeLine{00397\ }
+\DoxyCodeLine{00398\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00399\ \textcolor{keywordtype}{bool}\ SpeechRecognizerModule::handleRGMCmd(\textcolor{keyword}{const}\ Bottle\&\ cmd,\ Bottle\&\ reply)}
+\DoxyCodeLine{00400\ \{}
+\DoxyCodeLine{00401\ \ \ \ \ \textcolor{keywordtype}{string}\ firstVocab\ =\ cmd.get(0).asString();}
+\DoxyCodeLine{00402\ \ \ \ \ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}add"{}})}
+\DoxyCodeLine{00403\ \ \ \ \ \{}
+\DoxyCodeLine{00404\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ vocabulory\ =\ cmd.get(1).asString();}
+\DoxyCodeLine{00405\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (vocabulory[0]\ !=\ \textcolor{charliteral}{'\#'})}
+\DoxyCodeLine{00406\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00407\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//reply.addString("{}Vocabulories\ have\ to\ start\ with\ a\ \#.\ \#Dictation\ and\ \#WildCard\ are\ reserved.\ Aborting."{});}}
+\DoxyCodeLine{00408\ \ \ \ \ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}ERROR"{}});}
+\DoxyCodeLine{00409\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00410\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00411\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ word\ =\ cmd.get(2).asString();}
+\DoxyCodeLine{00412\ \ \ \ \ \ \ \ \ m\_vocabulories[vocabulory].push\_back(word);}
+\DoxyCodeLine{00413\ \ \ \ \ \ \ \ \ refreshFromVocabulories(m\_cpGrammarFromFile);}
+\DoxyCodeLine{00414\ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}OK"{}});}
+\DoxyCodeLine{00415\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00416\ \ \ \ \ \}}
+\DoxyCodeLine{00417\ }
+\DoxyCodeLine{00418\ \ \ \ \ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}addAuto"{}})}
+\DoxyCodeLine{00419\ \ \ \ \ \{}
+\DoxyCodeLine{00420\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ vocabuloryType\ =\ cmd.get(1).asString();}
+\DoxyCodeLine{00421\ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Trying\ to\ enrich\ the\ "{}}<<vocabuloryType<<\textcolor{stringliteral}{"{}\ vocabulary."{}};}
+\DoxyCodeLine{00422\ }
+\DoxyCodeLine{00423\ \ \ \ \ \ \ \ \ say(\textcolor{stringliteral}{"{}Let's\ improve\ my\ dictionary."{}});}
+\DoxyCodeLine{00424\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00425\ \ \ \ \ \ \ \ \ \textcolor{comment}{//Try\ first\ with\ open\ dictation}}
+\DoxyCodeLine{00426\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ TRIALS\_BEFORE\_SPELLING\ =\ 2;}
+\DoxyCodeLine{00427\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ isFine\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00428\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ trial=0;}
+\DoxyCodeLine{00429\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ newWord\ =\ \textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{00430\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}(!isFine\ \&\&\ trial<TRIALS\_BEFORE\_SPELLING)}
+\DoxyCodeLine{00431\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00432\ \ \ \ \ \ \ \ \ \ \ \ \ say(\textcolor{stringliteral}{"{}Please,\ say\ the\ word."{}});}
+\DoxyCodeLine{00433\ \ \ \ \ \ \ \ \ \ \ \ \ newWord\ =\ \textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{00434\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}(newWord==\textcolor{stringliteral}{"{}"{}})}
+\DoxyCodeLine{00435\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ newWord=getFromDictaction(m\_timeout);}
+\DoxyCodeLine{00436\ \ \ \ \ \ \ \ \ \ \ \ \ say(\textcolor{stringliteral}{"{}I\ understood\ "{}}+\ newWord\ +\ \textcolor{stringliteral}{"{}.\ Did\ you\ say\ that?"{}});}
+\DoxyCodeLine{00437\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00438\ \ \ \ \ \ \ \ \ \ \ \ \ Bottle\ cmdTmp,\ replyTmp;}
+\DoxyCodeLine{00439\ \ \ \ \ \ \ \ \ \ \ \ \ cmdTmp.addString(\textcolor{stringliteral}{"{}grammarSimple"{}});}
+\DoxyCodeLine{00440\ \ \ \ \ \ \ \ \ \ \ \ \ cmdTmp.addString(\textcolor{stringliteral}{"{}Yes\ I\ did.|No\ I\ did\ not.|Skip"{}});}
+\DoxyCodeLine{00441\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ gotAConfirmation\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00442\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}(!gotAConfirmation)}
+\DoxyCodeLine{00443\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00444\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ replyTmp.clear();}
+\DoxyCodeLine{00445\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ handleRecognitionCmd(cmdTmp,replyTmp);}
+\DoxyCodeLine{00446\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cout<<"{}DEBUG="{}<<replyTmp.toString()<<endl;}}
+\DoxyCodeLine{00447\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cout<<"{}DEBUG\ FIRST\ ELEMENT\ =|"{}<<replyTmp.get(0).asString()<<"{}|"{}<<endl;}}
+\DoxyCodeLine{00448\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (replyTmp.get(0).asString()\ ==\ \textcolor{stringliteral}{"{}Skip"{}})}
+\DoxyCodeLine{00449\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00450\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ say(\textcolor{stringliteral}{"{}Fine,\ we\ give\ up."{}});}
+\DoxyCodeLine{00451\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}ERROR"{}});}
+\DoxyCodeLine{00452\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00453\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00454\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ gotAConfirmation\ =\ }
+\DoxyCodeLine{00455\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ replyTmp.size()>0\ \&\&}
+\DoxyCodeLine{00456\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ (replyTmp.get(0).asString()\ ==\ \textcolor{stringliteral}{"{}Yes"{}}\ ||}
+\DoxyCodeLine{00457\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ replyTmp.get(0).asString()\ ==\ \textcolor{stringliteral}{"{}No"{}});}
+\DoxyCodeLine{00458\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00459\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cout<<"{}Reply\ is\ "{}<<replyTmp.toString()<<endl;}}
+\DoxyCodeLine{00460\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\ replyTmp.get(0).asString()\ ==\ \textcolor{stringliteral}{"{}Yes"{}})}
+\DoxyCodeLine{00461\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ isFine\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00462\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00463\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ trial++;}
+\DoxyCodeLine{00464\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00465\ }
+\DoxyCodeLine{00466\ \ \ \ \ \ \ \ \ \textcolor{comment}{//Try\ then\ with\ spelling}}
+\DoxyCodeLine{00467\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ TRIALS\_BEFORE\_GIVING\_UP\ =\ 2;}
+\DoxyCodeLine{00468\ \ \ \ \ \ \ \ \ trial\ =0;}
+\DoxyCodeLine{00469\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}(!isFine\ \&\&\ trial<TRIALS\_BEFORE\_GIVING\_UP)}
+\DoxyCodeLine{00470\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00471\ \ \ \ \ \ \ \ \ \ \ \ \ say(\textcolor{stringliteral}{"{}Sorry,\ I\ cannot\ get\ it.\ Please,\ spell\ this\ word\ for\ me?"{}});}
+\DoxyCodeLine{00472\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ spelledWord\ =\ \ \textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{00473\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}(spelledWord\ ==\ \textcolor{stringliteral}{"{}"{}})}
+\DoxyCodeLine{00474\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ spelledWord=getFromDictaction(m\_timeout,SPTOPIC\_SPELLING);}
+\DoxyCodeLine{00475\ \ \ \ \ \ \ \ \ \ \ \ \ newWord\ =\ spelledWord;}
+\DoxyCodeLine{00476\ }
+\DoxyCodeLine{00477\ \ \ \ \ \ \ \ \ \ \ \ \ say(\textcolor{stringliteral}{"{}I\ understood\ "{}}+\ newWord\ +\ \textcolor{stringliteral}{"{}.\ Is\ that\ right?"{}});}
+\DoxyCodeLine{00478\ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00479\ \ \ \ \ \ \ \ \ \ \ \ \ Bottle\ cmdTmp,\ replyTmp;}
+\DoxyCodeLine{00480\ \ \ \ \ \ \ \ \ \ \ \ \ cmdTmp.addString(\textcolor{stringliteral}{"{}grammarSimple"{}});}
+\DoxyCodeLine{00481\ \ \ \ \ \ \ \ \ \ \ \ \ cmdTmp.addString(\textcolor{stringliteral}{"{}Yes\ I\ did.|No\ I\ did\ not.|Skip"{}});}
+\DoxyCodeLine{00482\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ gotAConfirmation\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00483\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}(!gotAConfirmation)}
+\DoxyCodeLine{00484\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00485\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ replyTmp.clear();}
+\DoxyCodeLine{00486\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ handleRecognitionCmd(cmdTmp,replyTmp);}
+\DoxyCodeLine{00487\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cout<<"{}DEBUG="{}<<replyTmp.toString()<<endl;}}
+\DoxyCodeLine{00488\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cout<<"{}DEBUG\ FIRST\ ELEMENT\ =|"{}<<replyTmp.get(0).asString()<<"{}|"{}<<endl;}}
+\DoxyCodeLine{00489\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (replyTmp.get(0).asString()\ ==\ \textcolor{stringliteral}{"{}Skip"{}})}
+\DoxyCodeLine{00490\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00491\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ say(\textcolor{stringliteral}{"{}Fine,\ we\ give\ up."{}});}
+\DoxyCodeLine{00492\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}ERROR"{}});}
+\DoxyCodeLine{00493\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00494\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00495\ }
+\DoxyCodeLine{00496\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ gotAConfirmation\ =\ }
+\DoxyCodeLine{00497\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ replyTmp.size()>0\ \&\&}
+\DoxyCodeLine{00498\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ (replyTmp.get(0).asString()\ ==\ \textcolor{stringliteral}{"{}Yes"{}}\ ||}
+\DoxyCodeLine{00499\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ replyTmp.get(0).asString()\ ==\ \textcolor{stringliteral}{"{}No"{}});}
+\DoxyCodeLine{00500\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00501\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cout<<"{}Reply\ is\ "{}<<replyTmp.toString()<<endl;}}
+\DoxyCodeLine{00502\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\ replyTmp.get(0).asString()\ ==\ \textcolor{stringliteral}{"{}Yes"{}})}
+\DoxyCodeLine{00503\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ isFine\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00504\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00505\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ trial++;}
+\DoxyCodeLine{00506\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00507\ \ \ \ \ \ \ \ \ \textcolor{comment}{//Give\ up}}
+\DoxyCodeLine{00508\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!isFine)}
+\DoxyCodeLine{00509\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00510\ \ \ \ \ \ \ \ \ \ \ \ \ say(\textcolor{stringliteral}{"{}Sorry,\ I\ think\ we\ should\ give\ up\ with\ this\ word."{}});}
+\DoxyCodeLine{00511\ \ \ \ \ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}ERROR"{}});}
+\DoxyCodeLine{00512\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00513\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00514\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00515\ \ \ \ \ \ \ \ \ \ \ \ \ say(\textcolor{stringliteral}{"{}Perfect!\ I\ know\ the\ word\ "{}}\ +\ newWord);}
+\DoxyCodeLine{00516\ \ \ \ \ \ \ \ \ \ \ \ \ m\_vocabulories[vocabuloryType].push\_back(newWord);}
+\DoxyCodeLine{00517\ \ \ \ \ \ \ \ \ \ \ \ \ refreshFromVocabulories(m\_cpGrammarFromFile);}
+\DoxyCodeLine{00518\ \ \ \ \ \ \ \ \ \ \ \ \ reply.addString(newWord);}
+\DoxyCodeLine{00519\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00520\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00521\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00522\ \ \ \ \ \}}
+\DoxyCodeLine{00523\ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}UNKNOWN"{}});}
+\DoxyCodeLine{00524\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00525\ \}}
+\DoxyCodeLine{00526\ }
+\DoxyCodeLine{00527\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00528\ \textcolor{keywordtype}{bool}\ SpeechRecognizerModule::handleAsyncRecognitionCmd(\textcolor{keyword}{const}\ Bottle\&\ cmd,\ Bottle\&\ reply)}
+\DoxyCodeLine{00529\ \{}
+\DoxyCodeLine{00530\ \ \ \ \ HRESULT\ hr;}
+\DoxyCodeLine{00531\ \ \ \ \ \textcolor{keywordtype}{string}\ firstVocab\ =\ cmd.get(0).asString();}
+\DoxyCodeLine{00532\ \ \ \ \ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}getGrammar"{}})}
+\DoxyCodeLine{00533\ \ \ \ \ \{}
+\DoxyCodeLine{00534\ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}NOT\_IMPLEMENTED"{}});}
+\DoxyCodeLine{00535\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00536\ \ \ \ \ \}}
+\DoxyCodeLine{00537\ }
+\DoxyCodeLine{00538\ \ \ \ \ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}clear"{}})}
+\DoxyCodeLine{00539\ \ \ \ \ \{}
+\DoxyCodeLine{00540\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ everythingIsFine=\textcolor{keyword}{true};}
+\DoxyCodeLine{00541\ \ \ \ \ \ \ \ \ SPSTATEHANDLE\ rootRule;}
+\DoxyCodeLine{00542\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarFromFile-\/>SetGrammarState(SPGS\_DISABLED));}
+\DoxyCodeLine{00543\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarFromFile-\/>GetRule(L\textcolor{stringliteral}{"{}rootRule"{}},\ NULL,\ SPRAF\_TopLevel\ |\ SPRAF\_Active,\ TRUE,\ \&rootRule));}
+\DoxyCodeLine{00544\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarFromFile-\/>ClearRule(rootRule));}
+\DoxyCodeLine{00545\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(hr\ =\ m\_cpGrammarFromFile-\/>Commit(NULL));}
+\DoxyCodeLine{00546\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarFromFile-\/>SetGrammarState(SPGS\_ENABLED));\ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00547\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarFromFile-\/>SetRuleState(NULL,\ NULL,\ SPRS\_ACTIVE));}
+\DoxyCodeLine{00548\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpRecoCtxt-\/>Resume(0));}
+\DoxyCodeLine{00549\ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}Cleared"{}});}
+\DoxyCodeLine{00550\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00551\ \ \ \ \ \}}
+\DoxyCodeLine{00552\ }
+\DoxyCodeLine{00553\ \ \ \ \ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}addGrammar"{}})}
+\DoxyCodeLine{00554\ \ \ \ \ \{\ \ \ \ }
+\DoxyCodeLine{00555\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ grammar\ =\ cmd.get(1).asString();}
+\DoxyCodeLine{00556\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ everythingIsFine\ =\ setGrammarCustom(m\_cpGrammarFromFile,grammar,\textcolor{keyword}{true});}
+\DoxyCodeLine{00557\ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}Added"{}});}
+\DoxyCodeLine{00558\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00559\ \ \ \ \ \}}
+\DoxyCodeLine{00560\ }
+\DoxyCodeLine{00561\ \ \ \ \ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}loadXML"{}})}
+\DoxyCodeLine{00562\ \ \ \ \ \{\ }
+\DoxyCodeLine{00563\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ xml\ =\ cmd.get(1).asString();}
+\DoxyCodeLine{00564\ \ \ \ \ \ \ \ \ ofstream\ fileTmp(\textcolor{stringliteral}{"{}grammarTmp.grxml"{}});}
+\DoxyCodeLine{00565\ \ \ \ \ \ \ \ \ fileTmp<<xml;}
+\DoxyCodeLine{00566\ \ \ \ \ \ \ \ \ fileTmp.close();}
+\DoxyCodeLine{00567\ }
+\DoxyCodeLine{00568\ \ \ \ \ \ \ \ \ std::wstring\ tmp\ =\ s2ws(\textcolor{stringliteral}{"{}grammarTmp.grxml"{}});}
+\DoxyCodeLine{00569\ \ \ \ \ \ \ \ \ LPCWSTR\ cwgrammarfile\ =\ tmp.c\_str();}
+\DoxyCodeLine{00570\ }
+\DoxyCodeLine{00571\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ everythingIsFine\ =\textcolor{keyword}{true};}
+\DoxyCodeLine{00572\ \ \ \ \ \ \ \ \ \textcolor{comment}{//everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpRecoCtxt-\/>CreateGrammar(\ 1,\ \&m\_cpGrammarFromFile\ ));}}
+\DoxyCodeLine{00573\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpGrammarFromFile-\/>SetGrammarState(SPGS\_DISABLED));}
+\DoxyCodeLine{00574\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpGrammarFromFile-\/>LoadCmdFromFile(cwgrammarfile,\ SPLO\_DYNAMIC));}
+\DoxyCodeLine{00575\ }
+\DoxyCodeLine{00576\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpGrammarFromFile-\/>SetGrammarState(SPGS\_ENABLED));}
+\DoxyCodeLine{00577\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarFromFile-\/>SetRuleState(NULL,\ NULL,\ SPRS\_ACTIVE));}
+\DoxyCodeLine{00578\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpRecoCtxt-\/>Resume(0));}
+\DoxyCodeLine{00579\ }
+\DoxyCodeLine{00580\ \ \ \ \ \ \ \ \ refreshFromVocabulories(m\_cpGrammarFromFile);}
+\DoxyCodeLine{00581\ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}Loaded"{}});}
+\DoxyCodeLine{00582\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00583\ \ \ \ \ \}}
+\DoxyCodeLine{00584\ }
+\DoxyCodeLine{00585\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00586\ \}}
+\DoxyCodeLine{00587\ }
+\DoxyCodeLine{00588\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00589\ \textcolor{keywordtype}{bool}\ SpeechRecognizerModule::refreshFromVocabulories(CComPtr<ISpRecoGrammar>\ grammarToModify)}
+\DoxyCodeLine{00590\ \{}
+\DoxyCodeLine{00591\ \ \ \ \ \textcolor{comment}{//return\ true;}}
+\DoxyCodeLine{00592\ \ \ \ \ \textcolor{keywordtype}{bool}\ everythingIsFine\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00593\ }
+\DoxyCodeLine{00594\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>SetGrammarState(SPGS\_DISABLED));\ }
+\DoxyCodeLine{00595\ }
+\DoxyCodeLine{00596\ \ \ \ \ \textcolor{comment}{//Build\ a\ rule\ for\ each\ vocabulory}}
+\DoxyCodeLine{00597\ \ \ \ \ \textcolor{keywordflow}{for}(map<\textcolor{keywordtype}{string},\ list<string>\ >::iterator\ vIt\ =\ m\_vocabulories.begin();\ vIt\ !=\ m\_vocabulories.end();\ vIt++)}
+\DoxyCodeLine{00598\ \ \ \ \ \{}
+\DoxyCodeLine{00599\ \ \ \ \ \ \ \ \ \textcolor{comment}{//Get\ the\ rule\ name\ from\ the\ key\ in\ the\ dictionary\ (i.e\ Agent,\ Action,\ etc...)}}
+\DoxyCodeLine{00600\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ removedSharp\ =vIt-\/>first;}
+\DoxyCodeLine{00601\ \ \ \ \ \ \ \ \ removedSharp.erase(0,1);}
+\DoxyCodeLine{00602\ \ \ \ \ \ \ \ \ std::wstring\ tmp\ =\ s2ws(removedSharp);}
+\DoxyCodeLine{00603\ \ \ \ \ \ \ \ \ LPCWSTR\ cwRuleName\ =\ tmp.c\_str();}
+\DoxyCodeLine{00604\ }
+\DoxyCodeLine{00605\ \ \ \ \ \ \ \ \ SPSTATEHANDLE\ hinit,hstate;}
+\DoxyCodeLine{00606\ \ \ \ \ \ \ \ \ HRESULT\ hr;}
+\DoxyCodeLine{00607\ \ \ \ \ \ \ \ \ \textcolor{comment}{//Get\ the\ rule\ or\ create\ it}}
+\DoxyCodeLine{00608\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(hr\ =\ grammarToModify-\/>GetRule(cwRuleName,\ NULL,\ SPRAF\_Dynamic,\ \textcolor{keyword}{false},\ \&hinit));}
+\DoxyCodeLine{00609\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(hr\ =\ grammarToModify-\/>ClearRule(hinit));}
+\DoxyCodeLine{00610\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(list<string>::iterator\ wordIt\ =\ vIt-\/>second.begin()\ ;\ wordIt\ !=\ vIt-\/>second.end();\ wordIt++)}
+\DoxyCodeLine{00611\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00612\ \ \ \ \ \ \ \ \ \ \ \ \ std::wstring\ wordTmp\ =\ s2ws(*wordIt);}
+\DoxyCodeLine{00613\ \ \ \ \ \ \ \ \ \ \ \ \ LPCWSTR\ cwWord\ =\ wordTmp.c\_str();}
+\DoxyCodeLine{00614\ \ \ \ \ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ grammarToModify-\/>AddWordTransition(hinit,\ NULL,\ cwWord,\ NULL,\ SPWT\_LEXICAL,\ 1,\ NULL)\ );}
+\DoxyCodeLine{00615\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00616\ \ \ \ \ \}}
+\DoxyCodeLine{00617\ }
+\DoxyCodeLine{00618\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>Commit(NULL));}
+\DoxyCodeLine{00619\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>SetGrammarState(SPGS\_ENABLED));\ }
+\DoxyCodeLine{00620\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>SetRuleState(NULL,\ NULL,\ SPRS\_ACTIVE));}
+\DoxyCodeLine{00621\ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Grammar\ is\ paused,\ DO\ NOT\ SPEAK!\ (if\ next\ message\ is\ coming\ after\ too\ long,\ check\ your\ microphone\ level\ and\ lower\ it!"{}}\ ;}
+\DoxyCodeLine{00622\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpRecoCtxt-\/>Resume(NULL));}
+\DoxyCodeLine{00623\ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Grammar\ is\ resumed\ :\ everything\ is\ fine\ =\ "{}}\ <<\ everythingIsFine;\ }
+\DoxyCodeLine{00624\ }
+\DoxyCodeLine{00625\ \ \ \ \ \textcolor{keywordflow}{return}\ everythingIsFine;}
+\DoxyCodeLine{00626\ \}}
+\DoxyCodeLine{00627\ \ \ \ \ }
+\DoxyCodeLine{00628\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00629\ \textcolor{keywordtype}{string}\ SpeechRecognizerModule::getFromDictaction(\textcolor{keywordtype}{int}\ timeout,\ LPCWSTR\ options\ )}
+\DoxyCodeLine{00630\ \{}
+\DoxyCodeLine{00631\ \ \ \ \ \textcolor{keywordtype}{bool}\ everythingIsFine\ =\ TRUE;}
+\DoxyCodeLine{00632\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarDictation-\/>UnloadDictation());}
+\DoxyCodeLine{00633\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarDictation-\/>LoadDictation(options,\ SPLO\_STATIC));}
+\DoxyCodeLine{00634\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarDictation-\/>SetDictationState(\ SPRS\_ACTIVE\ ));}
+\DoxyCodeLine{00635\ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Dictation\ is\ on..."{}}\ ;}
+\DoxyCodeLine{00636\ \ \ \ \ Bottle\ botTmp;}
+\DoxyCodeLine{00637\ \ \ \ \ \textcolor{keywordflow}{if}\ (!USE\_LEGACY)}
+\DoxyCodeLine{00638\ \ \ \ \ \{}
+\DoxyCodeLine{00639\ \ \ \ \ \ \ \ \ botTmp\ =\ waitNextRecognition(m\_timeout);}
+\DoxyCodeLine{00640\ \ \ \ \ \}}
+\DoxyCodeLine{00641\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00642\ \ \ \ \ \{\ \ \ }
+\DoxyCodeLine{00643\ \ \ \ \ \ \ \ \ list<\ pair<string,\ double>\ >\ results\ =\ waitNextRecognitionLEGACY(m\_timeout);}
+\DoxyCodeLine{00644\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(list<\ pair<string,\ double>\ >::iterator\ it\ =\ results.begin();\ it\ !=\ results.end();\ it++)}
+\DoxyCodeLine{00645\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00646\ \ \ \ \ \ \ \ \ \ \ \ \ botTmp.addString(it-\/>first);}
+\DoxyCodeLine{00647\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//botTmp.addFloat64(it-\/>second);}}
+\DoxyCodeLine{00648\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00649\ \ \ \ \ \}}
+\DoxyCodeLine{00650\ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Dictation\ is\ off..."{}};}
+\DoxyCodeLine{00651\ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Got\ :\ "{}}<<botTmp.toString();}
+\DoxyCodeLine{00652\ \ \ \ \ \textcolor{comment}{//Turn\ off\ dictation\ and\ go\ back\ to\ the\ file\ grammar}}
+\DoxyCodeLine{00653\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarDictation-\/>SetDictationState(\ SPRS\_INACTIVE\ ));}
+\DoxyCodeLine{00654\ \ \ \ \ everythingIsFine\ \&=SUCCEEDED(m\_cpGrammarFromFile-\/>SetGrammarState(SPGS\_ENABLED));}
+\DoxyCodeLine{00655\ \ \ \ \ \textcolor{keywordflow}{return}\ botTmp.toString();}
+\DoxyCodeLine{00656\ \}}
+\DoxyCodeLine{00657\ }
+\DoxyCodeLine{00658\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00659\ \textcolor{keywordtype}{bool}\ SpeechRecognizerModule::handleRecognitionCmd(\textcolor{keyword}{const}\ Bottle\&\ cmd,\ Bottle\&\ reply)}
+\DoxyCodeLine{00660\ \{}
+\DoxyCodeLine{00661\ \ \ \ \ \textcolor{keywordtype}{string}\ firstVocab\ =\ cmd.get(0).asString();}
+\DoxyCodeLine{00662\ }
+\DoxyCodeLine{00663\ \ \ \ \ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}timeout"{}})}
+\DoxyCodeLine{00664\ \ \ \ \ \{}
+\DoxyCodeLine{00665\ \ \ \ \ \ \ \ \ m\_timeout\ =\ cmd.get(1).asInt32();}
+\DoxyCodeLine{00666\ \ \ \ \ \ \ \ \ \textcolor{comment}{//reply.addInt32(true);}}
+\DoxyCodeLine{00667\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00668\ \ \ \ \ \}}
+\DoxyCodeLine{00669\ }
+\DoxyCodeLine{00670\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}dictation"{}})}
+\DoxyCodeLine{00671\ \ \ \ \ \{}
+\DoxyCodeLine{00672\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ everythingIsFine\ =\ TRUE;}
+\DoxyCodeLine{00673\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarDictation-\/>SetDictationState(\ SPRS\_ACTIVE\ ));}
+\DoxyCodeLine{00674\ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Dictation\ is\ on..."{}}\ ;}
+\DoxyCodeLine{00675\ }
+\DoxyCodeLine{00676\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!USE\_LEGACY)}
+\DoxyCodeLine{00677\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00678\ \ \ \ \ \ \ \ \ \ \ \ \ reply.addList()\ =\ waitNextRecognition(m\_timeout);}
+\DoxyCodeLine{00679\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00680\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00681\ \ \ \ \ \ \ \ \ \{\ \ \ }
+\DoxyCodeLine{00682\ \ \ \ \ \ \ \ \ \ \ \ \ list<\ pair<string,\ double>\ >\ results\ =\ waitNextRecognitionLEGACY(m\_timeout);}
+\DoxyCodeLine{00683\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (results.size()>0)}
+\DoxyCodeLine{00684\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(list<\ pair<string,\ double>\ >::iterator\ it\ =\ results.begin();\ it\ !=\ results.end();\ it++)}
+\DoxyCodeLine{00685\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00686\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ reply.addString(it-\/>first);}
+\DoxyCodeLine{00687\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ reply.addFloat64(it-\/>second);}
+\DoxyCodeLine{00688\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00689\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00690\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}-\/1"{}});}
+\DoxyCodeLine{00691\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00692\ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Dictation\ is\ off..."{}};}
+\DoxyCodeLine{00693\ }
+\DoxyCodeLine{00694\ \ \ \ \ \ \ \ \ \textcolor{comment}{//Turn\ off\ dictation\ and\ go\ back\ to\ the\ file\ grammar}}
+\DoxyCodeLine{00695\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarDictation-\/>SetDictationState(\ SPRS\_INACTIVE\ ));}
+\DoxyCodeLine{00696\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=SUCCEEDED(m\_cpGrammarFromFile-\/>SetGrammarState(SPGS\_ENABLED));\ \ }
+\DoxyCodeLine{00697\ \ \ \ \ \ \ \ \ \textcolor{comment}{//reply.addInt32(true);}}
+\DoxyCodeLine{00698\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00699\ \ \ \ \ \}\ \ \ \ }
+\DoxyCodeLine{00700\ \ \ \ \ \textcolor{comment}{//\ If\ we\ are\ not\ in\ dictation\ then\ we\ set\ and\ switch\ to\ the\ runtimeGrammar}}
+\DoxyCodeLine{00701\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}grammarXML"{}})}
+\DoxyCodeLine{00702\ \ \ \ \ \{}
+\DoxyCodeLine{00703\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ xml\ =\ cmd.get(1).asString();}
+\DoxyCodeLine{00704\ \ \ \ \ \ \ \ \ ofstream\ fileTmp(\textcolor{stringliteral}{"{}grammarTmp.grxml"{}});}
+\DoxyCodeLine{00705\ \ \ \ \ \ \ \ \ fileTmp<<xml;}
+\DoxyCodeLine{00706\ \ \ \ \ \ \ \ \ fileTmp.close();}
+\DoxyCodeLine{00707\ }
+\DoxyCodeLine{00708\ \ \ \ \ \ \ \ \ std::wstring\ tmp\ =\ s2ws(\textcolor{stringliteral}{"{}grammarTmp.grxml"{}});}
+\DoxyCodeLine{00709\ \ \ \ \ \ \ \ \ LPCWSTR\ cwgrammarfile\ =\ tmp.c\_str();}
+\DoxyCodeLine{00710\ }
+\DoxyCodeLine{00711\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ everythingIsFine\ =\textcolor{keyword}{true};}
+\DoxyCodeLine{00712\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpGrammarRuntime-\/>SetGrammarState(SPGS\_DISABLED));}
+\DoxyCodeLine{00713\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ m\_cpGrammarRuntime-\/>LoadCmdFromFile(cwgrammarfile,\ SPLO\_DYNAMIC));}
+\DoxyCodeLine{00714\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpGrammarRuntime-\/>SetRuleState(NULL,\ NULL,\ SPRS\_ACTIVE));}
+\DoxyCodeLine{00715\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpRecoCtxt-\/>Resume(0));}
+\DoxyCodeLine{00716\ }
+\DoxyCodeLine{00717\ \ \ \ \ \ \ \ \ refreshFromVocabulories(m\_cpGrammarRuntime);}
+\DoxyCodeLine{00718\ }
+\DoxyCodeLine{00719\ \ \ \ \ \ \ \ \ \textcolor{comment}{//reply.addInt32(everythingIsFine);}}
+\DoxyCodeLine{00720\ \ \ \ \ \}}
+\DoxyCodeLine{00721\ }
+\DoxyCodeLine{00722\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}choices"{}})}
+\DoxyCodeLine{00723\ \ \ \ \ \{}
+\DoxyCodeLine{00724\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ choices\ =\textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{00725\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ wI\ =\ 1;\ wI\ <\ cmd.size();\ wI++)}
+\DoxyCodeLine{00726\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00727\ \ \ \ \ \ \ \ \ \ \ \ \ choices+=cmd.get(wI).asString();}
+\DoxyCodeLine{00728\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (wI<cmd.size()-\/1)}
+\DoxyCodeLine{00729\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ choices+=\textcolor{stringliteral}{"{}|"{}};}
+\DoxyCodeLine{00730\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00731\ \ \ \ \ \ \ \ \ setGrammarCustom(m\_cpGrammarRuntime,choices,\textcolor{keyword}{false});}
+\DoxyCodeLine{00732\ \ \ \ \ \}}
+\DoxyCodeLine{00733\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (firstVocab\ ==\ \textcolor{stringliteral}{"{}grammarSimple"{}})}
+\DoxyCodeLine{00734\ \ \ \ \ \{}
+\DoxyCodeLine{00735\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ RADStyle\ =\ cmd.get(1).asString();}
+\DoxyCodeLine{00736\ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Setting\ runtime\ grammar\ to\ :\ "{}}<<RADStyle\ ;}
+\DoxyCodeLine{00737\ \ \ \ \ \ \ \ \ setGrammarCustom(m\_cpGrammarRuntime,RADStyle,\textcolor{keyword}{false});}
+\DoxyCodeLine{00738\ \ \ \ \ \}}
+\DoxyCodeLine{00739\ \ \ \ \ \textcolor{keywordflow}{else}\ }
+\DoxyCodeLine{00740\ \ \ \ \ \{}
+\DoxyCodeLine{00741\ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}UNKNOWN"{}});}
+\DoxyCodeLine{00742\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00743\ \ \ \ \ \}}
+\DoxyCodeLine{00744\ }
+\DoxyCodeLine{00745\ \ \ \ \ \textcolor{comment}{//Disable\ the\ from\ file\ grammar}}
+\DoxyCodeLine{00746\ \ \ \ \ SUCCEEDED(m\_cpGrammarFromFile-\/>SetGrammarState(SPGS\_DISABLED));\ }
+\DoxyCodeLine{00747\ \ \ \ \ SUCCEEDED(m\_cpGrammarRuntime-\/>SetGrammarState(SPGS\_ENABLED));\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00748\ }
+\DoxyCodeLine{00749\ \ \ \ \ \textcolor{comment}{//Force\ blocking\ recognition}}
+\DoxyCodeLine{00750\ \ \ \ \ \textcolor{keywordflow}{if}\ (!USE\_LEGACY)}
+\DoxyCodeLine{00751\ \ \ \ \ \{}
+\DoxyCodeLine{00752\ \ \ \ \ \ \ \ \ reply.addList()\ =\ waitNextRecognition(m\_timeout);}
+\DoxyCodeLine{00753\ \ \ \ \ \}}
+\DoxyCodeLine{00754\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00755\ \ \ \ \ \{\ \ \ }
+\DoxyCodeLine{00756\ \ \ \ \ \ \ \ \ list<\ pair<string,\ double>\ >\ results\ =\ waitNextRecognitionLEGACY(m\_timeout);}
+\DoxyCodeLine{00757\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (results.size()>0)}
+\DoxyCodeLine{00758\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(list<\ pair<string,\ double>\ >::iterator\ it\ =\ results.begin();\ it\ !=\ results.end();\ it++)}
+\DoxyCodeLine{00759\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00760\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ reply.addString(it-\/>first);}
+\DoxyCodeLine{00761\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ reply.addFloat64(it-\/>second);}
+\DoxyCodeLine{00762\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00763\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00764\ \ \ \ \ \ \ \ \ \ \ \ \ reply.addString(\textcolor{stringliteral}{"{}-\/1"{}});}
+\DoxyCodeLine{00765\ \ \ \ \ \}}
+\DoxyCodeLine{00766\ \ \ \ \ \textcolor{comment}{//Disable\ the\ runtime\ grammar}}
+\DoxyCodeLine{00767\ \ \ \ \ SUCCEEDED(m\_cpGrammarRuntime-\/>SetGrammarState(SPGS\_DISABLED));\ \ \ }
+\DoxyCodeLine{00768\ \ \ \ \ SUCCEEDED(m\_cpGrammarFromFile-\/>SetGrammarState(SPGS\_ENABLED));\ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00769\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00770\ \}}
+\DoxyCodeLine{00771\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00772\ Bottle\ SpeechRecognizerModule::waitNextRecognition(\textcolor{keywordtype}{int}\ timeout)}
+\DoxyCodeLine{00773\ \{}
+\DoxyCodeLine{00774\ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Recognition:\ blocking\ mode\ on"{}}\ ;}
+\DoxyCodeLine{00775\ \ \ \ \ Bottle\ bOutGrammar;}
+\DoxyCodeLine{00776\ }
+\DoxyCodeLine{00777\ \ \ \ \ \textcolor{keywordtype}{bool}\ gotSomething\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00778\ \ \ \ \ \textcolor{keywordtype}{double}\ endTime\ =\ Time::now()\ +\ timeout/1000.0;}
+\DoxyCodeLine{00779\ \ \ \ \ interruptRecognition\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00780\ }
+\DoxyCodeLine{00781\ \ \ \ \ cout\ <<\ endl\ ;}
+\DoxyCodeLine{00782\ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}===========\ GO\ Waiting\ for\ recog!\ ==========="{}}\ ;}
+\DoxyCodeLine{00783\ }
+\DoxyCodeLine{00784\ \ \ \ \ \textcolor{keywordflow}{while}(Time::now()<endTime\ \&\&\ !gotSomething\ \&\&\ !interruptRecognition)}
+\DoxyCodeLine{00785\ \ \ \ \ \{}
+\DoxyCodeLine{00786\ \ \ \ \ \ \ \ \ \textcolor{comment}{//std::cout<<"{}."{};}}
+\DoxyCodeLine{00787\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{float}\ ConfidenceThreshold\ =\ 0.3f;}
+\DoxyCodeLine{00788\ \ \ \ \ \ \ \ \ SPEVENT\ curEvent;}
+\DoxyCodeLine{00789\ \ \ \ \ \ \ \ \ ULONG\ fetched\ =\ 0;}
+\DoxyCodeLine{00790\ \ \ \ \ \ \ \ \ HRESULT\ hr\ =\ S\_OK;}
+\DoxyCodeLine{00791\ }
+\DoxyCodeLine{00792\ \ \ \ \ \ \ \ \ m\_cpRecoCtxt-\/>GetEvents(1,\ \&curEvent,\ \&fetched);}
+\DoxyCodeLine{00793\ }
+\DoxyCodeLine{00794\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (fetched\ >\ 0)}
+\DoxyCodeLine{00795\ \ \ \ \ \ \ \ \ \{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00796\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\ received\ something\ in\ waitNextRecognition"{}}\ ;}
+\DoxyCodeLine{00797\ \ \ \ \ \ \ \ \ \ \ \ \ gotSomething\ =\ \textcolor{keyword}{true};\ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00798\ \ \ \ \ \ \ \ \ \ \ \ \ ISpRecoResult*\ result\ =\ \textcolor{keyword}{reinterpret\_cast<}ISpRecoResult*\textcolor{keyword}{>}(curEvent.lParam);}
+\DoxyCodeLine{00799\ \ \ \ \ \ \ \ \ \ \ \ \ CSpDynamicString\ dstrText;}
+\DoxyCodeLine{00800\ \ \ \ \ \ \ \ \ \ \ \ \ result-\/>GetText(SP\_GETWHOLEPHRASE,\ SP\_GETWHOLEPHRASE,\ TRUE,\ \&dstrText,\ NULL);}
+\DoxyCodeLine{00801\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ fullSentence\ =\ ws2s(dstrText);}
+\DoxyCodeLine{00802\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<fullSentence\ ;}
+\DoxyCodeLine{00803\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_useTalkBack)}
+\DoxyCodeLine{00804\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ say(fullSentence);}
+\DoxyCodeLine{00805\ \ \ \ \ \ \ \ \ \ \ \ \ bOutGrammar.addString(fullSentence);}
+\DoxyCodeLine{00806\ }
+\DoxyCodeLine{00807\ \ \ \ \ \ \ \ \ \ \ \ \ SPPHRASE*\ pPhrase\ =\ NULL;}
+\DoxyCodeLine{00808\ \ \ \ \ \ \ \ \ \ \ \ \ result-\/>GetPhrase(\&pPhrase);\ \ \ \ }
+\DoxyCodeLine{00809\ \ \ \ \ \ \ \ \ \ \ \ \ bOutGrammar.addList()\ =\ toBottle(pPhrase,\&pPhrase-\/>Rule);}
+\DoxyCodeLine{00810\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Sending\ semantic\ bottle\ :\ "{}}<<bOutGrammar.toString()\ ;}
+\DoxyCodeLine{00811\ \ \ \ \ \ \ \ \ \ \ \ \ m\_cpRecoCtxt-\/>GetEvents(1,\ \&curEvent,\ \&fetched);}
+\DoxyCodeLine{00812\ }
+\DoxyCodeLine{00813\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_forwardSound)}
+\DoxyCodeLine{00814\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00815\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yarp::sig::Sound\&\ rawSnd\ =\ m\_portSound.prepare();}
+\DoxyCodeLine{00816\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ rawSnd\ =\ toSound(result);}
+\DoxyCodeLine{00817\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ m\_portSound.write();}
+\DoxyCodeLine{00818\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00819\ }
+\DoxyCodeLine{00820\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00821\ \ \ \ \ \}}
+\DoxyCodeLine{00822\ }
+\DoxyCodeLine{00823\ \ \ \ \ \textcolor{keywordflow}{if}(interruptRecognition)\ \{}
+\DoxyCodeLine{00824\ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}interrupted\ speech\ recognizer!"{}};}
+\DoxyCodeLine{00825\ \ \ \ \ \}}
+\DoxyCodeLine{00826\ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Recognition:\ blocking\ mode\ off"{}};}
+\DoxyCodeLine{00827\ \ \ \ \ \textcolor{keywordflow}{return}\ bOutGrammar;}
+\DoxyCodeLine{00828\ \}}
+\DoxyCodeLine{00829\ }
+\DoxyCodeLine{00830\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00831\ list<\ pair<string,\ double>\ >\ SpeechRecognizerModule::waitNextRecognitionLEGACY(\textcolor{keywordtype}{int}\ timeout)}
+\DoxyCodeLine{00832\ \{}
+\DoxyCodeLine{00833\ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Recognition\ LEGACY:\ blocking\ mode\ on"{}}\ ;}
+\DoxyCodeLine{00834\ \ \ \ \ list<\ pair<string,\ double>\ >\ recognitionResults;}
+\DoxyCodeLine{00835\ }
+\DoxyCodeLine{00836\ \ \ \ \ \textcolor{keywordtype}{bool}\ gotSomething\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00837\ \ \ \ \ \textcolor{keywordtype}{double}\ endTime\ =\ Time::now()\ +\ timeout/1000.0;}
+\DoxyCodeLine{00838\ \ \ \ \ \textcolor{keywordflow}{while}(Time::now()<endTime\ \&\&\ !gotSomething\ \&\&\ !interruptRecognition)}
+\DoxyCodeLine{00839\ \ \ \ \ \{}
+\DoxyCodeLine{00840\ \ \ \ \ \ \ \ \ \textcolor{comment}{//std::cout<<"{}."{};}}
+\DoxyCodeLine{00841\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{float}\ ConfidenceThreshold\ =\ 0.3f;}
+\DoxyCodeLine{00842\ \ \ \ \ \ \ \ \ SPEVENT\ curEvent;}
+\DoxyCodeLine{00843\ \ \ \ \ \ \ \ \ ULONG\ fetched\ =\ 0;}
+\DoxyCodeLine{00844\ \ \ \ \ \ \ \ \ HRESULT\ hr\ =\ S\_OK;}
+\DoxyCodeLine{00845\ }
+\DoxyCodeLine{00846\ \ \ \ \ \ \ \ \ m\_cpRecoCtxt-\/>GetEvents(1,\ \&curEvent,\ \&fetched);}
+\DoxyCodeLine{00847\ }
+\DoxyCodeLine{00848\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (fetched\ >\ 0)}
+\DoxyCodeLine{00849\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00850\ \ \ \ \ \ \ \ \ \ \ \ \ gotSomething\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00851\ \ \ \ \ \ \ \ \ \ \ \ \ ISpRecoResult*\ result\ =\ \textcolor{keyword}{reinterpret\_cast<}ISpRecoResult*\textcolor{keyword}{>}(curEvent.lParam);}
+\DoxyCodeLine{00852\ }
+\DoxyCodeLine{00853\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//Convert\ the\ catched\ sentence\ to\ strings.\ }}
+\DoxyCodeLine{00854\ \ \ \ \ \ \ \ \ \ \ \ \ CSpDynamicString\ dstrText;}
+\DoxyCodeLine{00855\ \ \ \ \ \ \ \ \ \ \ \ \ result-\/>GetText(SP\_GETWHOLEPHRASE,\ SP\_GETWHOLEPHRASE,\ TRUE,\ \&dstrText,\ NULL);}
+\DoxyCodeLine{00856\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{string}\ fullSentence\ =\ ws2s(dstrText);}
+\DoxyCodeLine{00857\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<fullSentence\ ;}
+\DoxyCodeLine{00858\ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00859\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_useTalkBack)}
+\DoxyCodeLine{00860\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ say(fullSentence);}
+\DoxyCodeLine{00861\ \ \ \ \ \ \ \ \ \ \ \ \ vector<string>\ words\ =\ split(fullSentence,\textcolor{charliteral}{'\ '});}
+\DoxyCodeLine{00862\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(\textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ w=0;w<words.size();w++)}
+\DoxyCodeLine{00863\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00864\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//Todo\ extract\ the\ confidence\ value\ somehow...}}
+\DoxyCodeLine{00865\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ recognitionResults.push\_back(make\_pair(words[w],\ -\/1.0));}
+\DoxyCodeLine{00866\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00867\ \ \ \ \ \ \ \ \ \ \ \ \ m\_cpRecoCtxt-\/>GetEvents(1,\ \&curEvent,\ \&fetched);}
+\DoxyCodeLine{00868\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00869\ \ \ \ \ \}}
+\DoxyCodeLine{00870\ \ \ \ \ interruptRecognition\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00871\ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Recognition:\ blocking\ mode\ off"{}}\ ;}
+\DoxyCodeLine{00872\ \ \ \ \ \textcolor{keywordflow}{return}\ recognitionResults;}
+\DoxyCodeLine{00873\ \}}
+\DoxyCodeLine{00874\ }
+\DoxyCodeLine{00875\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00876\ \textcolor{keywordtype}{void}\ SpeechRecognizerModule::say(\textcolor{keywordtype}{string}\ s,\ \textcolor{keywordtype}{bool}\ wait)}
+\DoxyCodeLine{00877\ \{}
+\DoxyCodeLine{00878\ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}TTS:\ "{}}<<s\ ;}
+\DoxyCodeLine{00879\ \ \ \ \ Bottle\ b;}
+\DoxyCodeLine{00880\ \ \ \ \ b.addString(s);}
+\DoxyCodeLine{00881\ \ \ \ \ m\_port2iSpeak.write(b);}
+\DoxyCodeLine{00882\ \ \ \ \ \textcolor{keywordflow}{if}(wait)}
+\DoxyCodeLine{00883\ \ \ \ \ \{}
+\DoxyCodeLine{00884\ \ \ \ \ \ \ \ \ yarp::os::Bottle\ cmd,reply;}
+\DoxyCodeLine{00885\ \ \ \ \ \ \ \ \ cmd.addVocab32(VOCAB(\textcolor{charliteral}{'s'},\textcolor{charliteral}{'t'},\textcolor{charliteral}{'a'},\textcolor{charliteral}{'t'}));}
+\DoxyCodeLine{00886\ \ \ \ \ \ \ \ \ std::string\ status\ =\ \textcolor{stringliteral}{"{}speaking"{}};}
+\DoxyCodeLine{00887\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ speechStarted\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00888\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}(wait\&\&(!speechStarted\ ||status==\textcolor{stringliteral}{"{}speaking"{}}))}
+\DoxyCodeLine{00889\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00890\ \ \ \ \ \ \ \ \ \ \ \ \ m\_port2iSpeakRpc.write(cmd,reply);}
+\DoxyCodeLine{00891\ \ \ \ \ \ \ \ \ \ \ \ \ status\ =\ reply.get(0).asString();}
+\DoxyCodeLine{00892\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!speechStarted\ \&\&\ status\ !=\ \textcolor{stringliteral}{"{}quiet"{}})}
+\DoxyCodeLine{00893\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00894\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ speechStarted\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00895\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00896\ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Time::delay(0.2);}
+\DoxyCodeLine{00897\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00898\ \ \ \ \ \}}
+\DoxyCodeLine{00899\ \}}
+\DoxyCodeLine{00900\ }
+\DoxyCodeLine{00901\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00902\ \textcolor{keywordtype}{bool}\ \ SpeechRecognizerModule::setGrammarCustom(CComPtr<ISpRecoGrammar>\ grammarToModify,\ \textcolor{keywordtype}{string}\ grammar,\ \textcolor{keywordtype}{bool}\ append)}
+\DoxyCodeLine{00903\ \{}
+\DoxyCodeLine{00904\ \ \ \ \ \textcolor{comment}{//Clear\ the\ existing\ runtime\ grammar}}
+\DoxyCodeLine{00905\ \ \ \ \ SPSTATEHANDLE\ runtimeRootRule;}
+\DoxyCodeLine{00906\ \ \ \ \ \textcolor{keywordtype}{bool}\ everythingIsFine\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00907\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>SetGrammarState(SPGS\_DISABLED));}
+\DoxyCodeLine{00908\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>GetRule(L\textcolor{stringliteral}{"{}rootRule"{}},\ NULL,\ SPRAF\_TopLevel\ |\ SPRAF\_Active,\ TRUE,\ \&runtimeRootRule));}
+\DoxyCodeLine{00909\ \ \ \ \ \textcolor{keywordflow}{if}(!append)}
+\DoxyCodeLine{00910\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>ClearRule(runtimeRootRule));\ \ \ }
+\DoxyCodeLine{00911\ }
+\DoxyCodeLine{00912\ \ \ \ \ \textcolor{comment}{//Build\ a\ rule\ for\ each\ vocabulory}}
+\DoxyCodeLine{00913\ \ \ \ \ map<string,\ SPSTATEHANDLE>\ vocabRules;}
+\DoxyCodeLine{00914\ \ \ \ \ \textcolor{keywordflow}{for}(map<\textcolor{keywordtype}{string},\ list<string>\ >::iterator\ vIt\ =\ m\_vocabulories.begin();\ vIt\ !=\ m\_vocabulories.end();\ vIt++)}
+\DoxyCodeLine{00915\ \ \ \ \ \{}
+\DoxyCodeLine{00916\ \ \ \ \ \ \ \ \ \textcolor{comment}{//Get\ the\ rule\ name\ from\ the\ key\ in\ the\ dictionary\ (i.e\ Agent,\ Action,\ etc...)}}
+\DoxyCodeLine{00917\ \ \ \ \ \ \ \ \ std::wstring\ tmp\ =\ s2ws(vIt-\/>first);}
+\DoxyCodeLine{00918\ \ \ \ \ \ \ \ \ LPCWSTR\ cwRuleName\ =\ tmp.c\_str();}
+\DoxyCodeLine{00919\ }
+\DoxyCodeLine{00920\ \ \ \ \ \ \ \ \ \textcolor{comment}{//Get\ the\ rule\ or\ create\ it}}
+\DoxyCodeLine{00921\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>GetRule(cwRuleName,\ NULL,\ SPRAF\_Dynamic,\ TRUE,\ \&vocabRules[vIt-\/>first]));}
+\DoxyCodeLine{00922\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>ClearRule(vocabRules[vIt-\/>first]));}
+\DoxyCodeLine{00923\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(list<string>::iterator\ wordIt\ =\ vIt-\/>second.begin()\ ;\ wordIt\ !=\ vIt-\/>second.end();\ wordIt++)}
+\DoxyCodeLine{00924\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00925\ \ \ \ \ \ \ \ \ \ \ \ \ std::wstring\ wordTmp\ =\ s2ws(*wordIt);}
+\DoxyCodeLine{00926\ \ \ \ \ \ \ \ \ \ \ \ \ LPCWSTR\ cwWord\ =\ wordTmp.c\_str();}
+\DoxyCodeLine{00927\ \ \ \ \ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ grammarToModify-\/>AddWordTransition(vocabRules[vIt-\/>first],\ NULL,\ cwWord,\ NULL,\ SPWT\_LEXICAL,\ 1,\ NULL)\ );}
+\DoxyCodeLine{00928\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00929\ \ \ \ \ \}}
+\DoxyCodeLine{00930\ }
+\DoxyCodeLine{00931\ \ \ \ \ \textcolor{comment}{//Go\ through\ the\ given\ string\ and\ build\ the\ according\ grammar}}
+\DoxyCodeLine{00932\ \ \ \ \ \textcolor{comment}{//Split\ the\ choices}}
+\DoxyCodeLine{00933\ \ \ \ \ vector<string>\ sentences\ =\ split(grammar,\textcolor{charliteral}{'|'});}
+\DoxyCodeLine{00934\ \ \ \ \ \textcolor{keywordflow}{for}(vector<string>::iterator\ it\ =\ sentences.begin()\ ;\ it\ !=\ sentences.end()\ ;\ it++)}
+\DoxyCodeLine{00935\ \ \ \ \ \{}
+\DoxyCodeLine{00936\ \ \ \ \ \ \ \ \ \textcolor{comment}{//Split\ the\ words}}
+\DoxyCodeLine{00937\ \ \ \ \ \ \ \ \ vector<string>\ words\ =\ split(*it,\textcolor{charliteral}{'\ '});\ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00938\ \ \ \ \ \ \ \ \ SPSTATEHANDLE\ beforeWordHandle\ =\ runtimeRootRule;}
+\DoxyCodeLine{00939\ \ \ \ \ \ \ \ \ SPSTATEHANDLE\ afterWordHandle;}
+\DoxyCodeLine{00940\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(vector<string>::iterator\ itWord\ =\ words.begin()\ ;\ itWord\ !=\ words.end()\ ;\ itWord++)}
+\DoxyCodeLine{00941\ \ \ \ \ \ \ \ \ \{\ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00942\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}((*itWord)==\textcolor{stringliteral}{"{}"{}})}
+\DoxyCodeLine{00943\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{continue};}
+\DoxyCodeLine{00944\ }
+\DoxyCodeLine{00945\ \ \ \ \ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>CreateNewState(beforeWordHandle,\ \&afterWordHandle));}
+\DoxyCodeLine{00946\ }
+\DoxyCodeLine{00947\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//Check\ if\ the\ current\ word\ is\ the\ name\ of\ a\ vocabulory}}
+\DoxyCodeLine{00948\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\ (*itWord)[0]\ ==\ \textcolor{charliteral}{'\#'}\ \&\&\ m\_vocabulories.find(*itWord)\ !=\ m\_vocabulories.end())}
+\DoxyCodeLine{00949\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00950\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>AddRuleTransition(beforeWordHandle,\ afterWordHandle,\ vocabRules[*itWord],\ 1,\ NULL));}
+\DoxyCodeLine{00951\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00952\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00953\ \ \ \ \ \ \ \ \ \ \ \ \ \{\ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00954\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::wstring\ wordTmp\ =\ s2ws(*itWord);}
+\DoxyCodeLine{00955\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ LPCWSTR\ cwWord\ =\ wordTmp.c\_str();}
+\DoxyCodeLine{00956\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ grammarToModify-\/>AddWordTransition(beforeWordHandle,\ afterWordHandle,\ cwWord,\ NULL,\ SPWT\_LEXICAL,\ 1,\ NULL)\ );}
+\DoxyCodeLine{00957\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00958\ \ \ \ \ \ \ \ \ \ \ \ \ beforeWordHandle\ =\ afterWordHandle;}
+\DoxyCodeLine{00959\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00960\ \ \ \ \ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(\ grammarToModify-\/>AddWordTransition(beforeWordHandle,\ NULL,\ NULL,\ NULL,\ SPWT\_LEXICAL,\ 1,\ NULL)\ );}
+\DoxyCodeLine{00961\ \ \ \ \ \}}
+\DoxyCodeLine{00962\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>Commit(NULL));}
+\DoxyCodeLine{00963\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>SetGrammarState(SPGS\_ENABLED));\ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00964\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(grammarToModify-\/>SetRuleState(NULL,\ NULL,\ SPRS\_ACTIVE));}
+\DoxyCodeLine{00965\ \ \ \ \ everythingIsFine\ \&=\ SUCCEEDED(m\_cpRecoCtxt-\/>Resume(0));}
+\DoxyCodeLine{00966\ }
+\DoxyCodeLine{00967\ \ \ \ \ \textcolor{keywordflow}{return}\ everythingIsFine;}
+\DoxyCodeLine{00968\ \}}
+\DoxyCodeLine{00969\ }
+\DoxyCodeLine{00970\ }
+\DoxyCodeLine{00971\ }
+\DoxyCodeLine{00972\ }
+\DoxyCodeLine{00973\ \textcolor{comment}{/************************************************************************/}}
+\DoxyCodeLine{00974\ \textcolor{keywordtype}{bool}\ SpeechRecognizerModule::loadGrammarFromRf(ResourceFinder\ \&RF)}
+\DoxyCodeLine{00975\ \{}
+\DoxyCodeLine{00976\ \ \ \ \ Bottle\ \&bAgent\ =\ RF.findGroup(\textcolor{stringliteral}{"{}agent"{}});}
+\DoxyCodeLine{00977\ \ \ \ \ Bottle\ \&bAction\ =\ RF.findGroup(\textcolor{stringliteral}{"{}action"{}});}
+\DoxyCodeLine{00978\ \ \ \ \ Bottle\ \&bObject\ =\ RF.findGroup(\textcolor{stringliteral}{"{}object"{}});}
+\DoxyCodeLine{00979\ }
+\DoxyCodeLine{00980\ \ \ \ \ Bottle\ bMessenger,\ bReply;}
+\DoxyCodeLine{00981\ }
+\DoxyCodeLine{00982\ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Agents\ are:\ "{}}\ ;}
+\DoxyCodeLine{00983\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ iBottle\ =\ 1\ ;\ iBottle\ <\ bAgent.size()\ ;\ iBottle++)}
+\DoxyCodeLine{00984\ \ \ \ \ \{}
+\DoxyCodeLine{00985\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)t"{}}\ <<\ bAgent.get(iBottle).toString();}
+\DoxyCodeLine{00986\ \ \ \ \ \ \ \ \ bMessenger.clear();}
+\DoxyCodeLine{00987\ \ \ \ \ \ \ \ \ bMessenger.addString(\textcolor{stringliteral}{"{}add"{}});}
+\DoxyCodeLine{00988\ \ \ \ \ \ \ \ \ bMessenger.addString(\textcolor{stringliteral}{"{}\#agent"{}});}
+\DoxyCodeLine{00989\ \ \ \ \ \ \ \ \ bMessenger.addString(bAgent.get(iBottle).toString());}
+\DoxyCodeLine{00990\ }
+\DoxyCodeLine{00991\ \ \ \ \ \ \ \ \ handleRGMCmd(bMessenger,\ bReply);}
+\DoxyCodeLine{00992\ }
+\DoxyCodeLine{00993\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)t\(\backslash\)t"{}}\ <<\ bReply.toString()\ ;}
+\DoxyCodeLine{00994\ \ \ \ \ \}}
+\DoxyCodeLine{00995\ }
+\DoxyCodeLine{00996\ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n"{}}\ <<\ \textcolor{stringliteral}{"{}Actions\ are:\ "{}}\ ;}
+\DoxyCodeLine{00997\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ iBottle\ =\ 1\ ;\ iBottle\ <\ bAction.size()\ ;\ iBottle++)}
+\DoxyCodeLine{00998\ \ \ \ \ \{}
+\DoxyCodeLine{00999\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)t"{}}\ <<\ bAction.get(iBottle).toString();}
+\DoxyCodeLine{01000\ \ \ \ \ \ \ \ \ bMessenger.clear();}
+\DoxyCodeLine{01001\ \ \ \ \ \ \ \ \ bMessenger.addString(\textcolor{stringliteral}{"{}add"{}});}
+\DoxyCodeLine{01002\ \ \ \ \ \ \ \ \ bMessenger.addString(\textcolor{stringliteral}{"{}\#action"{}});}
+\DoxyCodeLine{01003\ \ \ \ \ \ \ \ \ bMessenger.addString(bAction.get(iBottle).toString());}
+\DoxyCodeLine{01004\ }
+\DoxyCodeLine{01005\ \ \ \ \ \ \ \ \ handleRGMCmd(bMessenger,\ bReply);}
+\DoxyCodeLine{01006\ }
+\DoxyCodeLine{01007\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)t\(\backslash\)t"{}}\ <<\ bReply.toString()\ ;}
+\DoxyCodeLine{01008\ \ \ \ \ \}}
+\DoxyCodeLine{01009\ }
+\DoxyCodeLine{01010\ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n"{}}\ <<\ \textcolor{stringliteral}{"{}Objects\ are:\ "{}}\ ;}
+\DoxyCodeLine{01011\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ iBottle\ =\ 1\ ;\ iBottle\ <\ bObject.size()\ ;\ iBottle++)}
+\DoxyCodeLine{01012\ \ \ \ \ \{}
+\DoxyCodeLine{01013\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)t"{}}\ <<\ bObject.get(iBottle).toString();}
+\DoxyCodeLine{01014\ \ \ \ \ \ \ \ \ bMessenger.clear();}
+\DoxyCodeLine{01015\ \ \ \ \ \ \ \ \ bMessenger.addString(\textcolor{stringliteral}{"{}add"{}});}
+\DoxyCodeLine{01016\ \ \ \ \ \ \ \ \ bMessenger.addString(\textcolor{stringliteral}{"{}\#object"{}});}
+\DoxyCodeLine{01017\ \ \ \ \ \ \ \ \ bMessenger.addString(bObject.get(iBottle).toString());}
+\DoxyCodeLine{01018\ }
+\DoxyCodeLine{01019\ \ \ \ \ \ \ \ \ handleRGMCmd(bMessenger,\ bReply);}
+\DoxyCodeLine{01020\ }
+\DoxyCodeLine{01021\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)t\(\backslash\)t"{}}\ <<\ bReply.toString()\ ;}
+\DoxyCodeLine{01022\ \ \ \ \ \}}
+\DoxyCodeLine{01023\ }
+\DoxyCodeLine{01024\ \ \ \ \ Bottle\ bGrammarMain,\ bGrammarDef;}
+\DoxyCodeLine{01025\ }
+\DoxyCodeLine{01026\ }
+\DoxyCodeLine{01027\ \ \ \ \ bGrammarMain.addString(\textcolor{stringliteral}{"{}addGrammar"{}});}
+\DoxyCodeLine{01028\ \ \ \ \ bGrammarMain.addString(\textcolor{stringliteral}{"{}\#agent\ \#action\ \#object"{}});}
+\DoxyCodeLine{01029\ }
+\DoxyCodeLine{01030\ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n"{}}\ <<\ bGrammarMain.toString()\ ;}
+\DoxyCodeLine{01031\ }
+\DoxyCodeLine{01032\ \textcolor{comment}{//\ \ handleAsyncRecognitionCmd(bGrammarMain,\ bReply);}}
+\DoxyCodeLine{01033\ }
+\DoxyCodeLine{01034\ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n"{}}\ <<\ bReply.toString()\ ;}
+\DoxyCodeLine{01035\ }
+\DoxyCodeLine{01036\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{01037\ \}}
+\DoxyCodeLine{01038\ }
+
+\end{DoxyCode}

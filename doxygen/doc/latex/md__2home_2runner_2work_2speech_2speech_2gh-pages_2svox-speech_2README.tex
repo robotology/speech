@@ -1,0 +1,49 @@
+\chapter{Speech}
+\label{md__2home_2runner_2work_2speech_2speech_2gh-pages_2svox-speech_2README}\index{Speech@{Speech}}
+A simple text to speech using \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}{\ttfamily SVOXPICO}\texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}.\hypertarget{md__2home_2runner_2work_2speech_2speech_2gh-pages_2svox-speech_2README_autotoc_md2}{}\doxysection{\texorpdfstring{Requirements}{Requirements}}\label{md__2home_2runner_2work_2speech_2speech_2gh-pages_2svox-speech_2README_autotoc_md2}
+The current implementation requires Linux \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}{\ttfamily aplay}\texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*} command (in the {\ttfamily alsa-\/utils} package) to play the generated wave file. This can/should be easily replaced with the {\ttfamily yarp portaudio} device (audio player).
+
+On Windows systems {\ttfamily powershell} is employed to play the wave file.\hypertarget{md__2home_2runner_2work_2speech_2speech_2gh-pages_2svox-speech_2README_autotoc_md3}{}\doxysection{\texorpdfstring{Installation}{Installation}}\label{md__2home_2runner_2work_2speech_2speech_2gh-pages_2svox-speech_2README_autotoc_md3}
+
+\begin{DoxyItemize}
+\item {\ttfamily \$ cd svox-\/speech}
+\item {\ttfamily \$ mkdir build \&\& cd build}
+\item {\ttfamily \$ cmake ..}
+\item tick on the driver {\ttfamily speech}.
+\item select a convenient location for installation via {\ttfamily CMAKE\+\_\+\+INSTALL\+\_\+\+PREFIX} (refer to this location as {\ttfamily \$INST\+\_\+\+DIR}).
+\item {\ttfamily \$ make install}
+\item append to the environment variable \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}{\ttfamily YARP\+\_\+\+DATA\+\_\+\+DIRS}\texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*} the path {\ttfamily \$INST\+\_\+\+DIR/share/speech}.
+\end{DoxyItemize}\hypertarget{md__2home_2runner_2work_2speech_2speech_2gh-pages_2svox-speech_2README_autotoc_md4}{}\doxysection{\texorpdfstring{Testing}{Testing}}\label{md__2home_2runner_2work_2speech_2speech_2gh-pages_2svox-speech_2README_autotoc_md4}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$\ yarpdev\ -\/-\/device\ speech\ -\/-\/lingware-\/context\ speech\ -\/-\/default-\/language\ en-\/US\ -\/-\/pitch\ 100\ -\/-\/speed\ 100}
+
+\end{DoxyCode}
+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$\ yarp\ rpc\ /icub/speech:rpc}
+\DoxyCodeLine{>>help}
+\DoxyCodeLine{Responses:}
+\DoxyCodeLine{\ \ ***\ Available\ commands:}
+\DoxyCodeLine{\ \ setLanguage}
+\DoxyCodeLine{\ \ setSpeed}
+\DoxyCodeLine{\ \ setPitch}
+\DoxyCodeLine{\ \ getSpeed}
+\DoxyCodeLine{\ \ getPitch}
+\DoxyCodeLine{\ \ getSupportedLang}
+\DoxyCodeLine{\ \ say}
+\DoxyCodeLine{\ \ help}
+
+\end{DoxyCode}
+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{>>\ say\ "{}Hello\ iCub!"{}}
+\DoxyCodeLine{>>\ setPitch\ 200}
+\DoxyCodeLine{>>\ say\ "{}Hello\ iCub!"{}}
+
+\end{DoxyCode}
+ 

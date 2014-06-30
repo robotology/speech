@@ -1,0 +1,104 @@
+\doxysection{main.\+cpp}
+\label{windows-tts_2src_2main_8cpp_source}\index{/home/runner/work/speech/speech/gh-\/pages/windows-\/tts/src/main.cpp@{/home/runner/work/speech/speech/gh-\/pages/windows-\/tts/src/main.cpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{*\ Copyright(C)\ 2015\ Insitute\ For\ Infocomm\ Research,\ A*STAR,\ Singapore}}
+\DoxyCodeLine{00003\ \textcolor{comment}{*\ Authors:\ Stephane\ Lallee}}
+\DoxyCodeLine{00004\ \textcolor{comment}{*\ email\ :\ stephane.lallee@gmail.com}}
+\DoxyCodeLine{00005\ \textcolor{comment}{*\ Permission\ is\ granted\ to\ copy,\ distribute,\ and\ /\ or\ modify\ this\ program}}
+\DoxyCodeLine{00006\ \textcolor{comment}{*\ under\ the\ terms\ of\ the\ GNU\ General\ Public\ License,\ version\ 2\ or\ any}}
+\DoxyCodeLine{00007\ \textcolor{comment}{*\ later\ version\ published\ by\ the\ Free\ Software\ Foundation.}}
+\DoxyCodeLine{00008\ \textcolor{comment}{*}}
+\DoxyCodeLine{00009\ \textcolor{comment}{*\ A\ copy\ of\ the\ license\ can\ be\ found\ at}}
+\DoxyCodeLine{00010\ \textcolor{comment}{*\ wysiwyd\ /\ license\ /\ gpl.txt}}
+\DoxyCodeLine{00011\ \textcolor{comment}{*}}
+\DoxyCodeLine{00012\ \textcolor{comment}{*\ This\ program\ is\ distributed\ in\ the\ hope\ that\ it\ will\ be\ useful,\ but}}
+\DoxyCodeLine{00013\ \textcolor{comment}{*\ WITHOUT\ ANY\ WARRANTY;\ without\ even\ the\ implied\ warranty\ of}}
+\DoxyCodeLine{00014\ \textcolor{comment}{*\ MERCHANTABILITY\ or\ FITNESS\ FOR\ A\ PARTICULAR\ PURPOSE.See\ the\ GNU\ General}}
+\DoxyCodeLine{00015\ \textcolor{comment}{*\ Public\ License\ for\ more\ details}}
+\DoxyCodeLine{00016\ \textcolor{comment}{*/}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00050\ \textcolor{preprocessor}{\#include\ "{}stdafx.h"{}}}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00053\ \textcolor{comment}{//Helpers\ for\ dealing\ with\ the\ weird\ strings\ of\ windows...\ }}
+\DoxyCodeLine{00054\ std::wstring\ s2ws(\textcolor{keyword}{const}\ std::string\&\ s)}
+\DoxyCodeLine{00055\ \{}
+\DoxyCodeLine{00056\ \ \ \ \ \textcolor{keywordtype}{int}\ len;}
+\DoxyCodeLine{00057\ \ \ \ \ \textcolor{keywordtype}{int}\ slength\ =\ (int)s.length()\ +\ 1;}
+\DoxyCodeLine{00058\ \ \ \ \ len\ =\ MultiByteToWideChar(CP\_ACP,\ 0,\ s.c\_str(),\ slength,\ 0,\ 0);}
+\DoxyCodeLine{00059\ \ \ \ \ \textcolor{keywordtype}{wchar\_t}*\ buf\ =\ \textcolor{keyword}{new}\ \textcolor{keywordtype}{wchar\_t}[len];}
+\DoxyCodeLine{00060\ \ \ \ \ MultiByteToWideChar(CP\_ACP,\ 0,\ s.c\_str(),\ slength,\ buf,\ len);}
+\DoxyCodeLine{00061\ \ \ \ \ std::wstring\ r(buf);}
+\DoxyCodeLine{00062\ \ \ \ \ \textcolor{keyword}{delete}[]\ buf;}
+\DoxyCodeLine{00063\ \ \ \ \ \textcolor{keywordflow}{return}\ r;}
+\DoxyCodeLine{00064\ \}}
+\DoxyCodeLine{00065\ std::string\ ws2s(LPCWSTR\ s)}
+\DoxyCodeLine{00066\ \{}
+\DoxyCodeLine{00067\ \ \ \ \ \textcolor{keywordtype}{char}\ \ \ \ *pmbbuf\ =\ (\textcolor{keywordtype}{char}\ *)malloc(100);}
+\DoxyCodeLine{00068\ \ \ \ \ wcstombs(pmbbuf,\ s,\ 100);}
+\DoxyCodeLine{00069\ \ \ \ \ \textcolor{keywordflow}{return}\ pmbbuf;}
+\DoxyCodeLine{00070\ \}}
+\DoxyCodeLine{00071\ }
+\DoxyCodeLine{00073\ }
+\DoxyCodeLine{00074\ \textcolor{keywordtype}{int}\ main(\textcolor{keywordtype}{int}\ argc,\ \textcolor{keywordtype}{char}*\ argv[])}
+\DoxyCodeLine{00075\ \{}
+\DoxyCodeLine{00076\ \ \ \ \ \textcolor{comment}{//Parse\ de\ parameters.\ Similar\ way\ to\ acapelaCmd}}
+\DoxyCodeLine{00077\ \ \ \ \ std::string\ voice\ =\ \textcolor{stringliteral}{"{}iCub\_eng"{}};}
+\DoxyCodeLine{00078\ \ \ \ \ \textcolor{keywordflow}{if}\ (argc>1)}
+\DoxyCodeLine{00079\ \ \ \ \ \ \ \ \ voice\ =\ argv[1];}
+\DoxyCodeLine{00080\ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}Voice\ is:\ "{}}\ <<\ voice\ <<\ std::endl;}
+\DoxyCodeLine{00081\ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}TODO\ :\ select\ the\ right\ token\ from\ this\ option."{}}\ <<\ voice\ <<\ std::endl;}
+\DoxyCodeLine{00082\ }
+\DoxyCodeLine{00083\ \ \ \ \ std::string\ textInput;}
+\DoxyCodeLine{00084\ \ \ \ \ std::getline(std::cin,\ textInput);}
+\DoxyCodeLine{00085\ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}Text\ is:\ "{}}\ <<\ textInput\ <<\ std::endl;}
+\DoxyCodeLine{00086\ }
+\DoxyCodeLine{00087\ \ \ \ \ \textcolor{keywordflow}{if}\ (::CoInitializeEx(NULL,\ COINIT\_MULTITHREADED)\ ==\ S\_OK)}
+\DoxyCodeLine{00088\ \ \ \ \ \{}
+\DoxyCodeLine{00089\ \ \ \ \ \ \ \ \ HRESULT\ hr\ =\ S\_OK;}
+\DoxyCodeLine{00090\ \ \ \ \ \ \ \ \ CComPtr<IEnumSpObjectTokens>\ cpIEnum;}
+\DoxyCodeLine{00091\ \ \ \ \ \ \ \ \ CComPtr<ISpObjectToken>\ cpToken;}
+\DoxyCodeLine{00092\ \ \ \ \ \ \ \ \ CComPtr<ISpVoice>\ cpVoice;}
+\DoxyCodeLine{00093\ }
+\DoxyCodeLine{00094\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Enumerate\ voice\ tokens\ that\ speak\ US\ English\ in\ a\ female\ voice.}}
+\DoxyCodeLine{00095\ \ \ \ \ \ \ \ \ hr\ =\ SpEnumTokens(SPCAT\_VOICES,\ L\textcolor{stringliteral}{"{}Language=409"{}},\ L\textcolor{stringliteral}{"{}Gender=Female;"{}},\ \&cpIEnum);}
+\DoxyCodeLine{00096\ }
+\DoxyCodeLine{00097\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Get\ the\ best\ matching\ token.}}
+\DoxyCodeLine{00098\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (SUCCEEDED(hr))}
+\DoxyCodeLine{00099\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00100\ \ \ \ \ \ \ \ \ \ \ \ \ hr\ =\ cpIEnum-\/>Next(1,\ \&cpToken\ ,\ NULL);}
+\DoxyCodeLine{00101\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00102\ }
+\DoxyCodeLine{00103\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Create\ a\ voice\ and\ set\ its\ token\ to\ the\ one\ we\ just\ found.}}
+\DoxyCodeLine{00104\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (SUCCEEDED(hr))}
+\DoxyCodeLine{00105\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00106\ \ \ \ \ \ \ \ \ \ \ \ \ hr\ =\ cpVoice.CoCreateInstance(CLSID\_SpVoice);}
+\DoxyCodeLine{00107\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00108\ }
+\DoxyCodeLine{00109\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Set\ the\ voice.}}
+\DoxyCodeLine{00110\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (SUCCEEDED(hr))}
+\DoxyCodeLine{00111\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00112\ \ \ \ \ \ \ \ \ \ \ \ \ hr\ =\ cpVoice-\/>SetVoice(cpToken);}
+\DoxyCodeLine{00113\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00114\ }
+\DoxyCodeLine{00115\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Set\ the\ output\ to\ the\ default\ audio\ device.}}
+\DoxyCodeLine{00116\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (SUCCEEDED(hr))}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00118\ \ \ \ \ \ \ \ \ \ \ \ \ hr\ =\ cpVoice-\/>SetOutput(NULL,\ TRUE);}
+\DoxyCodeLine{00119\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00120\ }
+\DoxyCodeLine{00121\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Speak\ a\ string\ directly.}}
+\DoxyCodeLine{00122\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (SUCCEEDED(hr))}
+\DoxyCodeLine{00123\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00124\ \ \ \ \ \ \ \ \ \ \ \ \ hr\ =\ cpVoice-\/>Speak(s2ws(textInput).c\_str(),\ NULL,\ NULL);}
+\DoxyCodeLine{00125\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00126\ \ \ \ \ \}}
+\DoxyCodeLine{00127\ \ \ \ \ ::CoUninitialize();}
+\DoxyCodeLine{00128\ }
+\DoxyCodeLine{00129\ \ \ \ \ \textcolor{keywordflow}{return}\ 0;}
+\DoxyCodeLine{00130\ \}}
+\DoxyCodeLine{00131\ }
+\DoxyCodeLine{00132\ }
+
+\end{DoxyCode}

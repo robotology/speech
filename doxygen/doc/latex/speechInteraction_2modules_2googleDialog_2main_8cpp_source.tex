@@ -1,0 +1,454 @@
+\doxysection{main.\+cpp}
+\label{speechInteraction_2modules_2googleDialog_2main_8cpp_source}\index{/home/runner/work/speech/speech/gh-\/pages/speechInteraction/modules/googleDialog/main.cpp@{/home/runner/work/speech/speech/gh-\/pages/speechInteraction/modules/googleDialog/main.cpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Copyright\ (C)\ 2018\ iCub\ Facility\ -\/\ Istituto\ Italiano\ di\ Tecnologia}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Author:\ Ilaria\ Carlini\ Laura\ Cavaliere\ Vadim\ Tikhanoff\ }}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ email:\ \ ilaria.carlini@iit.it\ laura.cavaliere@iit.it\ vadim.tikhanoff@iit.it\ }}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ *\ Permission\ is\ granted\ to\ copy,\ distribute,\ and/or\ modify\ this\ program}}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ *\ under\ the\ terms\ of\ the\ GNU\ General\ Public\ License,\ version\ 2\ or\ any}}
+\DoxyCodeLine{00007\ \textcolor{comment}{\ *\ later\ version\ published\ by\ the\ Free\ Software\ Foundation.}}
+\DoxyCodeLine{00008\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00009\ \textcolor{comment}{\ *\ A\ copy\ of\ the\ license\ can\ be\ found\ at}}
+\DoxyCodeLine{00010\ \textcolor{comment}{\ *\ http://www.robotcub.org/icub/license/gpl.txt}}
+\DoxyCodeLine{00011\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00012\ \textcolor{comment}{\ *\ This\ program\ is\ distributed\ in\ the\ hope\ that\ it\ will\ be\ useful,\ but}}
+\DoxyCodeLine{00013\ \textcolor{comment}{\ *\ WITHOUT\ ANY\ WARRANTY;\ without\ even\ the\ implied\ warranty\ of}}
+\DoxyCodeLine{00014\ \textcolor{comment}{\ *\ MERCHANTABILITY\ or\ FITNESS\ FOR\ A\ PARTICULAR\ PURPOSE.\ See\ the\ GNU\ General}}
+\DoxyCodeLine{00015\ \textcolor{comment}{\ *\ Public\ License\ for\ more\ details}}
+\DoxyCodeLine{00016\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#include\ <iostream>}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#include\ <deque>}}
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#include\ <cstdio>}}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#include\ <cmath>}}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \textcolor{preprocessor}{\#include\ <fstream>}}
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\#include\ <iterator>}}
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00027\ \textcolor{preprocessor}{\#include\ <map>}}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#include\ <yarp/os/BufferedPort.h>}}
+\DoxyCodeLine{00030\ \textcolor{preprocessor}{\#include\ <yarp/os/ResourceFinder.h>}}
+\DoxyCodeLine{00031\ \textcolor{preprocessor}{\#include\ <yarp/os/RFModule.h>}}
+\DoxyCodeLine{00032\ \textcolor{preprocessor}{\#include\ <yarp/os/Network.h>}}
+\DoxyCodeLine{00033\ \textcolor{preprocessor}{\#include\ <yarp/os/Time.h>}}
+\DoxyCodeLine{00034\ \textcolor{preprocessor}{\#include\ <yarp/os/Log.h>}}
+\DoxyCodeLine{00035\ \textcolor{preprocessor}{\#include\ <yarp/os/LogStream.h>}}
+\DoxyCodeLine{00036\ \textcolor{preprocessor}{\#include\ <yarp/os/Semaphore.h>}}
+\DoxyCodeLine{00037\ \textcolor{preprocessor}{\#include\ <yarp/sig/SoundFile.h>}}
+\DoxyCodeLine{00038\ \textcolor{preprocessor}{\#include\ <yarp/dev/PolyDriver.h>}}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \textcolor{preprocessor}{\#include\ <grpc++/grpc++.h>}}
+\DoxyCodeLine{00041\ \textcolor{preprocessor}{\#include\ "{}google/cloud/language/v1/language\_service.grpc.pb.h"{}}}
+\DoxyCodeLine{00042\ \textcolor{preprocessor}{\#include\ "{}google/cloud/texttospeech/v1/cloud\_tts.grpc.pb.h"{}}}
+\DoxyCodeLine{00043\ \textcolor{preprocessor}{\#include\ "{}google/cloud/dialogflow/cx/v3beta1/agent.grpc.pb.h"{}}}
+\DoxyCodeLine{00044\ \textcolor{preprocessor}{\#include\ "{}google/cloud/dialogflow/cx/v3beta1/audio\_config.grpc.pb.h"{}}}
+\DoxyCodeLine{00045\ \textcolor{comment}{//\#include\ "{}google/cloud/dialogflow/cx/v3beta1/context.grpc.pb.h"{}}}
+\DoxyCodeLine{00046\ \textcolor{preprocessor}{\#include\ "{}google/cloud/dialogflow/cx/v3beta1/entity\_type.grpc.pb.h"{}}}
+\DoxyCodeLine{00047\ \textcolor{preprocessor}{\#include\ "{}google/cloud/dialogflow/cx/v3beta1/intent.grpc.pb.h"{}}}
+\DoxyCodeLine{00048\ \textcolor{preprocessor}{\#include\ "{}google/cloud/dialogflow/cx/v3beta1/session\_entity\_type.grpc.pb.h"{}}}
+\DoxyCodeLine{00049\ \textcolor{preprocessor}{\#include\ "{}google/cloud/dialogflow/cx/v3beta1/session.grpc.pb.h"{}}}
+\DoxyCodeLine{00050\ \textcolor{preprocessor}{\#include\ "{}google/cloud/dialogflow/cx/v3beta1/webhook.grpc.pb.h"{}}}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00052\ \textcolor{preprocessor}{\#include\ <chrono>}}
+\DoxyCodeLine{00053\ \textcolor{preprocessor}{\#include\ <ctime>}}
+\DoxyCodeLine{00054\ \textcolor{preprocessor}{\#include\ <algorithm>}}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00056\ \textcolor{preprocessor}{\#include\ "{}googleDialog\_IDL.h"{}}}
+\DoxyCodeLine{00057\ }
+\DoxyCodeLine{00058\ \textcolor{keyword}{using\ namespace\ }google::cloud::language::v1;}
+\DoxyCodeLine{00059\ \textcolor{keyword}{using\ namespace\ }google::cloud::texttospeech::v1;}
+\DoxyCodeLine{00060\ \textcolor{keyword}{using\ namespace\ }google::cloud::dialogflow::cx::v3beta1;}
+\DoxyCodeLine{00061\ \textcolor{keywordtype}{bool}\ is\_changed;}
+\DoxyCodeLine{00062\ }
+\DoxyCodeLine{00063\ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ std::map<grpc::StatusCode,\ std::string>\ status\_code\_to\_string\ \{}
+\DoxyCodeLine{00064\ \ \ \ \ \{grpc::OK,\ \textcolor{stringliteral}{"{}ok"{}}\},}
+\DoxyCodeLine{00065\ \ \ \ \ \{grpc::CANCELLED,\ \textcolor{stringliteral}{"{}cancelled"{}}\},}
+\DoxyCodeLine{00066\ \ \ \ \ \{grpc::UNKNOWN,\ \textcolor{stringliteral}{"{}unknown"{}}\},}
+\DoxyCodeLine{00067\ \ \ \ \ \{grpc::INVALID\_ARGUMENT,\ \textcolor{stringliteral}{"{}invalid\_argument"{}}\},}
+\DoxyCodeLine{00068\ \ \ \ \ \{grpc::DEADLINE\_EXCEEDED,\ \textcolor{stringliteral}{"{}deadline\_exceeded"{}}\},}
+\DoxyCodeLine{00069\ \ \ \ \ \{grpc::NOT\_FOUND,\ \textcolor{stringliteral}{"{}not\_found"{}}\},}
+\DoxyCodeLine{00070\ \ \ \ \ \{grpc::ALREADY\_EXISTS,\ \textcolor{stringliteral}{"{}already\_exists"{}}\},}
+\DoxyCodeLine{00071\ \ \ \ \ \{grpc::PERMISSION\_DENIED,\ \textcolor{stringliteral}{"{}permission\_denied"{}}\},}
+\DoxyCodeLine{00072\ \ \ \ \ \{grpc::UNAUTHENTICATED,\ \textcolor{stringliteral}{"{}unauthenticated"{}}\},}
+\DoxyCodeLine{00073\ \ \ \ \ \{grpc::RESOURCE\_EXHAUSTED\ ,\ \textcolor{stringliteral}{"{}resource\_exhausted"{}}\},}
+\DoxyCodeLine{00074\ \ \ \ \ \{grpc::FAILED\_PRECONDITION,\ \textcolor{stringliteral}{"{}failed\_precondition"{}}\},}
+\DoxyCodeLine{00075\ \ \ \ \ \{grpc::ABORTED,\ \textcolor{stringliteral}{"{}aborted"{}}\},}
+\DoxyCodeLine{00076\ \ \ \ \ \{grpc::OUT\_OF\_RANGE,\ \textcolor{stringliteral}{"{}out\_of\_range"{}}\},}
+\DoxyCodeLine{00077\ \ \ \ \ \{grpc::UNIMPLEMENTED,\ \textcolor{stringliteral}{"{}unimplemented"{}}\},}
+\DoxyCodeLine{00078\ \ \ \ \ \{grpc::INTERNAL,\ \textcolor{stringliteral}{"{}internal"{}}\},}
+\DoxyCodeLine{00079\ \ \ \ \ \{grpc::UNAVAILABLE,\ \textcolor{stringliteral}{"{}unavailable"{}}\},}
+\DoxyCodeLine{00080\ \ \ \ \ \{grpc::DATA\_LOSS,\ \textcolor{stringliteral}{"{}data\_loss"{}}\},}
+\DoxyCodeLine{00081\ \ \ \ \ \{grpc::DO\_NOT\_USE,\ \textcolor{stringliteral}{"{}do\_not\_use"{}}\}}
+\DoxyCodeLine{00082\ \};}
+\DoxyCodeLine{00083\ \textcolor{comment}{/********************************************************/}}
+\DoxyCodeLine{00084\ \textcolor{keyword}{class\ }Processing\ :\ \textcolor{keyword}{public}\ yarp::os::BufferedPort<yarp::os::Bottle>}
+\DoxyCodeLine{00085\ \{}
+\DoxyCodeLine{00086\ \ \ \ \ std::string\ moduleName;\ \ }
+\DoxyCodeLine{00087\ \ \ \ \ std::string\ session\_id;\ \ }
+\DoxyCodeLine{00088\ \ \ \ \ std::string\ agent\_name;\ \ }
+\DoxyCodeLine{00089\ \ \ \ \ std::string\ language\_code;\ }
+\DoxyCodeLine{00090\ \ \ \ \ std::string\ \&state;\ }
+\DoxyCodeLine{00091\ \ \ \ \ \textcolor{keywordtype}{bool}\ \&input\_is\_empty,\ reset;\ }
+\DoxyCodeLine{00092\ \ \ \ \ std::int64\_t\ \&processing\_time;\ }
+\DoxyCodeLine{00093\ \ \ \ \ yarp::os::RpcServer\ handlerPort;}
+\DoxyCodeLine{00094\ \ \ \ \ yarp::os::BufferedPort<yarp::os::Bottle>\ targetPort;}
+\DoxyCodeLine{00095\ }
+\DoxyCodeLine{00096\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00097\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00098\ }
+\DoxyCodeLine{00099\ \ \ \ \ Processing(\ \textcolor{keyword}{const}\ std::string\ \&moduleName,\ \textcolor{keyword}{const}\ std::string\ agent\_name,\ \textcolor{keyword}{const}\ std::string\ language\_code,\ std::string\ \&state,\ \textcolor{keywordtype}{bool}\ \&input\_is\_empty,\ std::int64\_t\ \&processing\_time)\ \ :\ state(state),\ input\_is\_empty(input\_is\_empty),\ processing\_time(processing\_time)}
+\DoxyCodeLine{00100\ \ \ \ \ \{}
+\DoxyCodeLine{00101\ \ \ \ \ \ \ \ \ this-\/>moduleName\ =\ moduleName;}
+\DoxyCodeLine{00102\ \ \ \ \ \ \ \ \ this-\/>session\_id\ =\ getRandSession();}
+\DoxyCodeLine{00103\ \ \ \ \ \ \ \ \ this-\/>agent\_name\ =\ agent\_name;}
+\DoxyCodeLine{00104\ \ \ \ \ \ \ \ \ this-\/>language\_code\ =\ language\_code;}
+\DoxyCodeLine{00105\ \ \ \ \ \ \ \ \ reset\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00106\ \ \ \ \ \ \ \ \ yInfo()<<\ \textcolor{stringliteral}{"{}State:\ "{}}\ <<\ state;}
+\DoxyCodeLine{00107\ \ \ \ \ \ \ \ \ yInfo()<<\ \textcolor{stringliteral}{"{}input\_is\_empty:\ "{}}\ <<\ input\_is\_empty;}
+\DoxyCodeLine{00108\ \ \ \ \ \}}
+\DoxyCodeLine{00109\ }
+\DoxyCodeLine{00110\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00111\ \ \ \ \ \string~Processing()}
+\DoxyCodeLine{00112\ \ \ \ \ \{}
+\DoxyCodeLine{00113\ }
+\DoxyCodeLine{00114\ \ \ \ \ \};}
+\DoxyCodeLine{00115\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00116\ \ \ \ \ std::string\ getRandSession()\ \{}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ std::string\ session;}
+\DoxyCodeLine{00118\ \ \ \ \ \ \ \ \ srand(time(NULL));}
+\DoxyCodeLine{00119\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(\textcolor{keywordtype}{int}\ i\ =\ 0;\ i<16;\ i++)\ \{}
+\DoxyCodeLine{00120\ \ \ \ \ \ \ \ \ \ \ \ \ session\ +=\ std::to\_string(rand()\ \%\ 10);}
+\DoxyCodeLine{00121\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00122\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ session;}
+\DoxyCodeLine{00123\ \ \ \ \ \}}
+\DoxyCodeLine{00124\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00125\ \ \ \ \ \textcolor{keywordtype}{bool}\ open()}
+\DoxyCodeLine{00126\ \ \ \ \ \{\ \ \ }
+\DoxyCodeLine{00127\ \ \ \ \ \ \ \ \ this-\/>useCallback();}
+\DoxyCodeLine{00128\ \ \ \ \ \ \ \ \ yarp::os::BufferedPort<yarp::os::Bottle\ >::open(\ \textcolor{stringliteral}{"{}/"{}}\ +\ moduleName\ +\ \textcolor{stringliteral}{"{}/text:i"{}}\ );}
+\DoxyCodeLine{00129\ \ \ \ \ \ \ \ \ targetPort.open(\textcolor{stringliteral}{"{}/"{}}+\ moduleName\ +\ \textcolor{stringliteral}{"{}/result:o"{}});}
+\DoxyCodeLine{00130\ }
+\DoxyCodeLine{00131\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00132\ \ \ \ \ \}}
+\DoxyCodeLine{00133\ }
+\DoxyCodeLine{00134\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00135\ \ \ \ \ \textcolor{keywordtype}{void}\ close()}
+\DoxyCodeLine{00136\ \ \ \ \ \{}
+\DoxyCodeLine{00137\ \ \ \ \ \ \ \ \ yarp::os::BufferedPort<yarp::os::Bottle\ >::close();}
+\DoxyCodeLine{00138\ \ \ \ \ \ \ \ \ targetPort.close();}
+\DoxyCodeLine{00139\ \ \ \ \ \}}
+\DoxyCodeLine{00140\ }
+\DoxyCodeLine{00141\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00142\ \ \ \ \ \textcolor{keywordtype}{void}\ onRead(\ yarp::os::Bottle\ \&bot)}
+\DoxyCodeLine{00143\ \ \ \ \ \{\ \ \ }
+\DoxyCodeLine{00144\ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&outTargets\ =\ targetPort.prepare();}
+\DoxyCodeLine{00145\ }
+\DoxyCodeLine{00146\ \ \ \ \ \ \ \ \ outTargets.clear();}
+\DoxyCodeLine{00147\ \ \ \ \ \ \ \ \ outTargets\ =\ queryGoogleDialog(bot);}
+\DoxyCodeLine{00148\ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}bottle"{}}\ <<\ outTargets.toString();}
+\DoxyCodeLine{00149\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(outTargets.size()>0)\{}
+\DoxyCodeLine{00150\ \ \ \ \ \ \ \ \ \ \ \ targetPort.write();}
+\DoxyCodeLine{00151\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00152\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}State:\ "{}}\ <<\ state;}
+\DoxyCodeLine{00153\ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}done\ querying\ google"{}};}
+\DoxyCodeLine{00154\ \ \ \ \ \}}
+\DoxyCodeLine{00155\ }
+\DoxyCodeLine{00156\ \textcolor{comment}{/********************************************************/}}
+\DoxyCodeLine{00157\ \ \ \ \ yarp::os::Bottle\ queryGoogleDialog(yarp::os::Bottle\&\ bottle)}
+\DoxyCodeLine{00158\ \ \ \ \ \{}
+\DoxyCodeLine{00159\ \ \ \ \ \ \ \ \ std::string\ text\ =\ bottle.toString();}
+\DoxyCodeLine{00160\ \ \ \ \ \ \ \ \ yarp::os::Bottle\ result;}
+\DoxyCodeLine{00161\ \ \ \ \ \ \ \ \ google::cloud::dialogflow::cx::v3beta1::TextInput\ text\_input;}
+\DoxyCodeLine{00162\ \ \ \ \ \ \ \ \ google::cloud::dialogflow::cx::v3beta1::QueryInput\ query\_input;}
+\DoxyCodeLine{00163\ }
+\DoxyCodeLine{00164\ \ \ \ \ \ \ \ \ \textcolor{comment}{//std::string\ language\_code\ =\ "{}en-\/English"{};}}
+\DoxyCodeLine{00165\ \ \ \ \ \ \ \ \ text\_input.set\_text(text.c\_str());}
+\DoxyCodeLine{00166\ \ \ \ \ \ \ \ \ query\_input.set\_allocated\_text(\&text\_input);}
+\DoxyCodeLine{00167\ \ \ \ \ \ \ \ \ query\_input.set\_language\_code(language\_code);}
+\DoxyCodeLine{00168\ }
+\DoxyCodeLine{00169\ \ \ \ \ \ \ \ \ grpc::Status\ status;}
+\DoxyCodeLine{00170\ \ \ \ \ \ \ \ \ grpc::ClientContext\ context;}
+\DoxyCodeLine{00171\ }
+\DoxyCodeLine{00172\ \ \ \ \ \ \ \ \ DetectIntentRequest\ request;}
+\DoxyCodeLine{00173\ \ \ \ \ \ \ \ \ DetectIntentResponse\ response;}
+\DoxyCodeLine{00174\ }
+\DoxyCodeLine{00175\ \ \ \ \ \ \ \ \ request.set\_session(agent\_name+\textcolor{stringliteral}{"{}/environments/draft/sessions/"{}}+session\_id);}
+\DoxyCodeLine{00176\ \ \ \ \ \ \ \ \ request.set\_allocated\_query\_input(\&query\_input);}
+\DoxyCodeLine{00177\ \ \ \ \ \ \ \ \ std::string\ user\_express\ =\ request.query\_input().text().text();}
+\DoxyCodeLine{00178\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}End-\/user\ expression:"{}}\ <<\ user\_express;}
+\DoxyCodeLine{00179\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(request.query\_input().text().text().size()>0)\{}
+\DoxyCodeLine{00180\ \ \ \ \ \ \ \ \ \ \ \ \ input\_is\_empty=\textcolor{keyword}{false};}
+\DoxyCodeLine{00181\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{auto}\ creds\ =\ grpc::GoogleDefaultCredentials();}
+\DoxyCodeLine{00182\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{auto}\ channel\ =\ grpc::CreateChannel(\textcolor{stringliteral}{"{}dialogflow.googleapis.com"{}},\ creds);}
+\DoxyCodeLine{00183\ \ \ \ \ \ \ \ \ \ \ \ \ std::unique\_ptr<Sessions::Stub>\ dialog\ (Sessions::NewStub(channel));}
+\DoxyCodeLine{00184\ \ \ \ \ \ \ \ \ \ \ \ \ checkState(\textcolor{stringliteral}{"{}Busy"{}});}
+\DoxyCodeLine{00185\ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Time::delay(0.2);}
+\DoxyCodeLine{00186\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::chrono::time\_point<std::chrono::steady\_clock>\ start\ =\ std::chrono::steady\_clock::now();}
+\DoxyCodeLine{00187\ }
+\DoxyCodeLine{00188\ \ \ \ \ \ \ \ \ \ \ \ \ grpc::Status\ dialog\_status\ =\ dialog-\/>DetectIntent(\&context,\ request,\ \&response);}
+\DoxyCodeLine{00189\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ status\_string\ =\ status\_code\_to\_string.at(dialog\_status.error\_code());}
+\DoxyCodeLine{00190\ }
+\DoxyCodeLine{00191\ \ \ \ \ \ \ \ \ \ \ \ \ result.clear();}
+\DoxyCodeLine{00192\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\ dialog\_status.ok()\ )\ \{}
+\DoxyCodeLine{00193\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keyword}{auto}\ end\ =\ std::chrono::steady\_clock::now();}
+\DoxyCodeLine{00194\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ processing\_time\ =\ std::chrono::duration\_cast<std::chrono::microseconds>(end\ -\/\ start).count();}
+\DoxyCodeLine{00195\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}Request\ processing\ time:\ "{}}\ <<\ processing\_time\ <<\ \textcolor{stringliteral}{"{}µs"{}};\ \ }
+\DoxyCodeLine{00196\ }
+\DoxyCodeLine{00197\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Status\ returned\ OK"{}};}
+\DoxyCodeLine{00198\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n-\/-\/-\/-\/-\/-\/Response-\/-\/-\/-\/-\/-\/\(\backslash\)n"{}};}
+\DoxyCodeLine{00199\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (response.query\_result().response\_messages().size()\ >\ 0\ \&\&\ response.query\_result().response\_messages().Get(0).text().text().size()\ >\ 0)\ }
+\DoxyCodeLine{00200\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00201\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ result.addString(response.query\_result().response\_messages().Get(0).text().text().Get(0).c\_str());}
+\DoxyCodeLine{00202\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}result\ bottle"{}}\ <<\ result.toString();}
+\DoxyCodeLine{00203\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ checkState(\textcolor{stringliteral}{"{}Done"{}});}
+\DoxyCodeLine{00204\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00205\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (reset)}
+\DoxyCodeLine{00206\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00207\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ checkState(\textcolor{stringliteral}{"{}Reset"{}});}
+\DoxyCodeLine{00208\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ reset=\textcolor{keyword}{false};}
+\DoxyCodeLine{00209\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00210\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00211\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00212\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ checkState(\textcolor{stringliteral}{"{}Empty"{}});}
+\DoxyCodeLine{00213\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00214\ \ \ \ \ \ \ \ \ \ \ \ \ \}\ }
+\DoxyCodeLine{00215\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (\ !dialog\_status.ok()\ )\ \{}
+\DoxyCodeLine{00216\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yError()\ <<\ \textcolor{stringliteral}{"{}Status\ Returned\ Cancelled"{}};}
+\DoxyCodeLine{00217\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ checkState(\textcolor{stringliteral}{"{}Failure\_"{}}\ +\ status\_string);\ }
+\DoxyCodeLine{00218\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ dialog\_status.error\_message();}
+\DoxyCodeLine{00219\ \ \ \ \ \ \ \ \ \ \ \ \ \}\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00220\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00221\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (request.query\_input().text().text().size()==0)\{}
+\DoxyCodeLine{00222\ \ \ \ \ \ \ \ \ \ \ \ \ input\_is\_empty=\textcolor{keyword}{true};}
+\DoxyCodeLine{00223\ \ \ \ \ \ \ \ \ \ \ \ \ yError()\ <<\ \textcolor{stringliteral}{"{}Input\ is\ empty"{}};}
+\DoxyCodeLine{00224\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00225\ \ \ \ \ \ \ \ \ request.release\_query\_input();}
+\DoxyCodeLine{00226\ \ \ \ \ \ \ \ \ query\_input.release\_text();}
+\DoxyCodeLine{00227\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ result;}
+\DoxyCodeLine{00228\ \ \ \ \}}
+\DoxyCodeLine{00229\ }
+\DoxyCodeLine{00230\ \textcolor{comment}{\ \ \ /********************************************************/}}
+\DoxyCodeLine{00231\ \ \ \ \ \textcolor{keywordtype}{bool}\ setLanguageCode(\textcolor{keyword}{const}\ std::string\ \&languageCode)}
+\DoxyCodeLine{00232\ \ \ \ \ \{}
+\DoxyCodeLine{00233\ \ \ \ \ \ \ \ \ language\_code\ =\ languageCode;}
+\DoxyCodeLine{00234\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00235\ \ \ \ \ \}}
+\DoxyCodeLine{00236\ }
+\DoxyCodeLine{00237\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00238\ \ \ \ \ std::string\ getLanguageCode()}
+\DoxyCodeLine{00239\ \ \ \ \ \{}
+\DoxyCodeLine{00240\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ language\_code;}
+\DoxyCodeLine{00241\ \ \ \ \ \}}
+\DoxyCodeLine{00242\ }
+\DoxyCodeLine{00243\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00244\ \ \ \ \ \textcolor{keywordtype}{bool}\ start\_acquisition()}
+\DoxyCodeLine{00245\ \ \ \ \ \{}
+\DoxyCodeLine{00246\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00247\ \ \ \ \ \}}
+\DoxyCodeLine{00248\ }
+\DoxyCodeLine{00249\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00250\ \ \ \ \ \textcolor{keywordtype}{bool}\ stop\_acquisition()}
+\DoxyCodeLine{00251\ \ \ \ \ \{}
+\DoxyCodeLine{00252\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00253\ \ \ \ \ \}}
+\DoxyCodeLine{00254\ }
+\DoxyCodeLine{00255\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00256\ \ \ \ \ \textcolor{keywordtype}{bool}\ checkState(std::string\ new\_state)}
+\DoxyCodeLine{00257\ \ \ \ \ \{\ \ \ }
+\DoxyCodeLine{00258\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(new\_state!=state)\{}
+\DoxyCodeLine{00259\ \ \ \ \ \ \ \ \ \ \ \ \ is\_changed=\textcolor{keyword}{true};}
+\DoxyCodeLine{00260\ \ \ \ \ \ \ \ \ \ \ \ \ state=new\_state;}
+\DoxyCodeLine{00261\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00262\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\{}
+\DoxyCodeLine{00263\ \ \ \ \ \ \ \ \ \ \ \ \ is\_changed=\textcolor{keyword}{false};}
+\DoxyCodeLine{00264\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00265\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ is\_changed;}
+\DoxyCodeLine{00266\ \ \ \ \ \}}
+\DoxyCodeLine{00267\ \ \ \ \ }
+\DoxyCodeLine{00268\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00269\ \ \ \ \ \textcolor{keywordtype}{void}\ resetDialog()\{}
+\DoxyCodeLine{00270\ \ \ \ \ \ \ \ \ \ reset\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00271\ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ bot;}
+\DoxyCodeLine{00272\ \ \ \ \ \ \ \ \ \ bot.clear();}
+\DoxyCodeLine{00273\ \ \ \ \ \ \ \ \ \ bot.addString(\textcolor{stringliteral}{"{}Exit"{}});}
+\DoxyCodeLine{00274\ \ \ \ \ \ queryGoogleDialog(bot);}
+\DoxyCodeLine{00275\ \ \ \ \ \}}
+\DoxyCodeLine{00276\ \};}
+\DoxyCodeLine{00277\ }
+\DoxyCodeLine{00278\ \textcolor{comment}{/********************************************************/}}
+\DoxyCodeLine{00279\ \textcolor{keyword}{class\ }Module\ :\ \textcolor{keyword}{public}\ yarp::os::RFModule,\ \textcolor{keyword}{public}\ googleDialog\_IDL}
+\DoxyCodeLine{00280\ \{}
+\DoxyCodeLine{00281\ \ \ \ \ yarp::os::ResourceFinder\ \ \ \ *rf;}
+\DoxyCodeLine{00282\ \ \ \ \ yarp::os::RpcServer\ \ \ \ \ \ \ \ \ rpcPort;}
+\DoxyCodeLine{00283\ \ \ \ \ std::string\ state;}
+\DoxyCodeLine{00284\ \ \ \ \ std::int64\_t\ processing\_time;}
+\DoxyCodeLine{00285\ \ \ \ \ \textcolor{keywordtype}{bool}\ input\_is\_empty;}
+\DoxyCodeLine{00286\ \ \ \ \ yarp::os::BufferedPort<yarp::os::Bottle>\ statePort;}
+\DoxyCodeLine{00287\ }
+\DoxyCodeLine{00288\ \ \ \ \ Processing\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ *processing;}
+\DoxyCodeLine{00289\ \ \ \ \ \textcolor{keyword}{friend}\ \textcolor{keyword}{class\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }processing;}
+\DoxyCodeLine{00290\ }
+\DoxyCodeLine{00291\ \ \ \ \ \textcolor{keywordtype}{bool}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ closing;}
+\DoxyCodeLine{00292\ \ \ \ \ std::vector<std::string>\ \ \ \ allLanguageCodes;}
+\DoxyCodeLine{00293\ }
+\DoxyCodeLine{00294\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00295\ \ \ \ \ \textcolor{keywordtype}{bool}\ attach(yarp::os::RpcServer\ \&source)}
+\DoxyCodeLine{00296\ \ \ \ \ \{}
+\DoxyCodeLine{00297\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ this-\/>yarp().attachAsServer(source);}
+\DoxyCodeLine{00298\ \ \ \ \ \}}
+\DoxyCodeLine{00299\ }
+\DoxyCodeLine{00300\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00301\ }
+\DoxyCodeLine{00302\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00303\ \ \ \ \ \textcolor{keywordtype}{bool}\ configure(yarp::os::ResourceFinder\ \&rf)}
+\DoxyCodeLine{00304\ \ \ \ \ \{}
+\DoxyCodeLine{00305\ \ \ \ \ \ \ \ \ this-\/>rf=\&rf;}
+\DoxyCodeLine{00306\ \ \ \ \ \ \ \ \ this-\/>state=\textcolor{stringliteral}{"{}Ready"{}};}
+\DoxyCodeLine{00307\ \ \ \ \ \ \ \ \ this-\/>input\_is\_empty=\textcolor{keyword}{false};}
+\DoxyCodeLine{00308\ \ \ \ \ \ \ \ \ this-\/>processing\_time=0;}
+\DoxyCodeLine{00309\ \ \ \ \ \ \ \ \ std::string\ moduleName\ =\ rf.check(\textcolor{stringliteral}{"{}name"{}},\ yarp::os::Value(\textcolor{stringliteral}{"{}googleDialog"{}}),\ \textcolor{stringliteral}{"{}module\ name\ (string)"{}}).asString();}
+\DoxyCodeLine{00310\ \ \ \ \ \ \ \ \ std::string\ agent\_name\ =\ rf.check(\textcolor{stringliteral}{"{}agent"{}},\ yarp::os::Value(\textcolor{stringliteral}{"{}1"{}}),\ \textcolor{stringliteral}{"{}name\ of\ the\ agent"{}}).asString();}
+\DoxyCodeLine{00311\ \ \ \ \ \ \ \ \ std::string\ language\_code\ =\ rf.check(\textcolor{stringliteral}{"{}language"{}},\ yarp::os::Value(\textcolor{stringliteral}{"{}en-\/US"{}}),\ \textcolor{stringliteral}{"{}language\ of\ the\ dialogflow"{}}).asString();}
+\DoxyCodeLine{00312\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00313\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (rf.check(\textcolor{stringliteral}{"{}languageCodes"{}},\ \textcolor{stringliteral}{"{}Getting\ language\ codes"{}}))}
+\DoxyCodeLine{00314\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00315\ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&grp=rf.findGroup(\textcolor{stringliteral}{"{}languageCodes"{}});}
+\DoxyCodeLine{00316\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ sz=grp.size()-\/1;}
+\DoxyCodeLine{00317\ }
+\DoxyCodeLine{00318\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i=0;\ i<sz;\ i++)}
+\DoxyCodeLine{00319\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ allLanguageCodes.push\_back(grp.get(1+i).asString());}
+\DoxyCodeLine{00320\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00321\ }
+\DoxyCodeLine{00322\ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}this\ is\ the\ project"{}}\ <<\ rf.check(\textcolor{stringliteral}{"{}project"{}});}
+\DoxyCodeLine{00323\ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}Module\ name"{}}\ <<\ moduleName;}
+\DoxyCodeLine{00324\ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}agent\ name"{}}\ <<\ agent\_name;}
+\DoxyCodeLine{00325\ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}language\ of\ the\ dialog"{}}\ <<\ language\_code;}
+\DoxyCodeLine{00326\ \ \ \ \ \ \ \ \ setName(moduleName.c\_str());}
+\DoxyCodeLine{00327\ }
+\DoxyCodeLine{00328\ \ \ \ \ \ \ \ \ rpcPort.open((\textcolor{stringliteral}{"{}/"{}}+getName(\textcolor{stringliteral}{"{}/rpc"{}})).c\_str());}
+\DoxyCodeLine{00329\ \ \ \ \ \ \ \ \ statePort.open(\textcolor{stringliteral}{"{}/"{}}+\ moduleName\ +\ \textcolor{stringliteral}{"{}/state:o"{}});}
+\DoxyCodeLine{00330\ }
+\DoxyCodeLine{00331\ \ \ \ \ \ \ \ \ closing\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00332\ }
+\DoxyCodeLine{00333\ \ \ \ \ \ \ \ \ processing\ =\ \textcolor{keyword}{new}\ Processing(\ moduleName,\ agent\_name,\ language\_code,\ state,\ input\_is\_empty,\ processing\_time);}
+\DoxyCodeLine{00334\ }
+\DoxyCodeLine{00335\ \ \ \ \ \ \ \ \ \textcolor{comment}{/*\ now\ start\ the\ thread\ to\ do\ the\ work\ */}}
+\DoxyCodeLine{00336\ \ \ \ \ \ \ \ \ processing-\/>open();}
+\DoxyCodeLine{00337\ }
+\DoxyCodeLine{00338\ \ \ \ \ \ \ \ \ attach(rpcPort);}
+\DoxyCodeLine{00339\ }
+\DoxyCodeLine{00340\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00341\ \ \ \ \ \}}
+\DoxyCodeLine{00342\ }
+\DoxyCodeLine{00343\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00344\ \ \ \ \ \textcolor{keywordtype}{bool}\ setLanguage(\textcolor{keyword}{const}\ std::string\&\ languageCode)}
+\DoxyCodeLine{00345\ \ \ \ \ \{}
+\DoxyCodeLine{00346\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ returnVal\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00347\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00348\ \ \ \ \ \ \ \ \ std::string\ language;}
+\DoxyCodeLine{00349\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00350\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ 0;\ i\ <\ allLanguageCodes.size();\ i++)}
+\DoxyCodeLine{00351\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00352\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (languageCode\ ==\ allLanguageCodes[i])}
+\DoxyCodeLine{00353\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00354\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ language\ =\ languageCode;}
+\DoxyCodeLine{00355\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ processing-\/>setLanguageCode(languageCode);}
+\DoxyCodeLine{00356\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ returnVal\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00357\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00358\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00359\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00360\ }
+\DoxyCodeLine{00361\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ returnVal;}
+\DoxyCodeLine{00362\ \ \ \ \ \}}
+\DoxyCodeLine{00363\ }
+\DoxyCodeLine{00364\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00365\ \ \ \ \ std::string\ getLanguageCode()}
+\DoxyCodeLine{00366\ \ \ \ \ \{}
+\DoxyCodeLine{00367\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ processing-\/>getLanguageCode();}
+\DoxyCodeLine{00368\ \ \ \ \ \}}
+\DoxyCodeLine{00369\ }
+\DoxyCodeLine{00370\ \textcolor{comment}{\ \ \ \ /**********************************************************/}}
+\DoxyCodeLine{00371\ \ \ \ \ \textcolor{keywordtype}{bool}\ close()}
+\DoxyCodeLine{00372\ \ \ \ \ \{\ \ \ }
+\DoxyCodeLine{00373\ \ \ \ \ \ \ \ \ statePort.close();}
+\DoxyCodeLine{00374\ \ \ \ \ \ \ \ \ processing-\/>close();}
+\DoxyCodeLine{00375\ \ \ \ \ \ \ \ \ \textcolor{keyword}{delete}\ processing;}
+\DoxyCodeLine{00376\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00377\ \ \ \ \ \}}
+\DoxyCodeLine{00378\ }
+\DoxyCodeLine{00379\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00380\ \ \ \ \ \textcolor{keywordtype}{double}\ getPeriod()}
+\DoxyCodeLine{00381\ \ \ \ \ \{}
+\DoxyCodeLine{00382\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 0.1;}
+\DoxyCodeLine{00383\ \ \ \ \ \}}
+\DoxyCodeLine{00384\ }
+\DoxyCodeLine{00385\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00386\ \ \ \ \ \textcolor{keywordtype}{bool}\ quit()}
+\DoxyCodeLine{00387\ \ \ \ \ \{}
+\DoxyCodeLine{00388\ \ \ \ \ \ \ \ \ closing=\textcolor{keyword}{true};}
+\DoxyCodeLine{00389\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00390\ \ \ \ \ \}}
+\DoxyCodeLine{00391\ }
+\DoxyCodeLine{00392\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00393\ \ \ \ \ \textcolor{keywordtype}{bool}\ updateModule()}
+\DoxyCodeLine{00394\ \ \ \ \ \{\ \ \ }
+\DoxyCodeLine{00395\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(is\_changed)\{}
+\DoxyCodeLine{00396\ \ \ \ \ \ \ \ \ \ \ \ \ is\_changed=\textcolor{keyword}{false};}
+\DoxyCodeLine{00397\ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&outTargets\ =\ statePort.prepare();\ \ \ }
+\DoxyCodeLine{00398\ \ \ \ \ \ \ \ \ \ \ \ \ outTargets.clear();\ \ }
+\DoxyCodeLine{00399\ \ \ \ \ \ \ \ \ \ \ \ \ outTargets.addString(state);}
+\DoxyCodeLine{00400\ \ \ \ \ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}outTarget:"{}}\ <<\ outTargets.toString().c\_str();}
+\DoxyCodeLine{00401\ \ \ \ \ \ \ \ \ \ \ \ \ statePort.write();}
+\DoxyCodeLine{00402\ \ \ \ \ \ \ \ \ \}\ \ }
+\DoxyCodeLine{00403\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ !closing;}
+\DoxyCodeLine{00404\ \ \ \ \ \}}
+\DoxyCodeLine{00405\ \ \ \ \ }
+\DoxyCodeLine{00406\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00407\ \ \ \ \ std::string\ getState()}
+\DoxyCodeLine{00408\ \ \ \ \ \{\ \ }
+\DoxyCodeLine{00409\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ state;}
+\DoxyCodeLine{00410\ \ \ \ \ \}}
+\DoxyCodeLine{00411\ \ }
+\DoxyCodeLine{00412\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00413\ \ \ \ \ std::int64\_t\ getProcessingTime()}
+\DoxyCodeLine{00414\ \ \ \ \ \{\ \ }
+\DoxyCodeLine{00415\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ processing\_time;}
+\DoxyCodeLine{00416\ \ \ \ \ \}}
+\DoxyCodeLine{00417\ }
+\DoxyCodeLine{00418\ \textcolor{comment}{\ \ \ \ /********************************************************/}}
+\DoxyCodeLine{00419\ \ \ \ \ \textcolor{keywordtype}{bool}\ resetDialog()}
+\DoxyCodeLine{00420\ \ \ \ \ \{\ }
+\DoxyCodeLine{00421\ \ \ \ \ processing-\/>resetDialog();}
+\DoxyCodeLine{00422\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00423\ \ \ \ \ \}}
+\DoxyCodeLine{00424\ \};}
+\DoxyCodeLine{00425\ }
+\DoxyCodeLine{00426\ \textcolor{comment}{/********************************************************/}}
+\DoxyCodeLine{00427\ \textcolor{keywordtype}{int}\ main(\textcolor{keywordtype}{int}\ argc,\ \textcolor{keywordtype}{char}\ *argv[])}
+\DoxyCodeLine{00428\ \{}
+\DoxyCodeLine{00429\ \ \ \ \ yarp::os::Network::init();}
+\DoxyCodeLine{00430\ }
+\DoxyCodeLine{00431\ \ \ \ \ yarp::os::Network\ yarp;}
+\DoxyCodeLine{00432\ \ \ \ \ \textcolor{keywordflow}{if}\ (!yarp.checkNetwork())}
+\DoxyCodeLine{00433\ \ \ \ \ \{}
+\DoxyCodeLine{00434\ \ \ \ \ \ \ \ \ yError(\textcolor{stringliteral}{"{}YARP\ server\ not\ available!"{}});}
+\DoxyCodeLine{00435\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 1;}
+\DoxyCodeLine{00436\ \ \ \ \ \}}
+\DoxyCodeLine{00437\ }
+\DoxyCodeLine{00438\ \ \ \ \ Module\ \textcolor{keyword}{module};}
+\DoxyCodeLine{00439\ \ \ \ \ yarp::os::ResourceFinder\ rf;}
+\DoxyCodeLine{00440\ }
+\DoxyCodeLine{00441\ \ \ \ \ rf.setVerbose(\ \textcolor{keyword}{true}\ );}
+\DoxyCodeLine{00442\ \ \ \ \ rf.setDefaultContext(\ \textcolor{stringliteral}{"{}googleDialog"{}}\ );}
+\DoxyCodeLine{00443\ \ \ \ \ rf.setDefaultConfigFile(\ \textcolor{stringliteral}{"{}config.ini"{}}\ );}
+\DoxyCodeLine{00444\ \ \ \ \ rf.setDefault(\textcolor{stringliteral}{"{}name"{}},\textcolor{stringliteral}{"{}googleDialog"{}});}
+\DoxyCodeLine{00445\ \ \ \ \ rf.configure(argc,argv);}
+\DoxyCodeLine{00446\ }
+\DoxyCodeLine{00447\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{module}.runModule(rf);}
+\DoxyCodeLine{00448\ \}}
+
+\end{DoxyCode}

@@ -1,0 +1,269 @@
+\doxysection{start-\/speech.cpp}
+\label{start-speech_8cpp_source}\index{/home/runner/work/speech/speech/gh-\/pages/speech-\/interpreters/start/input/src/start-\/speech.cpp@{/home/runner/work/speech/speech/gh-\/pages/speech-\/interpreters/start/input/src/start-\/speech.cpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Copyright\ (C)\ 2017\ Department\ of\ Robotics\ Brain\ and\ Cognitive\ Sciences\ -\/\ Istituto\ Italiano\ di\ Tecnologia}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Author:\ Vadim\ Tikhanoff}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ email:\ \ vadim.tikhanoff@iit.it}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ *\ Permission\ is\ granted\ to\ copy,\ distribute,\ and/or\ modify\ this\ program}}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ *\ under\ the\ terms\ of\ the\ GNU\ General\ Public\ License,\ version\ 2\ or\ any}}
+\DoxyCodeLine{00007\ \textcolor{comment}{\ *\ later\ version\ published\ by\ the\ Free\ Software\ Foundation.}}
+\DoxyCodeLine{00008\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00009\ \textcolor{comment}{\ *\ A\ copy\ of\ the\ license\ can\ be\ found\ at}}
+\DoxyCodeLine{00010\ \textcolor{comment}{\ *\ http://www.robotcub.org/icub/license/gpl.txt}}
+\DoxyCodeLine{00011\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00012\ \textcolor{comment}{\ *\ This\ program\ is\ distributed\ in\ the\ hope\ that\ it\ will\ be\ useful,\ but}}
+\DoxyCodeLine{00013\ \textcolor{comment}{\ *\ WITHOUT\ ANY\ WARRANTY;\ without\ even\ the\ implied\ warranty\ of}}
+\DoxyCodeLine{00014\ \textcolor{comment}{\ *\ MERCHANTABILITY\ or\ FITNESS\ FOR\ A\ PARTICULAR\ PURPOSE.\ See\ the\ GNU\ General}}
+\DoxyCodeLine{00015\ \textcolor{comment}{\ *\ Public\ License\ for\ more\ details}}
+\DoxyCodeLine{00016\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#include\ "{}start-\/speech.h"{}}}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#include\ <yarp/os/Log.h>}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#include\ <yarp/os/LogStream.h>}}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00023\ \textcolor{keywordtype}{bool}\ STARTModule::configure(yarp::os::ResourceFinder\ \&rf)}
+\DoxyCodeLine{00024\ \{}
+\DoxyCodeLine{00025\ \ \ \ \ moduleName\ =\ rf.check(\textcolor{stringliteral}{"{}name"{}},\ yarp::os::Value(\textcolor{stringliteral}{"{}start-\/speech"{}}),\ \textcolor{stringliteral}{"{}module\ name\ (string)"{}}).asString();}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \ \ \ \ setName(moduleName.c\_str());}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \ \ \ \ handlerPortName\ =\ \ \textcolor{stringliteral}{"{}/"{}};}
+\DoxyCodeLine{00030\ \ \ \ \ handlerPortName\ +=\ getName();}
+\DoxyCodeLine{00031\ \ \ \ \ handlerPortName\ +=\ \ \textcolor{stringliteral}{"{}/rpc:i"{}};}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordflow}{if}\ (!rpcPort.open(handlerPortName.c\_str()))}
+\DoxyCodeLine{00034\ \ \ \ \ \{}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ yError(\ \textcolor{stringliteral}{"{}\%s\ :\ Unable\ to\ open\ port\ \%s\(\backslash\)n"{}},\ getName().c\_str(),\ handlerPortName.c\_str());}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00037\ \ \ \ \ \}}
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00039\ \ \ \ \ attach(rpcPort);}
+\DoxyCodeLine{00040\ }
+\DoxyCodeLine{00041\ \ \ \ \ \textcolor{comment}{/*\ create\ the\ thread\ and\ pass\ pointers\ to\ the\ module\ parameters\ */}}
+\DoxyCodeLine{00042\ \ \ \ \ startManager\ =\ \textcolor{keyword}{new}\ STARTManager(\ moduleName\ );}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \ \ \ \ \textcolor{comment}{/*\ now\ start\ the\ thread\ to\ do\ the\ work\ */}}
+\DoxyCodeLine{00045\ \ \ \ \ startManager-\/>open();}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ \ \ \ \ \textcolor{keywordflow}{return}\ true\ ;}
+\DoxyCodeLine{00048\ \}}
+\DoxyCodeLine{00049\ }
+\DoxyCodeLine{00050\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00051\ \textcolor{keywordtype}{bool}\ STARTModule::interruptModule()}
+\DoxyCodeLine{00052\ \{}
+\DoxyCodeLine{00053\ \ \ \ \ rpcPort.interrupt();}
+\DoxyCodeLine{00054\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00055\ \}}
+\DoxyCodeLine{00056\ }
+\DoxyCodeLine{00057\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00058\ \textcolor{keywordtype}{bool}\ STARTModule::close()}
+\DoxyCodeLine{00059\ \{}
+\DoxyCodeLine{00060\ \ \ \ \ rpcPort.close();}
+\DoxyCodeLine{00061\ \ \ \ \ yInfo(\ \textcolor{stringliteral}{"{}starting\ the\ shutdown\ procedure\(\backslash\)n"{}});}
+\DoxyCodeLine{00062\ \ \ \ \ startManager-\/>interrupt();}
+\DoxyCodeLine{00063\ \ \ \ \ startManager-\/>close();}
+\DoxyCodeLine{00064\ \ \ \ \ yInfo(\ \textcolor{stringliteral}{"{}deleting\ thread\(\backslash\)n"{}});}
+\DoxyCodeLine{00065\ \ \ \ \ \textcolor{keyword}{delete}\ startManager;}
+\DoxyCodeLine{00066\ \ \ \ \ yInfo(\ \textcolor{stringliteral}{"{}done\ deleting\ thread\(\backslash\)n"{}});}
+\DoxyCodeLine{00067\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00068\ \}}
+\DoxyCodeLine{00069\ }
+\DoxyCodeLine{00070\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00071\ \textcolor{keywordtype}{bool}\ STARTModule::updateModule()}
+\DoxyCodeLine{00072\ \{}
+\DoxyCodeLine{00073\ \ \ \ \ \textcolor{keywordflow}{return}\ !closing;}
+\DoxyCodeLine{00074\ \}}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00076\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00077\ \textcolor{keywordtype}{double}\ STARTModule::getPeriod()}
+\DoxyCodeLine{00078\ \{}
+\DoxyCodeLine{00079\ \ \ \ \ \textcolor{keywordflow}{return}\ 0.1;}
+\DoxyCodeLine{00080\ \}}
+\DoxyCodeLine{00081\ }
+\DoxyCodeLine{00082\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00083\ STARTManager::\string~STARTManager()}
+\DoxyCodeLine{00084\ \{}
+\DoxyCodeLine{00085\ }
+\DoxyCodeLine{00086\ \}}
+\DoxyCodeLine{00087\ }
+\DoxyCodeLine{00088\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00089\ STARTManager::STARTManager(\ \textcolor{keyword}{const}\ std::string\ \&moduleName\ )}
+\DoxyCodeLine{00090\ \{}
+\DoxyCodeLine{00091\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}initialising\ Variables\(\backslash\)n"{}});}
+\DoxyCodeLine{00092\ \ \ \ \ this-\/>moduleName\ =\ moduleName;}
+\DoxyCodeLine{00093\ \}}
+\DoxyCodeLine{00094\ }
+\DoxyCodeLine{00095\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00096\ \textcolor{keywordtype}{bool}\ STARTManager::open()}
+\DoxyCodeLine{00097\ \{}
+\DoxyCodeLine{00098\ \ \ \ \ this-\/>useCallback();}
+\DoxyCodeLine{00099\ }
+\DoxyCodeLine{00100\ \ \ \ \ \textcolor{comment}{//create\ all\ ports}}
+\DoxyCodeLine{00101\ \ \ \ \ inSpeechPortName\ =\ \textcolor{stringliteral}{"{}/"{}}\ +\ moduleName\ +\ \textcolor{stringliteral}{"{}/speech:i"{}};}
+\DoxyCodeLine{00102\ \ \ \ \ yarp::os::BufferedPort<yarp::os::Bottle\ >::open(\ inSpeechPortName.c\_str()\ );}
+\DoxyCodeLine{00103\ }
+\DoxyCodeLine{00104\ \ \ \ \ outSTARTUrlName\ =\ \textcolor{stringliteral}{"{}/"{}}\ +\ moduleName\ +\ \textcolor{stringliteral}{"{}/url"{}};}
+\DoxyCodeLine{00105\ \ \ \ \ portURL.openFake(outSTARTUrlName);\ \textcolor{comment}{//\ don't\ use\ a\ full,\ real\ port}}
+\DoxyCodeLine{00106\ }
+\DoxyCodeLine{00107\ \ \ \ \ outSTARTPortName\ =\ \textcolor{stringliteral}{"{}/"{}}\ +\ moduleName\ +\ \textcolor{stringliteral}{"{}/start:o"{}};}
+\DoxyCodeLine{00108\ \ \ \ \ startOutPort.open(\ outSTARTPortName.c\_str()\ );}
+\DoxyCodeLine{00109\ }
+\DoxyCodeLine{00110\ \ \ \ \ yarp::os::Network::connect(\textcolor{stringliteral}{"{}/yarpIOS/speechPort:o"{}},\ \textcolor{stringliteral}{"{}/speechSTART/speech:i"{}});}
+\DoxyCodeLine{00111\ }
+\DoxyCodeLine{00112\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00113\ \}}
+\DoxyCodeLine{00114\ }
+\DoxyCodeLine{00115\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00116\ \textcolor{keywordtype}{void}\ STARTManager::close()}
+\DoxyCodeLine{00117\ \{}
+\DoxyCodeLine{00118\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}now\ closing\ ports...\(\backslash\)n"{}});}
+\DoxyCodeLine{00119\ \ \ \ \ startOutPort.close();}
+\DoxyCodeLine{00120\ \ \ \ \ portURL.close();}
+\DoxyCodeLine{00121\ \ \ \ \ yarp::os::BufferedPort<yarp::os::Bottle\ >::close();}
+\DoxyCodeLine{00122\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}finished\ closing\ the\ read\ port...\(\backslash\)n"{}});}
+\DoxyCodeLine{00123\ \}}
+\DoxyCodeLine{00124\ }
+\DoxyCodeLine{00125\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00126\ \textcolor{keywordtype}{void}\ STARTManager::interrupt()}
+\DoxyCodeLine{00127\ \{}
+\DoxyCodeLine{00128\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}cleaning\ up...\(\backslash\)n"{}});}
+\DoxyCodeLine{00129\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}attempting\ to\ interrupt\ ports\(\backslash\)n"{}});}
+\DoxyCodeLine{00130\ \ \ \ \ yarp::os::BufferedPort<yarp::os::Bottle\ >::interrupt();}
+\DoxyCodeLine{00131\ \ \ \ \ portURL.interrupt();}
+\DoxyCodeLine{00132\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}finished\ interrupt\ ports\(\backslash\)n"{}});}
+\DoxyCodeLine{00133\ \}}
+\DoxyCodeLine{00134\ }
+\DoxyCodeLine{00135\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00136\ \textcolor{keywordtype}{void}\ STARTManager::onRead(yarp::os::Bottle\ \&bot)}
+\DoxyCodeLine{00137\ \{}
+\DoxyCodeLine{00138\ \ \ \ \ yarp::os::Bottle\ \&\textcolor{keyword}{final}\ =\ startOutPort.prepare();}
+\DoxyCodeLine{00139\ \ \ \ \ \textcolor{keyword}{final}.clear();}
+\DoxyCodeLine{00140\ \ \ \ \ \textcolor{comment}{//yInfo("{}input:\ \%s\ \(\backslash\)n"{},\ bot.toString().c\_str());}}
+\DoxyCodeLine{00141\ }
+\DoxyCodeLine{00142\ \ \ \ \ \textcolor{keywordflow}{if}\ (bot.size()>0)\{}
+\DoxyCodeLine{00143\ }
+\DoxyCodeLine{00144\ \ \ \ \ \ \ \ \ std::string\ question\ =\ bot.toString();}
+\DoxyCodeLine{00145\ }
+\DoxyCodeLine{00146\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (isalpha(question[0]))}
+\DoxyCodeLine{00147\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}avoiding\ erase\(\backslash\)n"{}});}
+\DoxyCodeLine{00148\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\{}
+\DoxyCodeLine{00149\ }
+\DoxyCodeLine{00150\ \ \ \ \ \ \ \ \ \ \ \ \ question.erase(\ remove\_if(question.begin(),\ question.end(),\ aZCheck),\ question.end());}
+\DoxyCodeLine{00151\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00152\ }
+\DoxyCodeLine{00153\ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}cmd\ is\ \%s"{}},\ question.c\_str());}
+\DoxyCodeLine{00154\ }
+\DoxyCodeLine{00155\ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&request\ =\ \textcolor{keyword}{final}.addList();}
+\DoxyCodeLine{00156\ }
+\DoxyCodeLine{00157\ \ \ \ \ \ \ \ \ std::stringstream\ s(question);}
+\DoxyCodeLine{00158\ \ \ \ \ \ \ \ \ std::string\ word;}
+\DoxyCodeLine{00159\ }
+\DoxyCodeLine{00160\ \ \ \ \ \ \ \ \ std::string\ speech\ =\ \textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{00161\ }
+\DoxyCodeLine{00162\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ process\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00163\ }
+\DoxyCodeLine{00164\ \ \ \ \ \ \ \ \ \textcolor{comment}{//format\ it\ correctly\ for\ START}}
+\DoxyCodeLine{00165\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ 0;\ s\ >>\ word;\ i++)\{}
+\DoxyCodeLine{00166\ }
+\DoxyCodeLine{00167\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (i==0\ \&\&\ strcmp\ (word.c\_str(),\ \textcolor{stringliteral}{"{}no"{}})==0)}
+\DoxyCodeLine{00168\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ process=\textcolor{keyword}{false};}
+\DoxyCodeLine{00169\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (i==0\ \&\&\ strcmp\ (word.c\_str(),\ \textcolor{stringliteral}{"{}yes"{}})==0)}
+\DoxyCodeLine{00170\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ process=\textcolor{keyword}{false};}
+\DoxyCodeLine{00171\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (i==0\ \&\&\ strcmp\ (word.c\_str(),\ \textcolor{stringliteral}{"{}Skip"{}})==0)}
+\DoxyCodeLine{00172\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ process=\textcolor{keyword}{false};}
+\DoxyCodeLine{00173\ }
+\DoxyCodeLine{00174\ \ \ \ \ \ \ \ \ \ \ \ \ speech\ +=\ word.c\_str();}
+\DoxyCodeLine{00175\ \ \ \ \ \ \ \ \ \ \ \ \ request.addString(word);}
+\DoxyCodeLine{00176\ \ \ \ \ \ \ \ \ \ \ \ \ speech\ +=\ \textcolor{stringliteral}{"{}+"{}};}
+\DoxyCodeLine{00177\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00178\ }
+\DoxyCodeLine{00179\ \ \ \ \ \ \ \ \ \textcolor{comment}{//clean\ it}}
+\DoxyCodeLine{00180\ \ \ \ \ \ \ \ \ speech.erase(speech.size()-\/1,1);}
+\DoxyCodeLine{00181\ }
+\DoxyCodeLine{00182\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!process)}
+\DoxyCodeLine{00183\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00184\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}Special\ cmd\ \%s,\ not\ processing\ "{}},\ speech.c\_str());}
+\DoxyCodeLine{00185\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00186\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00187\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00188\ }
+\DoxyCodeLine{00189\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//string\ port\ =\ "{}http://start.csail.mit.edu:80/askstart.cgi?server=guest\&action=parse\&te=formatted-\/text\&query="{};}}
+\DoxyCodeLine{00190\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ port\ =\ \textcolor{stringliteral}{"{}http://start.csail.mit.edu:80/api.php?server=guest\&action=parse\&te=formatted-\/text\&query="{}};}
+\DoxyCodeLine{00191\ }
+\DoxyCodeLine{00192\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ query\ =\ port\ +\ speech;}
+\DoxyCodeLine{00193\ }
+\DoxyCodeLine{00194\ \ \ \ \ \ \ \ \ \ \ \ \ portURL.addOutput(query.c\_str());}
+\DoxyCodeLine{00195\ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ cmd,\ reply;}
+\DoxyCodeLine{00196\ \ \ \ \ \ \ \ \ \ \ \ \ cmd.addString(\textcolor{stringliteral}{"{}1"{}});\ \textcolor{comment}{//\ send\ any\ message\ you\ like,\ it\ is\ ignored}}
+\DoxyCodeLine{00197\ \ \ \ \ \ \ \ \ \ \ \ \ portURL.write(cmd,reply);}
+\DoxyCodeLine{00198\ }
+\DoxyCodeLine{00199\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (reply.size()>0)\{}
+\DoxyCodeLine{00200\ }
+\DoxyCodeLine{00201\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ tmp\ =\ reply.toString().c\_str();}
+\DoxyCodeLine{00202\ }
+\DoxyCodeLine{00203\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ answer;}
+\DoxyCodeLine{00204\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{try}\ \{}
+\DoxyCodeLine{00205\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ answer\ =\ tmp.substr(tmp.find\_first\_of(\textcolor{stringliteral}{"{}["{}}),\ tmp.find\_last\_of(\textcolor{stringliteral}{"{}]"{}}));}
+\DoxyCodeLine{00206\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00207\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{catch}\ (\textcolor{keyword}{const}\ std::out\_of\_range\&\ oor)\ \{}
+\DoxyCodeLine{00208\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yError(\textcolor{stringliteral}{"{}START\ cannot\ process\ the\ command\ \%s"{}},\ \ tmp.c\_str());}
+\DoxyCodeLine{00209\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00210\ }
+\DoxyCodeLine{00211\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//find\ how\ many\ occurences\ of\ "{}\(\backslash\)n"{}}}
+\DoxyCodeLine{00212\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ n\ =\ std::count(answer.begin(),\ answer.end(),\ \textcolor{charliteral}{']'});}
+\DoxyCodeLine{00213\ }
+\DoxyCodeLine{00214\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}with\ \%lu\ occurences\ \(\backslash\)n"{}},\ n);}
+\DoxyCodeLine{00215\ }
+\DoxyCodeLine{00216\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&tmpList\ =\ \textcolor{keyword}{final}.addList();}
+\DoxyCodeLine{00217\ }
+\DoxyCodeLine{00218\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i\ =\ 0;\ i<n;\ i++)}
+\DoxyCodeLine{00219\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00220\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ various\ =\ answer.substr(answer.find\_first\_of(\textcolor{stringliteral}{"{}["{}}),\ answer.find\_first\_of(\textcolor{stringliteral}{"{}]"{}}));}
+\DoxyCodeLine{00221\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ various.erase(0,1);}
+\DoxyCodeLine{00222\ }
+\DoxyCodeLine{00223\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//yInfo("{}\(\backslash\)n\ tmp\ string\ is:\(\backslash\)n\ \%s\ \(\backslash\)n"{},\ various.c\_str());}}
+\DoxyCodeLine{00224\ }
+\DoxyCodeLine{00225\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::stringstream\ str(various);}
+\DoxyCodeLine{00226\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ words;}
+\DoxyCodeLine{00227\ }
+\DoxyCodeLine{00228\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&finalTmp\ =\ tmpList.addList();}
+\DoxyCodeLine{00229\ }
+\DoxyCodeLine{00230\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ 0;\ str\ >>\ words;\ i++)}
+\DoxyCodeLine{00231\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00232\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (words.size()\ >\ 1\ )}
+\DoxyCodeLine{00233\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ words.erase(\ remove\_if(words.begin(),\ words.end(),\ aZCheck),\ words.end());}
+\DoxyCodeLine{00234\ }
+\DoxyCodeLine{00235\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (isalpha(*words.c\_str()))}
+\DoxyCodeLine{00236\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ finalTmp.addString(\ words.c\_str()\ );}
+\DoxyCodeLine{00237\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00238\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00239\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ sz;\ \ \ \textcolor{comment}{//\ alias\ of\ size\_t}}
+\DoxyCodeLine{00240\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ i\_dec\ =\ std::stoi\ (words,\&sz);}
+\DoxyCodeLine{00241\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ finalTmp.addInt32(i\_dec);}
+\DoxyCodeLine{00242\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00243\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00244\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ answer.erase(answer.find\_first\_of(\textcolor{stringliteral}{"{}["{}}),\ answer.find\_first\_of(\textcolor{stringliteral}{"{}]"{}}));}
+\DoxyCodeLine{00245\ }
+\DoxyCodeLine{00246\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ answer.erase(0,\ answer.find\_first\_of(\textcolor{stringliteral}{"{}["{}}));}
+\DoxyCodeLine{00247\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00248\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00249\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\{}
+\DoxyCodeLine{00250\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yError(\textcolor{stringliteral}{"{}Something\ is\ wrong\ with\ the\ reply\ from\ START"{}});}
+\DoxyCodeLine{00251\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00252\ }
+\DoxyCodeLine{00253\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}\ LIST\ is:\(\backslash\)n\ \%s\ \(\backslash\)n"{}},\ \textcolor{keyword}{final}.toString().c\_str());}
+\DoxyCodeLine{00254\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00255\ }
+\DoxyCodeLine{00256\ \ \ \ \ \ \ \ \ \ \ \ \ startOutPort.write();}
+\DoxyCodeLine{00257\ \ \ \ \ \ \ \ \ \}\textcolor{keywordflow}{else}}
+\DoxyCodeLine{00258\ }
+\DoxyCodeLine{00259\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00260\ \ \ \ \ \ \ \ \ \ \ \ \ yError(\textcolor{stringliteral}{"{}Something\ is\ wrong\ with\ the\ query"{}});}
+\DoxyCodeLine{00261\ \ \ \ \ \}}
+\DoxyCodeLine{00262\ \}}
+\DoxyCodeLine{00263\ \textcolor{comment}{//empty\ line\ to\ make\ gcc\ happy}}
+
+\end{DoxyCode}

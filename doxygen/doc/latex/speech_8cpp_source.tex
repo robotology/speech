@@ -1,0 +1,464 @@
+\doxysection{speech.\+cpp}
+\label{speech_8cpp_source}\index{/home/runner/work/speech/speech/gh-\/pages/svox-\/speech/speech.cpp@{/home/runner/work/speech/speech/gh-\/pages/svox-\/speech/speech.cpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Copyright\ (C)\ 2014\ iCub\ Facility}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Authors:\ Ali\ Paikan}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ CopyPolicy:\ Released\ under\ the\ terms\ of\ the\ LGPLv2.1\ or\ later,\ see\ LGPL.TXT}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <cstdio>}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <cstdlib>}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ <cstring>}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ <algorithm>}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ <yarp/os/Thread.h>}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ <yarp/os/Time.h>}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ <yarp/os/Stamp.h>}}
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#include\ <yarp/os/LogStream.h>}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#include\ <speech.h>}}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \textcolor{keyword}{using\ namespace\ }yarp::os;}
+\DoxyCodeLine{00021\ \textcolor{keyword}{using\ namespace\ }yarp::dev;}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \textcolor{preprocessor}{\#define\ PICO\_MEM\_SIZE\ \ \ 2500000\ \ \ \ \ }\textcolor{comment}{/*\ adaptation\ layer\ defines\ */}\textcolor{preprocessor}{}}
+\DoxyCodeLine{00024\ \textcolor{preprocessor}{\#define\ DummyLen\ \ \ \ \ \ \ \ 100000000}}
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\#define\ MAX\_OUTBUF\_SIZE\ 128\ \ \ \ \ \ \ \ \ }\textcolor{comment}{/*\ string\ constants\ */}\textcolor{preprocessor}{}}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\ PICO\_VOICE\_NAME\ \ \ \ =\ \textcolor{stringliteral}{"{}PicoVoice"{}};}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \textcolor{comment}{//\ supported\ voices\ Pico\ does\ not\ seperately\ specify\ the\ voice\ and\ locale.}}
+\DoxyCodeLine{00030\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\ picoSupportedLangIso3[]\ \ \ \ \ \ \ \ =\ \{\ \textcolor{stringliteral}{"{}eng"{}},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}eng"{}},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}deu"{}},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}spa"{}},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}fra"{}},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}ita"{}}\ \};}
+\DoxyCodeLine{00031\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\ picoSupportedCountryIso3[]\ \ \ \ \ =\ \{\ \textcolor{stringliteral}{"{}USA"{}},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}GBR"{}},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}DEU"{}},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}ESP"{}},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}FRA"{}},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}ITA"{}}\ \};}
+\DoxyCodeLine{00032\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\ picoSupportedLang[]\ \ \ \ \ \ \ \ \ \ \ \ =\ \{\ \textcolor{stringliteral}{"{}en-\/US"{}},\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}en-\/GB"{}},\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}de-\/DE"{}},\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}es-\/ES"{}},\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}fr-\/FR"{}},\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}it-\/IT"{}}\ \};}
+\DoxyCodeLine{00033\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\ picoInternalLang[]\ \ \ \ \ \ \ \ \ \ \ \ \ =\ \{\ \textcolor{stringliteral}{"{}en-\/US"{}},\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}en-\/GB"{}},\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}de-\/DE"{}},\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}es-\/ES"{}},\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}fr-\/FR"{}},\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}it-\/IT"{}}\ \};}
+\DoxyCodeLine{00034\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\ picoInternalTaLingware[]\ \ \ \ \ \ \ =\ \{\ \textcolor{stringliteral}{"{}en-\/US\_ta.bin"{}},\ \ \ \ \ \textcolor{stringliteral}{"{}en-\/GB\_ta.bin"{}},\ \ \ \ \ \textcolor{stringliteral}{"{}de-\/DE\_ta.bin"{}},\ \ \ \ \ \textcolor{stringliteral}{"{}es-\/ES\_ta.bin"{}},\ \ \ \ \ \textcolor{stringliteral}{"{}fr-\/FR\_ta.bin"{}},\ \ \ \ \ \textcolor{stringliteral}{"{}it-\/IT\_ta.bin"{}}\ \};}
+\DoxyCodeLine{00035\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\ picoInternalSgLingware[]\ \ \ \ \ \ \ =\ \{\ \textcolor{stringliteral}{"{}en-\/US\_lh0\_sg.bin"{}},\ \textcolor{stringliteral}{"{}en-\/GB\_kh0\_sg.bin"{}},\ \textcolor{stringliteral}{"{}de-\/DE\_gl0\_sg.bin"{}},\ \textcolor{stringliteral}{"{}es-\/ES\_zl0\_sg.bin"{}},\ \textcolor{stringliteral}{"{}fr-\/FR\_nk0\_sg.bin"{}},\ \textcolor{stringliteral}{"{}it-\/IT\_cm0\_sg.bin"{}}\ \};}
+\DoxyCodeLine{00036\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\ picoInternalUtppLingware[]\ \ \ \ \ =\ \{\ \textcolor{stringliteral}{"{}en-\/US\_utpp.bin"{}},\ \ \ \textcolor{stringliteral}{"{}en-\/GB\_utpp.bin"{}},\ \ \ \textcolor{stringliteral}{"{}de-\/DE\_utpp.bin"{}},\ \ \ \textcolor{stringliteral}{"{}es-\/ES\_utpp.bin"{}},\ \ \ \textcolor{stringliteral}{"{}fr-\/FR\_utpp.bin"{}},\ \ \ \textcolor{stringliteral}{"{}it-\/IT\_utpp.bin"{}}\ \};}
+\DoxyCodeLine{00037\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ picoNumSupportedVocs\ \ \ \ \ \ \ \ \ \ \ \ \ \ =\ 6;}
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \textcolor{comment}{/****************************************************************}}
+\DoxyCodeLine{00041\ \textcolor{comment}{\ *\ @brief\ The\ yarp::dev::Speech\ class}}
+\DoxyCodeLine{00042\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00043\ Speech::Speech()\ \{}
+\DoxyCodeLine{00044\ \ \ \ \ pcmDevice.clear();}
+\DoxyCodeLine{00045\ \ \ \ \ language\ =\ \textcolor{stringliteral}{"{}en-\/US"{}};}
+\DoxyCodeLine{00046\ \ \ \ \ supportedLangs.push\_back(\textcolor{stringliteral}{"{}en-\/US"{}});}
+\DoxyCodeLine{00047\ \ \ \ \ supportedLangs.push\_back(\textcolor{stringliteral}{"{}en-\/GB"{}});}
+\DoxyCodeLine{00048\ \ \ \ \ supportedLangs.push\_back(\textcolor{stringliteral}{"{}es-\/ES"{}});}
+\DoxyCodeLine{00049\ \ \ \ \ supportedLangs.push\_back(\textcolor{stringliteral}{"{}fr-\/FR"{}});}
+\DoxyCodeLine{00050\ \ \ \ \ supportedLangs.push\_back(\textcolor{stringliteral}{"{}it-\/IT"{}});}
+\DoxyCodeLine{00051\ \ \ \ \ supportedLangs.push\_back(\textcolor{stringliteral}{"{}de-\/DE"{}});}
+\DoxyCodeLine{00052\ \ \ \ \ \textcolor{comment}{//\ picotts}}
+\DoxyCodeLine{00053\ \ \ \ \ picoMemArea\ \ \ \ \ \ \ \ \ =\ NULL;}
+\DoxyCodeLine{00054\ \ \ \ \ picoSystem\ \ \ \ \ \ \ \ \ \ =\ NULL;}
+\DoxyCodeLine{00055\ \ \ \ \ picoTaResource\ \ \ \ \ \ =\ NULL;}
+\DoxyCodeLine{00056\ \ \ \ \ picoSgResource\ \ \ \ \ \ =\ NULL;}
+\DoxyCodeLine{00057\ \ \ \ \ picoUtppResource\ \ \ \ =\ NULL;}
+\DoxyCodeLine{00058\ \ \ \ \ picoEngine\ \ \ \ \ \ \ \ \ \ =\ NULL;}
+\DoxyCodeLine{00059\ \ \ \ \ picoTaFileName\ \ \ \ \ \ =\ NULL;}
+\DoxyCodeLine{00060\ \ \ \ \ picoSgFileName\ \ \ \ \ \ =\ NULL;}
+\DoxyCodeLine{00061\ \ \ \ \ picoUtppFileName\ \ \ \ =\ NULL;}
+\DoxyCodeLine{00062\ \ \ \ \ picoTaResourceName\ \ =\ NULL;}
+\DoxyCodeLine{00063\ \ \ \ \ picoSgResourceName\ \ =\ NULL;}
+\DoxyCodeLine{00064\ \ \ \ \ picoUtppResourceName\ =\ NULL;}
+\DoxyCodeLine{00065\ \ \ \ \ picoSynthAbort\ =\ 0;}
+\DoxyCodeLine{00066\ \}}
+\DoxyCodeLine{00067\ }
+\DoxyCodeLine{00068\ Speech::\string~Speech()\ \{}
+\DoxyCodeLine{00069\ \ \ \ \ close();}
+\DoxyCodeLine{00070\ \}}
+\DoxyCodeLine{00071\ }
+\DoxyCodeLine{00072\ }
+\DoxyCodeLine{00073\ \textcolor{keywordtype}{bool}\ Speech::open(yarp::os::Searchable\ \&config)}
+\DoxyCodeLine{00074\ \{}
+\DoxyCodeLine{00075\ \ \ \ \ Speech::config.fromString(config.toString());}
+\DoxyCodeLine{00076\ }
+\DoxyCodeLine{00077\ \ \ \ \ \textcolor{keywordflow}{if}(config.check(\textcolor{stringliteral}{"{}pcm-\/device"{}}))}
+\DoxyCodeLine{00078\ \ \ \ \ \ \ \ \ pcmDevice\ =\ config.find(\textcolor{stringliteral}{"{}pcm-\/device"{}}).asString();}
+\DoxyCodeLine{00079\ \ \ \ \ \textcolor{keywordflow}{if}(config.check(\textcolor{stringliteral}{"{}default-\/language"{}}))}
+\DoxyCodeLine{00080\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(!setLanguage(config.find(\textcolor{stringliteral}{"{}default-\/language"{}}).asString()))\ \{}
+\DoxyCodeLine{00081\ \ \ \ \ \ \ \ \ \ \ \ \ yError()<<\textcolor{stringliteral}{"{}Cannot\ set\ the\ default\ language\ to"{}}<<config.find(\textcolor{stringliteral}{"{}default-\/language"{}}).asString();}
+\DoxyCodeLine{00082\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00083\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00084\ }
+\DoxyCodeLine{00085\ \ \ \ \ setPitch(config.check(\textcolor{stringliteral}{"{}pitch"{}},Value(90)).asInt32());}
+\DoxyCodeLine{00086\ \ \ \ \ setSpeed(config.check(\textcolor{stringliteral}{"{}speed"{}},Value(105)).asInt32());}
+\DoxyCodeLine{00087\ }
+\DoxyCodeLine{00088\ \ \ \ \ lingwareRF.setDefaultContext(config.check(\textcolor{stringliteral}{"{}lingware-\/context"{}},Value(\textcolor{stringliteral}{"{}speech"{}})).asString());}
+\DoxyCodeLine{00089\ \ \ \ \ lingwareRF.configure(0,NULL);}
+\DoxyCodeLine{00090\ }
+\DoxyCodeLine{00091\ \ \ \ \ this-\/>yarp().attachAsServer(rpcPort);}
+\DoxyCodeLine{00092\ }
+\DoxyCodeLine{00093\ \ \ \ \ std::string\ robot=config.check(\textcolor{stringliteral}{"{}robot"{}},Value(\textcolor{stringliteral}{"{}icub"{}})).asString();}
+\DoxyCodeLine{00094\ \ \ \ \ std::string\ portName=std::string(\textcolor{stringliteral}{"{}/"{}}+robot+\textcolor{stringliteral}{"{}/speech:rpc"{}});}
+\DoxyCodeLine{00095\ \ \ \ \ \textcolor{keywordflow}{if}(!rpcPort.open(portName))\ \{}
+\DoxyCodeLine{00096\ \ \ \ \ \ \ \ \ yError()<<\textcolor{stringliteral}{"{}Cannot\ open\ port\ "{}}<<portName;}
+\DoxyCodeLine{00097\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00098\ \ \ \ \ \}}
+\DoxyCodeLine{00099\ }
+\DoxyCodeLine{00100\ \ \ \ \ \textcolor{comment}{//return\ PeriodicThread::start();}}
+\DoxyCodeLine{00101\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00102\ \}}
+\DoxyCodeLine{00103\ }
+\DoxyCodeLine{00104\ \textcolor{keywordtype}{bool}\ Speech::close()}
+\DoxyCodeLine{00105\ \{}
+\DoxyCodeLine{00106\ \ \ \ \ yInfo()<<\textcolor{stringliteral}{"{}closing\ Speech!"{}};}
+\DoxyCodeLine{00107\ \ \ \ \ Thread::stop();}
+\DoxyCodeLine{00108\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00109\ \}}
+\DoxyCodeLine{00110\ }
+\DoxyCodeLine{00111\ \textcolor{keywordtype}{bool}\ Speech::threadInit()\ \{}
+\DoxyCodeLine{00112\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00113\ \}}
+\DoxyCodeLine{00114\ }
+\DoxyCodeLine{00115\ \textcolor{keywordtype}{void}\ Speech::threadRelease()\ \{}
+\DoxyCodeLine{00116\ \ \ \ \ rpcPort.close();}
+\DoxyCodeLine{00117\ \}}
+\DoxyCodeLine{00118\ }
+\DoxyCodeLine{00119\ \textcolor{keywordtype}{void}\ Speech::run()\ \{}
+\DoxyCodeLine{00120\ \}}
+\DoxyCodeLine{00121\ }
+\DoxyCodeLine{00122\ }
+\DoxyCodeLine{00123\ \textcolor{keywordtype}{bool}\ Speech::playWav(\textcolor{keyword}{const}\ std::string\&\ filename)\ \{}
+\DoxyCodeLine{00124\ \ \ \ \ std::string\ cmd;}
+\DoxyCodeLine{00125\ \textcolor{preprocessor}{\#if\ WIN32}}
+\DoxyCodeLine{00126\ \ \ \ \ cmd\ =\ \textcolor{stringliteral}{"{}powershell\ -\/c\ (New-\/Object\ Media.SoundPlayer\ "{}};}
+\DoxyCodeLine{00127\ \ \ \ \ cmd\ +=\ filename;}
+\DoxyCodeLine{00128\ \ \ \ \ cmd\ +=\ \textcolor{stringliteral}{"{}).PlaySync()"{}};}
+\DoxyCodeLine{00129\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00130\ \ \ \ \ \textcolor{comment}{//\ aplay\ -\/-\/device="{}plughw:1,0"{}\ speech.wav}}
+\DoxyCodeLine{00131\ \ \ \ \ cmd\ =\ \textcolor{stringliteral}{"{}aplay\ "{}};}
+\DoxyCodeLine{00132\ \ \ \ \ \textcolor{keywordflow}{if}(pcmDevice.size())}
+\DoxyCodeLine{00133\ \ \ \ \ \ \ \ \ cmd\ +=\ \textcolor{stringliteral}{"{}-\/-\/device=\(\backslash\)"{}"{}}+pcmDevice+\textcolor{stringliteral}{"{}\(\backslash\)"{}\ "{}};}
+\DoxyCodeLine{00134\ \ \ \ \ cmd\ +=\ filename;}
+\DoxyCodeLine{00135\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00136\ \ \ \ \ yInfo()<<cmd;}
+\DoxyCodeLine{00137\ \ \ \ \ \textcolor{keywordtype}{int}\ ret\ =\ system(cmd.c\_str());}
+\DoxyCodeLine{00138\ \ \ \ \ \textcolor{keywordflow}{if}(ret\ !=\ 0)\ \{}
+\DoxyCodeLine{00139\ \ \ \ \ \ \ \ \ yWarning()<<\textcolor{stringliteral}{"{}Cannot\ play\ wave\ file"{}}<<filename;}
+\DoxyCodeLine{00140\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00141\ \ \ \ \ \}}
+\DoxyCodeLine{00142\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00143\ \}}
+\DoxyCodeLine{00144\ }
+\DoxyCodeLine{00145\ \textcolor{keywordtype}{bool}\ Speech::setLanguage(\textcolor{keyword}{const}\ std::string\&\ language)\ \{}
+\DoxyCodeLine{00146\ \ \ \ \ \textcolor{keywordflow}{if}(std::find(supportedLangs.begin(),}
+\DoxyCodeLine{00147\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ supportedLangs.end(),}
+\DoxyCodeLine{00148\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ language)\ ==\ supportedLangs.end())\ \{}
+\DoxyCodeLine{00149\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00150\ \ \ \ \ \}}
+\DoxyCodeLine{00151\ }
+\DoxyCodeLine{00152\ \ \ \ \ Speech::language\ =\ language;}
+\DoxyCodeLine{00153\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00154\ \}}
+\DoxyCodeLine{00155\ }
+\DoxyCodeLine{00156\ \textcolor{keywordtype}{bool}\ Speech::setSpeed(\textcolor{keyword}{const}\ int16\_t\ speed)\ \{}
+\DoxyCodeLine{00157\ \ \ \ \ Speech::speed\ =\ speed;}
+\DoxyCodeLine{00158\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00159\ \}}
+\DoxyCodeLine{00160\ }
+\DoxyCodeLine{00161\ \textcolor{keywordtype}{bool}\ Speech::setPitch(\textcolor{keyword}{const}\ int16\_t\ pitch)\{}
+\DoxyCodeLine{00162\ \ \ \ \ Speech::pitch\ =\ pitch;}
+\DoxyCodeLine{00163\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00164\ \}}
+\DoxyCodeLine{00165\ }
+\DoxyCodeLine{00166\ std::vector<std::string>\ Speech::getSupportedLang()\ \{}
+\DoxyCodeLine{00167\ \ \ \ \ \textcolor{keywordflow}{return}\ supportedLangs;}
+\DoxyCodeLine{00168\ \}}
+\DoxyCodeLine{00169\ }
+\DoxyCodeLine{00170\ int16\_t\ Speech::getSpeed()\ \{}
+\DoxyCodeLine{00171\ \ \ \ \ \textcolor{keywordflow}{return}\ speed;}
+\DoxyCodeLine{00172\ \}}
+\DoxyCodeLine{00173\ }
+\DoxyCodeLine{00174\ int16\_t\ Speech::getPitch()\{}
+\DoxyCodeLine{00175\ \ \ \ \ \textcolor{keywordflow}{return}\ pitch;}
+\DoxyCodeLine{00176\ \}}
+\DoxyCodeLine{00177\ }
+\DoxyCodeLine{00178\ }
+\DoxyCodeLine{00179\ \textcolor{keywordtype}{bool}\ Speech::say(\textcolor{keyword}{const}\ std::string\&\ text)\ \{}
+\DoxyCodeLine{00180\ \ \ \ \ std::string\ waveFile\ =\ renderSpeech(text);}
+\DoxyCodeLine{00181\ \ \ \ \ \textcolor{keywordflow}{if}(waveFile.size()\ ==\ 0)}
+\DoxyCodeLine{00182\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00183\ \ \ \ \ \textcolor{keywordflow}{return}\ playWav(waveFile);}
+\DoxyCodeLine{00184\ \}}
+\DoxyCodeLine{00185\ }
+\DoxyCodeLine{00186\ \textcolor{keywordtype}{bool}\ Speech::play()\ \{}
+\DoxyCodeLine{00187\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00188\ \}}
+\DoxyCodeLine{00189\ }
+\DoxyCodeLine{00190\ \textcolor{keywordtype}{bool}\ Speech::pause()\ \{}
+\DoxyCodeLine{00191\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00192\ \}}
+\DoxyCodeLine{00193\ }
+\DoxyCodeLine{00194\ \textcolor{keywordtype}{bool}\ Speech::stop()\ \{}
+\DoxyCodeLine{00195\ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00196\ \}}
+\DoxyCodeLine{00197\ }
+\DoxyCodeLine{00198\ \textcolor{keyword}{const}\ std::string\ Speech::renderSpeech(\textcolor{keyword}{const}\ std::string\ \&text)\ \{}
+\DoxyCodeLine{00199\ \ \ \ \ \textcolor{comment}{//<pitch\ level='70'><speed\ level='100'></speed></pitch>"{}}}
+\DoxyCodeLine{00200\ \ \ \ \ \textcolor{keywordtype}{char}*\ cmdText\ =\ (\textcolor{keywordtype}{char}*)\ std::malloc(text.size()+256);}
+\DoxyCodeLine{00201\ \ \ \ \ std::string\ filename;}
+\DoxyCodeLine{00202\ \textcolor{preprocessor}{\#if\ WIN32}}
+\DoxyCodeLine{00203\ \ \ \ \ \textcolor{keywordflow}{if}\ (\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ env\_tmp\ =\ std::getenv(\textcolor{stringliteral}{"{}TMP"{}}))}
+\DoxyCodeLine{00204\ \ \ \ \ \{}
+\DoxyCodeLine{00205\ \ \ \ \ \ \ \ \ filename\ =\ env\_tmp;}
+\DoxyCodeLine{00206\ \ \ \ \ \ \ \ \ filename\ +=\ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)speech.wav"{}};}
+\DoxyCodeLine{00207\ \ \ \ \ \}}
+\DoxyCodeLine{00208\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00209\ \ \ \ \ \ \ \ \ filename\ =\ \textcolor{stringliteral}{"{}speech.wav"{}};}
+\DoxyCodeLine{00210\ \ \ \ \ \_snprintf}
+\DoxyCodeLine{00211\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00212\ \ \ \ \ filename\ =\ \textcolor{stringliteral}{"{}/tmp/speech.wav"{}};}
+\DoxyCodeLine{00213\ \ \ \ \ snprintf}
+\DoxyCodeLine{00214\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00215\ \ \ \ \ (cmdText,text.size()+255,}
+\DoxyCodeLine{00216\ \ \ \ \ \textcolor{stringliteral}{"{}<pitch\ level='\%d'><speed\ level='\%d'>\ \%s\ </speed></pitch>"{}},}
+\DoxyCodeLine{00217\ \ \ \ \ pitch,\ speed,\ text.c\_str());}
+\DoxyCodeLine{00218\ \ \ \ \ \textcolor{comment}{/*}}
+\DoxyCodeLine{00219\ \textcolor{comment}{\ \ \ \ //pico2wave\ -\/len-\/US\ -\/w\ out.wav\ "{}hello!"{}}}
+\DoxyCodeLine{00220\ \textcolor{comment}{\ \ \ \ std::string\ cmd\ =\ "{}pico2wave\ -\/l"{}\ +\ language\ +\ "{}\ -\/w\ "{}\ +\ filename;}}
+\DoxyCodeLine{00221\ \textcolor{comment}{\ \ \ \ cmd\ =\ cmd\ +\ "{}\ \(\backslash\)"{}"{}\ +\ text\ +\ "{}\(\backslash\)"{}"{};}}
+\DoxyCodeLine{00222\ \textcolor{comment}{\ \ \ \ int\ ret\ =\ system(cmd.c\_str());}}
+\DoxyCodeLine{00223\ \textcolor{comment}{\ \ \ \ if(ret\ !=\ 0)\ \{}}
+\DoxyCodeLine{00224\ \textcolor{comment}{\ \ \ \ \ \ \ \ yWarning()<<"{}Cannot\ render\ the\ speech!"{};}}
+\DoxyCodeLine{00225\ \textcolor{comment}{\ \ \ \ \ \ \ \ filename.clear();}}
+\DoxyCodeLine{00226\ \textcolor{comment}{\ \ \ \ \}}}
+\DoxyCodeLine{00227\ \textcolor{comment}{*/}}
+\DoxyCodeLine{00228\ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\ lang\ =\ language.c\_str();}
+\DoxyCodeLine{00229\ \ \ \ \ \textcolor{keywordtype}{int}\ langIndex\ =\ -\/1,\ langIndexTmp\ =\ -\/1;}
+\DoxyCodeLine{00230\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ bufferSize\ =\ 256;}
+\DoxyCodeLine{00231\ }
+\DoxyCodeLine{00232\ }
+\DoxyCodeLine{00233\ \ \ \ \ \textcolor{comment}{/*\ option:\ -\/-\/lang\ */}}
+\DoxyCodeLine{00234\ \ \ \ \ \textcolor{keywordflow}{for}(langIndexTmp\ =0;\ langIndexTmp<picoNumSupportedVocs;\ langIndexTmp++)\ \{}
+\DoxyCodeLine{00235\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(!std::strcmp(picoSupportedLang[langIndexTmp],\ lang))\ \{}
+\DoxyCodeLine{00236\ \ \ \ \ \ \ \ \ \ \ \ \ langIndex\ =\ langIndexTmp;}
+\DoxyCodeLine{00237\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00238\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00239\ \ \ \ \ \}}
+\DoxyCodeLine{00240\ \ \ \ \ yAssert(langIndex\ !=\ -\/1);}
+\DoxyCodeLine{00241\ }
+\DoxyCodeLine{00242\ \ \ \ \ \textcolor{keywordtype}{int}\ ret,\ getstatus;}
+\DoxyCodeLine{00243\ \ \ \ \ pico\_Char\ *\ inp\ =\ NULL;}
+\DoxyCodeLine{00244\ \ \ \ \ pico\_Char\ *\ local\_text\ =\ NULL;}
+\DoxyCodeLine{00245\ \ \ \ \ \textcolor{keywordtype}{short}\ \ \ \ \ \ \ outbuf[MAX\_OUTBUF\_SIZE/2];}
+\DoxyCodeLine{00246\ \ \ \ \ pico\_Int16\ \ bytes\_sent,\ bytes\_recv,\ text\_remaining,\ out\_data\_type;}
+\DoxyCodeLine{00247\ \ \ \ \ pico\_Retstring\ outMessage;}
+\DoxyCodeLine{00248\ }
+\DoxyCodeLine{00249\ \ \ \ \ picoSynthAbort\ =\ 0;}
+\DoxyCodeLine{00250\ }
+\DoxyCodeLine{00251\ \ \ \ \ picoMemArea\ =\ std::malloc(\ PICO\_MEM\_SIZE\ );}
+\DoxyCodeLine{00252\ \ \ \ \ \textcolor{keywordflow}{if}((ret\ =\ pico\_initialize(\ picoMemArea,\ PICO\_MEM\_SIZE,\ \&picoSystem\ )))\ \{}
+\DoxyCodeLine{00253\ \ \ \ \ \ \ \ \ pico\_getSystemStatusMessage(picoSystem,\ ret,\ outMessage);}
+\DoxyCodeLine{00254\ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ initialize\ pico\ (\%i):\ \%s\(\backslash\)n"{}},\ ret,\ outMessage);}
+\DoxyCodeLine{00255\ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00256\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00257\ \ \ \ \ \}}
+\DoxyCodeLine{00258\ }
+\DoxyCodeLine{00259\ \ \ \ \ \textcolor{comment}{/*\ Load\ the\ text\ analysis\ Lingware\ resource\ file.\ \ \ */}}
+\DoxyCodeLine{00260\ \ \ \ \ picoTaFileName\ \ \ \ \ \ =\ (pico\_Char\ *)\ std::malloc(\ PICO\_MAX\_DATAPATH\_NAME\_SIZE\ +\ PICO\_MAX\_FILE\_NAME\_SIZE\ );}
+\DoxyCodeLine{00261\ \ \ \ \ std::strcpy((\textcolor{keywordtype}{char}\ *)\ picoTaFileName,\ \ \ lingwareRF.findFileByName(picoInternalTaLingware[langIndex]).c\_str());}
+\DoxyCodeLine{00262\ \ \ \ \ \textcolor{keywordflow}{if}((ret\ =\ pico\_loadResource(\ picoSystem,\ picoTaFileName,\ \&picoTaResource\ )))\ \{}
+\DoxyCodeLine{00263\ \ \ \ \ \ \ \ \ pico\_getSystemStatusMessage(picoSystem,\ ret,\ outMessage);}
+\DoxyCodeLine{00264\ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ load\ text\ analysis\ resource\ file\ (\%i):\ \%s\(\backslash\)n"{}},\ ret,\ outMessage);}
+\DoxyCodeLine{00265\ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00266\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00267\ \ \ \ \ \}}
+\DoxyCodeLine{00268\ }
+\DoxyCodeLine{00269\ \ \ \ \ \textcolor{comment}{/*\ Load\ the\ signal\ generation\ Lingware\ resource\ file.\ \ \ */}}
+\DoxyCodeLine{00270\ \ \ \ \ picoSgFileName\ \ \ \ \ \ =\ (pico\_Char\ *)\ std::malloc(\ PICO\_MAX\_DATAPATH\_NAME\_SIZE\ +\ PICO\_MAX\_FILE\_NAME\_SIZE\ );}
+\DoxyCodeLine{00271\ \ \ \ \ std::strcpy((\textcolor{keywordtype}{char}\ *)\ picoSgFileName,\ \ \ lingwareRF.findFileByName(picoInternalSgLingware[langIndex]).c\_str());}
+\DoxyCodeLine{00272\ \ \ \ \ \textcolor{keywordflow}{if}((ret\ =\ pico\_loadResource(\ picoSystem,\ picoSgFileName,\ \&picoSgResource\ )))\ \{}
+\DoxyCodeLine{00273\ \ \ \ \ \ \ \ \ pico\_getSystemStatusMessage(picoSystem,\ ret,\ outMessage);}
+\DoxyCodeLine{00274\ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ load\ signal\ generation\ Lingware\ resource\ file\ (\%i):\ \%s\(\backslash\)n"{}},\ ret,\ outMessage);}
+\DoxyCodeLine{00275\ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00276\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00277\ \ \ \ \ \}}
+\DoxyCodeLine{00278\ }
+\DoxyCodeLine{00279\ \ \ \ \ \textcolor{comment}{/*\ Load\ the\ utpp\ Lingware\ resource\ file\ if\ exists\ -\/\ NOTE:\ this\ file\ is\ optional}}
+\DoxyCodeLine{00280\ \textcolor{comment}{\ \ \ \ \ \ \ and\ is\ currently\ not\ used.\ Loading\ is\ only\ attempted\ for\ future\ compatibility.}}
+\DoxyCodeLine{00281\ \textcolor{comment}{\ \ \ \ \ \ \ If\ this\ file\ is\ not\ present\ the\ loading\ will\ still\ succeed.\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ //}}
+\DoxyCodeLine{00282\ \textcolor{comment}{\ \ \ \ picoUtppFileName\ \ \ \ \ \ =\ (pico\_Char\ *)\ std::malloc(\ PICO\_MAX\_DATAPATH\_NAME\_SIZE\ +\ PICO\_MAX\_FILE\_NAME\_SIZE\ );}}
+\DoxyCodeLine{00283\ \textcolor{comment}{\ \ \ \ std::strcpy((char\ *)\ picoUtppFileName,\ \ \ PICO\_LINGWARE\_PATH);}}
+\DoxyCodeLine{00284\ \textcolor{comment}{\ \ \ \ std::strcat((char\ *)\ picoUtppFileName,\ \ \ (const\ char\ *)\ picoInternalUtppLingware[langIndex]);}}
+\DoxyCodeLine{00285\ \textcolor{comment}{\ \ \ \ ret\ =\ pico\_loadResource(\ picoSystem,\ picoUtppFileName,\ \&picoUtppResource\ );}}
+\DoxyCodeLine{00286\ \textcolor{comment}{\ \ \ \ pico\_getSystemStatusMessage(picoSystem,\ ret,\ outMessage);}}
+\DoxyCodeLine{00287\ \textcolor{comment}{\ \ \ \ printf("{}pico\_loadResource:\ \%i:\ \%s\(\backslash\)n"{},\ ret,\ outMessage);}}
+\DoxyCodeLine{00288\ \textcolor{comment}{\ \ \ \ */}}
+\DoxyCodeLine{00289\ }
+\DoxyCodeLine{00290\ \ \ \ \ \textcolor{comment}{/*\ Get\ the\ text\ analysis\ resource\ name.\ \ \ \ \ */}}
+\DoxyCodeLine{00291\ \ \ \ \ picoTaResourceName\ \ =\ (pico\_Char\ *)\ std::malloc(\ PICO\_MAX\_RESOURCE\_NAME\_SIZE\ );}
+\DoxyCodeLine{00292\ \ \ \ \ \textcolor{keywordflow}{if}((ret\ =\ pico\_getResourceName(\ picoSystem,\ picoTaResource,\ (\textcolor{keywordtype}{char}\ *)\ picoTaResourceName\ )))\ \{}
+\DoxyCodeLine{00293\ \ \ \ \ \ \ \ \ pico\_getSystemStatusMessage(picoSystem,\ ret,\ outMessage);}
+\DoxyCodeLine{00294\ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ get\ the\ text\ analysis\ resource\ name\ (\%i):\ \%s\(\backslash\)n"{}},\ ret,\ outMessage);}
+\DoxyCodeLine{00295\ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00296\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00297\ \ \ \ \ \}}
+\DoxyCodeLine{00298\ }
+\DoxyCodeLine{00299\ \ \ \ \ \textcolor{comment}{/*\ Get\ the\ signal\ generation\ resource\ name.\ */}}
+\DoxyCodeLine{00300\ \ \ \ \ picoSgResourceName\ \ =\ (pico\_Char\ *)\ std::malloc(\ PICO\_MAX\_RESOURCE\_NAME\_SIZE\ );}
+\DoxyCodeLine{00301\ \ \ \ \ \textcolor{keywordflow}{if}((ret\ =\ pico\_getResourceName(\ picoSystem,\ picoSgResource,\ (\textcolor{keywordtype}{char}\ *)\ picoSgResourceName\ )))\ \{}
+\DoxyCodeLine{00302\ \ \ \ \ \ \ \ \ pico\_getSystemStatusMessage(picoSystem,\ ret,\ outMessage);}
+\DoxyCodeLine{00303\ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ get\ the\ signal\ generation\ resource\ name\ (\%i):\ \%s\(\backslash\)n"{}},\ ret,\ outMessage);}
+\DoxyCodeLine{00304\ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00305\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00306\ \ \ \ \ \}}
+\DoxyCodeLine{00307\ }
+\DoxyCodeLine{00308\ }
+\DoxyCodeLine{00309\ \ \ \ \ \textcolor{comment}{/*\ Create\ a\ voice\ definition.\ \ \ */}}
+\DoxyCodeLine{00310\ \ \ \ \ \textcolor{keywordflow}{if}((ret\ =\ pico\_createVoiceDefinition(\ picoSystem,\ (\textcolor{keyword}{const}\ pico\_Char\ *)\ PICO\_VOICE\_NAME\ )))\ \{}
+\DoxyCodeLine{00311\ \ \ \ \ \ \ \ \ pico\_getSystemStatusMessage(picoSystem,\ ret,\ outMessage);}
+\DoxyCodeLine{00312\ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ create\ voice\ definition\ (\%i):\ \%s\(\backslash\)n"{}},\ ret,\ outMessage);}
+\DoxyCodeLine{00313\ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00314\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00315\ \ \ \ \ \}}
+\DoxyCodeLine{00316\ }
+\DoxyCodeLine{00317\ \ \ \ \ \textcolor{comment}{/*\ Add\ the\ text\ analysis\ resource\ to\ the\ voice.\ */}}
+\DoxyCodeLine{00318\ \ \ \ \ \textcolor{keywordflow}{if}((ret\ =\ pico\_addResourceToVoiceDefinition(\ picoSystem,\ (\textcolor{keyword}{const}\ pico\_Char\ *)\ PICO\_VOICE\_NAME,\ picoTaResourceName\ )))\ \{}
+\DoxyCodeLine{00319\ \ \ \ \ \ \ \ \ pico\_getSystemStatusMessage(picoSystem,\ ret,\ outMessage);}
+\DoxyCodeLine{00320\ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ add\ the\ text\ analysis\ resource\ to\ the\ voice\ (\%i):\ \%s\(\backslash\)n"{}},\ ret,\ outMessage);}
+\DoxyCodeLine{00321\ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00322\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00323\ \ \ \ \ \}}
+\DoxyCodeLine{00324\ }
+\DoxyCodeLine{00325\ \ \ \ \ \textcolor{comment}{/*\ Add\ the\ signal\ generation\ resource\ to\ the\ voice.\ */}}
+\DoxyCodeLine{00326\ \ \ \ \ \textcolor{keywordflow}{if}((ret\ =\ pico\_addResourceToVoiceDefinition(\ picoSystem,\ (\textcolor{keyword}{const}\ pico\_Char\ *)\ PICO\_VOICE\_NAME,\ picoSgResourceName\ )))\ \{}
+\DoxyCodeLine{00327\ \ \ \ \ \ \ \ \ pico\_getSystemStatusMessage(picoSystem,\ ret,\ outMessage);}
+\DoxyCodeLine{00328\ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ add\ the\ signal\ generation\ resource\ to\ the\ voice\ (\%i):\ \%s\(\backslash\)n"{}},\ ret,\ outMessage);}
+\DoxyCodeLine{00329\ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00330\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00331\ \ \ \ \ \}}
+\DoxyCodeLine{00332\ }
+\DoxyCodeLine{00333\ \ \ \ \ \textcolor{comment}{/*\ Create\ a\ new\ Pico\ engine.\ */}}
+\DoxyCodeLine{00334\ \ \ \ \ \textcolor{keywordflow}{if}((ret\ =\ pico\_newEngine(\ picoSystem,\ (\textcolor{keyword}{const}\ pico\_Char\ *)\ PICO\_VOICE\_NAME,\ \&picoEngine\ )))\ \{}
+\DoxyCodeLine{00335\ \ \ \ \ \ \ \ \ pico\_getSystemStatusMessage(picoSystem,\ ret,\ outMessage);}
+\DoxyCodeLine{00336\ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ create\ a\ new\ pico\ engine\ (\%i):\ \%s\(\backslash\)n"{}},\ ret,\ outMessage);}
+\DoxyCodeLine{00337\ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00338\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00339\ \ \ \ \ \}}
+\DoxyCodeLine{00340\ }
+\DoxyCodeLine{00341\ \ \ \ \ local\_text\ =\ (pico\_Char\ *)\ cmdText;}
+\DoxyCodeLine{00342\ \ \ \ \ text\_remaining\ =\ std::strlen((\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *)\ local\_text)\ +\ 1;}
+\DoxyCodeLine{00343\ }
+\DoxyCodeLine{00344\ \ \ \ \ inp\ =\ (pico\_Char\ *)\ local\_text;}
+\DoxyCodeLine{00345\ }
+\DoxyCodeLine{00346\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ bufused\ =\ 0;}
+\DoxyCodeLine{00347\ }
+\DoxyCodeLine{00348\ \ \ \ \ picoos\_Common\ common\ =\ (picoos\_Common)\ pico\_sysGetCommon(picoSystem);}
+\DoxyCodeLine{00349\ }
+\DoxyCodeLine{00350\ \ \ \ \ picoos\_SDFile\ sdOutFile\ =\ NULL;}
+\DoxyCodeLine{00351\ }
+\DoxyCodeLine{00352\ \ \ \ \ picoos\_bool\ done\ =\ TRUE;}
+\DoxyCodeLine{00353\ \ \ \ \ \textcolor{keywordflow}{if}(TRUE\ !=\ (done\ =\ picoos\_sdfOpenOut(common,\ \&sdOutFile,}
+\DoxyCodeLine{00354\ \ \ \ \ \ \ \ \ (picoos\_char\ *)\ filename.c\_str(),\ SAMPLE\_FREQ\_16KHZ,\ PICOOS\_ENC\_LIN)))}
+\DoxyCodeLine{00355\ \ \ \ \ \{}
+\DoxyCodeLine{00356\ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ open\ output\ wave\ file\(\backslash\)n"{}});}
+\DoxyCodeLine{00357\ \ \ \ \ \ \ \ \ ret\ =\ 1;}
+\DoxyCodeLine{00358\ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00359\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00360\ \ \ \ \ \}}
+\DoxyCodeLine{00361\ }
+\DoxyCodeLine{00362\ \ \ \ \ int8\_t*\ buffer\ =\ (int8\_t*)\ std::malloc(\ bufferSize\ );}
+\DoxyCodeLine{00363\ \ \ \ \ \textcolor{comment}{/*\ synthesis\ loop\ \ \ */}}
+\DoxyCodeLine{00364\ \ \ \ \ \textcolor{keywordflow}{while}\ (text\_remaining)\ \{}
+\DoxyCodeLine{00365\ \ \ \ \ \ \ \ \ \textcolor{comment}{/*\ Feed\ the\ text\ into\ the\ engine.\ \ \ */}}
+\DoxyCodeLine{00366\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}((ret\ =\ pico\_putTextUtf8(\ picoEngine,\ inp,\ text\_remaining,\ \&bytes\_sent\ )))\ \{}
+\DoxyCodeLine{00367\ \ \ \ \ \ \ \ \ \ \ \ \ pico\_getSystemStatusMessage(picoSystem,\ ret,\ outMessage);}
+\DoxyCodeLine{00368\ \ \ \ \ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ put\ Text\ (\%i):\ \%s\(\backslash\)n"{}},\ ret,\ outMessage);}
+\DoxyCodeLine{00369\ \ \ \ \ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00370\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00371\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00372\ }
+\DoxyCodeLine{00373\ \ \ \ \ \ \ \ \ text\_remaining\ -\/=\ bytes\_sent;}
+\DoxyCodeLine{00374\ \ \ \ \ \ \ \ \ inp\ +=\ bytes\_sent;}
+\DoxyCodeLine{00375\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{do}\ \{}
+\DoxyCodeLine{00376\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (picoSynthAbort)\ \{}
+\DoxyCodeLine{00377\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00378\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00379\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00380\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{/*\ Retrieve\ the\ samples\ and\ add\ them\ to\ the\ buffer.\ */}}
+\DoxyCodeLine{00381\ \ \ \ \ \ \ \ \ \ \ \ \ getstatus\ =\ pico\_getData(\ picoEngine,\ (\textcolor{keywordtype}{void}\ *)\ outbuf,}
+\DoxyCodeLine{00382\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ MAX\_OUTBUF\_SIZE,\ \&bytes\_recv,\ \&out\_data\_type\ );}
+\DoxyCodeLine{00383\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}((getstatus\ !=PICO\_STEP\_BUSY)\ \&\&\ (getstatus\ !=PICO\_STEP\_IDLE))\{}
+\DoxyCodeLine{00384\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ pico\_getSystemStatusMessage(picoSystem,\ getstatus,\ outMessage);}
+\DoxyCodeLine{00385\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ get\ Data\ (\%i):\ \%s\(\backslash\)n"{}},\ getstatus,\ outMessage);}
+\DoxyCodeLine{00386\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00387\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00388\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00389\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (bytes\_recv)\ \{}
+\DoxyCodeLine{00390\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ ((bufused\ +\ bytes\_recv)\ <=\ bufferSize)\ \{}
+\DoxyCodeLine{00391\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::memcpy(buffer+bufused,\ (int8\_t\ *)\ outbuf,\ bytes\_recv);}
+\DoxyCodeLine{00392\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ bufused\ +=\ bytes\_recv;}
+\DoxyCodeLine{00393\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}\ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{00394\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ done\ =\ picoos\_sdfPutSamples(}
+\DoxyCodeLine{00395\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ sdOutFile,}
+\DoxyCodeLine{00396\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ bufused\ /\ 2,}
+\DoxyCodeLine{00397\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ (picoos\_int16*)\ (buffer));}
+\DoxyCodeLine{00398\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ bufused\ =\ 0;}
+\DoxyCodeLine{00399\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::memcpy(buffer,\ (int8\_t\ *)\ outbuf,\ bytes\_recv);}
+\DoxyCodeLine{00400\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ bufused\ +=\ bytes\_recv;}
+\DoxyCodeLine{00401\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00402\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00403\ \ \ \ \ \ \ \ \ \}\ \textcolor{keywordflow}{while}\ (PICO\_STEP\_BUSY\ ==\ getstatus);}
+\DoxyCodeLine{00404\ \ \ \ \ \ \ \ \ \textcolor{comment}{/*\ This\ chunk\ of\ synthesis\ is\ finished;\ pass\ the\ remaining\ samples.\ */}}
+\DoxyCodeLine{00405\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!picoSynthAbort)\ \{}
+\DoxyCodeLine{00406\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ done\ =\ picoos\_sdfPutSamples(}
+\DoxyCodeLine{00407\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ sdOutFile,}
+\DoxyCodeLine{00408\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ bufused\ /\ 2,}
+\DoxyCodeLine{00409\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ (picoos\_int16*)\ (buffer));}
+\DoxyCodeLine{00410\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00411\ \ \ \ \ \ \ \ \ picoSynthAbort\ =\ 0;}
+\DoxyCodeLine{00412\ \ \ \ \ \}}
+\DoxyCodeLine{00413\ }
+\DoxyCodeLine{00414\ \ \ \ \ \textcolor{keywordflow}{if}(TRUE\ !=\ (done\ =\ picoos\_sdfCloseOut(common,\ \&sdOutFile)))\ \{}
+\DoxyCodeLine{00415\ \ \ \ \ \ \ \ \ std::fprintf(stderr,\ \textcolor{stringliteral}{"{}Cannot\ close\ output\ wave\ file\(\backslash\)n"{}});}
+\DoxyCodeLine{00416\ \ \ \ \ \ \ \ \ ret\ =\ 1;}
+\DoxyCodeLine{00417\ \ \ \ \ \ \ \ \ std::free(buffer);}
+\DoxyCodeLine{00418\ \ \ \ \ \ \ \ \ releasePico();}
+\DoxyCodeLine{00419\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00420\ \ \ \ \ \}}
+\DoxyCodeLine{00421\ }
+\DoxyCodeLine{00422\ \ \ \ \ std::free(buffer);}
+\DoxyCodeLine{00423\ \ \ \ \ releasePico();}
+\DoxyCodeLine{00424\ \ \ \ \ \textcolor{keywordflow}{return}\ filename;}
+\DoxyCodeLine{00425\ \}}
+\DoxyCodeLine{00426\ }
+\DoxyCodeLine{00427\ \textcolor{keywordtype}{void}\ Speech::releasePico()\ \{}
+\DoxyCodeLine{00428\ }
+\DoxyCodeLine{00429\ \ \ \ \ \textcolor{keywordflow}{if}\ (picoEngine)\ \{}
+\DoxyCodeLine{00430\ \ \ \ \ \ \ \ \ pico\_disposeEngine(\ picoSystem,\ \&picoEngine\ );}
+\DoxyCodeLine{00431\ \ \ \ \ \ \ \ \ pico\_releaseVoiceDefinition(\ picoSystem,\ (pico\_Char\ *)\ PICO\_VOICE\_NAME\ );}
+\DoxyCodeLine{00432\ \ \ \ \ \ \ \ \ picoEngine\ =\ NULL;}
+\DoxyCodeLine{00433\ \ \ \ \ \}}
+\DoxyCodeLine{00434\ }
+\DoxyCodeLine{00435\ \ \ \ \ \textcolor{keywordflow}{if}\ (picoUtppResource)\ \{}
+\DoxyCodeLine{00436\ \ \ \ \ \ \ \ \ pico\_unloadResource(\ picoSystem,\ \&picoUtppResource\ );}
+\DoxyCodeLine{00437\ \ \ \ \ \ \ \ \ picoUtppResource\ =\ NULL;}
+\DoxyCodeLine{00438\ \ \ \ \ \}}
+\DoxyCodeLine{00439\ }
+\DoxyCodeLine{00440\ \ \ \ \ \textcolor{keywordflow}{if}\ (picoSgResource)\ \{}
+\DoxyCodeLine{00441\ \ \ \ \ \ \ \ \ pico\_unloadResource(\ picoSystem,\ \&picoSgResource\ );}
+\DoxyCodeLine{00442\ \ \ \ \ \ \ \ \ picoSgResource\ =\ NULL;}
+\DoxyCodeLine{00443\ \ \ \ \ \}}
+\DoxyCodeLine{00444\ }
+\DoxyCodeLine{00445\ \ \ \ \ \textcolor{keywordflow}{if}\ (picoTaResource)\ \{}
+\DoxyCodeLine{00446\ \ \ \ \ \ \ \ \ pico\_unloadResource(\ picoSystem,\ \&picoTaResource\ );}
+\DoxyCodeLine{00447\ \ \ \ \ \ \ \ \ picoTaResource\ =\ NULL;}
+\DoxyCodeLine{00448\ \ \ \ \ \}}
+\DoxyCodeLine{00449\ }
+\DoxyCodeLine{00450\ \ \ \ \ \textcolor{keywordflow}{if}\ (picoSystem)\ \{}
+\DoxyCodeLine{00451\ \ \ \ \ \ \ \ \ pico\_terminate(\&picoSystem);}
+\DoxyCodeLine{00452\ \ \ \ \ \ \ \ \ picoSystem\ =\ NULL;}
+\DoxyCodeLine{00453\ \ \ \ \ \}}
+\DoxyCodeLine{00454\ \ \ \ \ \textcolor{keywordflow}{if}(picoMemArea)\ \{}
+\DoxyCodeLine{00455\ \ \ \ \ \ \ \ \ std::free(picoMemArea);}
+\DoxyCodeLine{00456\ \ \ \ \ \ \ \ \ picoMemArea\ =\ NULL;}
+\DoxyCodeLine{00457\ \ \ \ \ \}}
+\DoxyCodeLine{00458\ \}}
+
+\end{DoxyCode}

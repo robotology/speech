@@ -1,0 +1,49 @@
+\doxysection{main.\+cpp}
+\label{speechRecognizer_2src_2main_8cpp_source}\index{/home/runner/work/speech/speech/gh-\/pages/speechRecognizer/src/main.cpp@{/home/runner/work/speech/speech/gh-\/pages/speechRecognizer/src/main.cpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{*\ Copyright(C)\ 2014\ WYSIWYD\ Consortium,\ European\ Commission\ FP7\ Project\ ICT\ -\/\ 612139}}
+\DoxyCodeLine{00003\ \textcolor{comment}{*\ Authors:\ Stephane\ Lallee}}
+\DoxyCodeLine{00004\ \textcolor{comment}{*\ email\ :\ stephane.lallee@gmail.com}}
+\DoxyCodeLine{00005\ \textcolor{comment}{*\ Permission\ is\ granted\ to\ copy,\ distribute,\ and\ /\ or\ modify\ this\ program}}
+\DoxyCodeLine{00006\ \textcolor{comment}{*\ under\ the\ terms\ of\ the\ GNU\ General\ Public\ License,\ version\ 2\ or\ any}}
+\DoxyCodeLine{00007\ \textcolor{comment}{*\ later\ version\ published\ by\ the\ Free\ Software\ Foundation.}}
+\DoxyCodeLine{00008\ \textcolor{comment}{*}}
+\DoxyCodeLine{00009\ \textcolor{comment}{*\ A\ copy\ of\ the\ license\ can\ be\ found\ at}}
+\DoxyCodeLine{00010\ \textcolor{comment}{*\ wysiwyd\ /\ license\ /\ gpl.txt}}
+\DoxyCodeLine{00011\ \textcolor{comment}{*}}
+\DoxyCodeLine{00012\ \textcolor{comment}{*\ This\ program\ is\ distributed\ in\ the\ hope\ that\ it\ will\ be\ useful,\ but}}
+\DoxyCodeLine{00013\ \textcolor{comment}{*\ WITHOUT\ ANY\ WARRANTY;\ without\ even\ the\ implied\ warranty\ of}}
+\DoxyCodeLine{00014\ \textcolor{comment}{*\ MERCHANTABILITY\ or\ FITNESS\ FOR\ A\ PARTICULAR\ PURPOSE.See\ the\ GNU\ General}}
+\DoxyCodeLine{00015\ \textcolor{comment}{*\ Public\ License\ for\ more\ details}}
+\DoxyCodeLine{00016\ \textcolor{comment}{*/}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00094\ \textcolor{preprocessor}{\#include\ "{}SpeechRecognizerModule.h"{}}}
+\DoxyCodeLine{00095\ }
+\DoxyCodeLine{00096\ \textcolor{keywordtype}{int}\ main(\textcolor{keywordtype}{int}\ argc,\ \textcolor{keywordtype}{char}*\ argv[])}
+\DoxyCodeLine{00097\ \{}
+\DoxyCodeLine{00098\ \ \ \ \ \textcolor{keywordtype}{double}\ t0;}
+\DoxyCodeLine{00099\ \ \ \ \ \textcolor{keywordflow}{if}\ (::CoInitializeEx(NULL,COINIT\_MULTITHREADED)\ ==\ S\_OK)}
+\DoxyCodeLine{00100\ \ \ \ \ \{}
+\DoxyCodeLine{00101\ \ \ \ \ \ \ \ \ Network\ yarp;}
+\DoxyCodeLine{00102\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!yarp.checkNetwork())}
+\DoxyCodeLine{00103\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 1;}
+\DoxyCodeLine{00104\ }
+\DoxyCodeLine{00105\ \ \ \ \ \ \ \ \ ResourceFinder\ rf;}
+\DoxyCodeLine{00106\ \ \ \ \ \ \ \ \ rf.setDefaultContext(\textcolor{stringliteral}{"{}speechRecognizer"{}});}
+\DoxyCodeLine{00107\ \ \ \ \ \ \ \ \ rf.setDefaultConfigFile(\textcolor{stringliteral}{"{}config.ini"{}});}
+\DoxyCodeLine{00108\ \ \ \ \ \ \ \ \ rf.configure(argc,argv);}
+\DoxyCodeLine{00109\ \ \ \ \ \ \ \ \ SpeechRecognizerModule\ mod;}
+\DoxyCodeLine{00110\ }
+\DoxyCodeLine{00111\ \ \ \ \ \ \ \ \ mod.runModule(rf);}
+\DoxyCodeLine{00112\ \ \ \ \ \ \ \ \ t0\ =\ Time::now();}
+\DoxyCodeLine{00113\ \ \ \ \ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Out\ of\ the\ runModule().\ You\ may\ want\ to\ stop\ the\ microphone\ to\ get\ back\ the\ hand..."{}};}
+\DoxyCodeLine{00114\ \ \ \ \ \}}
+\DoxyCodeLine{00115\ \ \ \ \ ::CoUninitialize();}
+\DoxyCodeLine{00116\ \ \ \ \ yInfo()\ <<\textcolor{stringliteral}{"{}Time\ to\ give\ back\ the\ hand\ :\ "{}}<<Time::now()-\/t0;}
+\DoxyCodeLine{00117\ \}}
+\DoxyCodeLine{00118\ }
+\DoxyCodeLine{00119\ }
+
+\end{DoxyCode}

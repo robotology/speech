@@ -1,0 +1,536 @@
+\doxysection{start-\/ask.cpp}
+\label{start-ask_8cpp_source}\index{/home/runner/work/speech/speech/gh-\/pages/speech-\/interpreters/start/ask/src/start-\/ask.cpp@{/home/runner/work/speech/speech/gh-\/pages/speech-\/interpreters/start/ask/src/start-\/ask.cpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Copyright\ (C)\ 2017\ iCub\ Facility\ -\/\ Istituto\ Italiano\ di\ Tecnologia}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Author:\ Vadim\ Tikhanoff}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ email:\ \ vadim.tikhanoff@iit.it}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ *\ Permission\ is\ granted\ to\ copy,\ distribute,\ and/or\ modify\ this\ program}}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ *\ under\ the\ terms\ of\ the\ GNU\ General\ Public\ License,\ version\ 2\ or\ any}}
+\DoxyCodeLine{00007\ \textcolor{comment}{\ *\ later\ version\ published\ by\ the\ Free\ Software\ Foundation.}}
+\DoxyCodeLine{00008\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00009\ \textcolor{comment}{\ *\ A\ copy\ of\ the\ license\ can\ be\ found\ at}}
+\DoxyCodeLine{00010\ \textcolor{comment}{\ *\ http://www.robotcub.org/icub/license/gpl.txt}}
+\DoxyCodeLine{00011\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00012\ \textcolor{comment}{\ *\ This\ program\ is\ distributed\ in\ the\ hope\ that\ it\ will\ be\ useful,\ but}}
+\DoxyCodeLine{00013\ \textcolor{comment}{\ *\ WITHOUT\ ANY\ WARRANTY;\ without\ even\ the\ implied\ warranty\ of}}
+\DoxyCodeLine{00014\ \textcolor{comment}{\ *\ MERCHANTABILITY\ or\ FITNESS\ FOR\ A\ PARTICULAR\ PURPOSE.\ See\ the\ GNU\ General}}
+\DoxyCodeLine{00015\ \textcolor{comment}{\ *\ Public\ License\ for\ more\ details}}
+\DoxyCodeLine{00016\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#include\ "{}start-\/ask.h"{}}}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#include\ <yarp/os/Log.h>}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#include\ <yarp/os/LogStream.h>}}
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00024\ \textcolor{keywordtype}{bool}\ STARTModule::configure(yarp::os::ResourceFinder\ \&rf)}
+\DoxyCodeLine{00025\ \{}
+\DoxyCodeLine{00026\ \ \ \ \ moduleName\ =\ rf.check(\textcolor{stringliteral}{"{}name"{}},\ yarp::os::Value(\textcolor{stringliteral}{"{}start-\/ask"{}}),\ \textcolor{stringliteral}{"{}module\ name\ (string)"{}}).asString();}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ \ \ \ \ setName(moduleName.c\_str());}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \ \ \ \ handlerPortName\ =\ \ \textcolor{stringliteral}{"{}/"{}};}
+\DoxyCodeLine{00031\ \ \ \ \ handlerPortName\ +=\ getName();}
+\DoxyCodeLine{00032\ \ \ \ \ handlerPortName\ +=\ \ \textcolor{stringliteral}{"{}/rpc:i"{}};}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00034\ \ \ \ \ \textcolor{keywordflow}{if}\ (!rpcPort.open(handlerPortName.c\_str()))}
+\DoxyCodeLine{00035\ \ \ \ \ \{}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ yError(\ \textcolor{stringliteral}{"{}\%s\ :\ Unable\ to\ open\ port\ \%s\(\backslash\)n"{}},\ getName().c\_str(),\ handlerPortName.c\_str());}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00038\ \ \ \ \ \}}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \ \ \ \ attach(rpcPort);}
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00042\ \ \ \ \ \textcolor{comment}{/*\ create\ the\ thread\ and\ pass\ pointers\ to\ the\ module\ parameters\ */}}
+\DoxyCodeLine{00043\ \ \ \ \ startManager\ =\ \textcolor{keyword}{new}\ STARTManager(\ moduleName\ );}
+\DoxyCodeLine{00044\ }
+\DoxyCodeLine{00045\ \ \ \ \ \textcolor{comment}{/*\ now\ start\ the\ thread\ to\ do\ the\ work\ */}}
+\DoxyCodeLine{00046\ \ \ \ \ startManager-\/>open();}
+\DoxyCodeLine{00047\ }
+\DoxyCodeLine{00048\ \ \ \ \ \textcolor{keywordflow}{return}\ true\ ;}
+\DoxyCodeLine{00049\ \}}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00051\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00052\ \textcolor{keywordtype}{bool}\ STARTModule::interruptModule()}
+\DoxyCodeLine{00053\ \{}
+\DoxyCodeLine{00054\ \ \ \ \ rpcPort.interrupt();}
+\DoxyCodeLine{00055\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00056\ \}}
+\DoxyCodeLine{00057\ }
+\DoxyCodeLine{00058\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00059\ \textcolor{keywordtype}{bool}\ STARTModule::close()}
+\DoxyCodeLine{00060\ \{}
+\DoxyCodeLine{00061\ \ \ \ \ \textcolor{comment}{//rpcPort.close();}}
+\DoxyCodeLine{00062\ \ \ \ \ yInfo(\ \textcolor{stringliteral}{"{}starting\ the\ shutdown\ procedure\(\backslash\)n"{}});}
+\DoxyCodeLine{00063\ \ \ \ \ startManager-\/>interrupt();}
+\DoxyCodeLine{00064\ \ \ \ \ startManager-\/>close();}
+\DoxyCodeLine{00065\ \ \ \ \ yInfo(\ \textcolor{stringliteral}{"{}deleting\ thread\(\backslash\)n"{}});}
+\DoxyCodeLine{00066\ \ \ \ \ \textcolor{keyword}{delete}\ startManager;}
+\DoxyCodeLine{00067\ \ \ \ \ yInfo(\ \textcolor{stringliteral}{"{}done\ deleting\ thread\(\backslash\)n"{}});}
+\DoxyCodeLine{00068\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00069\ \}}
+\DoxyCodeLine{00070\ }
+\DoxyCodeLine{00071\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00072\ \textcolor{keywordtype}{bool}\ STARTModule::updateModule()}
+\DoxyCodeLine{00073\ \{}
+\DoxyCodeLine{00074\ \ \ \ \ \textcolor{keywordflow}{return}\ !closing;}
+\DoxyCodeLine{00075\ \}}
+\DoxyCodeLine{00076\ }
+\DoxyCodeLine{00077\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00078\ \textcolor{keywordtype}{double}\ STARTModule::getPeriod()}
+\DoxyCodeLine{00079\ \{}
+\DoxyCodeLine{00080\ \ \ \ \ \textcolor{keywordflow}{return}\ 0.1;}
+\DoxyCodeLine{00081\ \}}
+\DoxyCodeLine{00082\ }
+\DoxyCodeLine{00083\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00084\ STARTManager::\string~STARTManager()}
+\DoxyCodeLine{00085\ \{}
+\DoxyCodeLine{00086\ }
+\DoxyCodeLine{00087\ \}}
+\DoxyCodeLine{00088\ }
+\DoxyCodeLine{00089\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00090\ STARTManager::STARTManager(\ \textcolor{keyword}{const}\ std::string\ \&moduleName\ )}
+\DoxyCodeLine{00091\ \{}
+\DoxyCodeLine{00092\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}initialising\ Variables\(\backslash\)n"{}});}
+\DoxyCodeLine{00093\ \ \ \ \ this-\/>moduleName\ =\ moduleName;}
+\DoxyCodeLine{00094\ \}}
+\DoxyCodeLine{00095\ }
+\DoxyCodeLine{00096\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00097\ \textcolor{keywordtype}{bool}\ STARTManager::open()}
+\DoxyCodeLine{00098\ \{}
+\DoxyCodeLine{00099\ \ \ \ \ this-\/>useCallback();}
+\DoxyCodeLine{00100\ }
+\DoxyCodeLine{00101\ \ \ \ \ \textcolor{comment}{//create\ all\ ports}}
+\DoxyCodeLine{00102\ \ \ \ \ inSpeechPortName\ =\ \textcolor{stringliteral}{"{}/"{}}\ +\ moduleName\ +\ \textcolor{stringliteral}{"{}/speech:i"{}};}
+\DoxyCodeLine{00103\ \ \ \ \ BufferedPort<yarp::os::Bottle\ >::open(\ inSpeechPortName.c\_str()\ );}
+\DoxyCodeLine{00104\ }
+\DoxyCodeLine{00105\ \ \ \ \ outSTARTUrlName\ =\ \textcolor{stringliteral}{"{}/"{}}\ +\ moduleName\ +\ \textcolor{stringliteral}{"{}/url"{}};}
+\DoxyCodeLine{00106\ \ \ \ \ portURL.openFake(outSTARTUrlName);\ \textcolor{comment}{//\ don't\ use\ a\ full,\ real\ port}}
+\DoxyCodeLine{00107\ }
+\DoxyCodeLine{00108\ \ \ \ \ outSTARTPortName\ =\ \textcolor{stringliteral}{"{}/"{}}\ +\ moduleName\ +\ \textcolor{stringliteral}{"{}/start:o"{}};}
+\DoxyCodeLine{00109\ \ \ \ \ startOutPort.open(\ outSTARTPortName.c\_str()\ );}
+\DoxyCodeLine{00110\ }
+\DoxyCodeLine{00111\ \ \ \ \ inFacePortName\ =\ \textcolor{stringliteral}{"{}/"{}}\ +\ moduleName\ +\ \textcolor{stringliteral}{"{}/faces:i"{}};}
+\DoxyCodeLine{00112\ \ \ \ \ faceInPort.open(\ inFacePortName.c\_str()\ );}
+\DoxyCodeLine{00113\ }
+\DoxyCodeLine{00114\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00115\ \}}
+\DoxyCodeLine{00116\ }
+\DoxyCodeLine{00117\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00118\ \textcolor{keywordtype}{void}\ STARTManager::close()}
+\DoxyCodeLine{00119\ \{}
+\DoxyCodeLine{00120\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}now\ closing\ ports...\(\backslash\)n"{}});}
+\DoxyCodeLine{00121\ \ \ \ \ startOutPort.close();}
+\DoxyCodeLine{00122\ \ \ \ \ faceInPort.close();}
+\DoxyCodeLine{00123\ \ \ \ \ portURL.close();}
+\DoxyCodeLine{00124\ \ \ \ \ yarp::os::BufferedPort<yarp::os::Bottle\ >::close();}
+\DoxyCodeLine{00125\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}finished\ closing\ the\ read\ port...\(\backslash\)n"{}});}
+\DoxyCodeLine{00126\ \}}
+\DoxyCodeLine{00127\ }
+\DoxyCodeLine{00128\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00129\ \textcolor{keywordtype}{void}\ STARTManager::interrupt()}
+\DoxyCodeLine{00130\ \{}
+\DoxyCodeLine{00131\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}cleaning\ up...\(\backslash\)n"{}});}
+\DoxyCodeLine{00132\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}attempting\ to\ interrupt\ ports\(\backslash\)n"{}});}
+\DoxyCodeLine{00133\ \ \ \ \ yarp::os::BufferedPort<yarp::os::Bottle\ >::interrupt();}
+\DoxyCodeLine{00134\ \ \ \ \ portURL.interrupt();}
+\DoxyCodeLine{00135\ \ \ \ \ faceInPort.interrupt();}
+\DoxyCodeLine{00136\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}finished\ interrupt\ ports\(\backslash\)n"{}});}
+\DoxyCodeLine{00137\ \}}
+\DoxyCodeLine{00138\ }
+\DoxyCodeLine{00139\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00140\ \textcolor{keywordtype}{void}\ STARTManager::onRead(yarp::os::Bottle\ \&bot)}
+\DoxyCodeLine{00141\ \{}
+\DoxyCodeLine{00142\ \ \ \ \ yarp::os::Bottle\ \&\textcolor{keyword}{final}\ =\ startOutPort.prepare();}
+\DoxyCodeLine{00143\ \ \ \ \ \textcolor{keyword}{final}.clear();}
+\DoxyCodeLine{00144\ }
+\DoxyCodeLine{00145\ \ \ \ \ \textcolor{keywordflow}{if}\ (bot.size()>0)\{}
+\DoxyCodeLine{00146\ }
+\DoxyCodeLine{00147\ \ \ \ \ \ \ \ \ std::string\ question\ =\ bot.toString();}
+\DoxyCodeLine{00148\ }
+\DoxyCodeLine{00149\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (isalpha(question[0]))}
+\DoxyCodeLine{00150\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}avoiding\ erase\(\backslash\)n"{}});}
+\DoxyCodeLine{00151\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00152\ \ \ \ \ \ \ \ \ \ \ \ \ question.erase(std::remove\_if(question.begin(),\ question.end(),\ aZCheck),\ question.end());}
+\DoxyCodeLine{00153\ }
+\DoxyCodeLine{00154\ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}cmd\ is\ \%s"{}},\ question.c\_str());}
+\DoxyCodeLine{00155\ }
+\DoxyCodeLine{00156\ \ \ \ \ \ \ \ \ yarp::os::Bottle\ *faceList\ =\ faceInPort.read(\textcolor{keyword}{false});}
+\DoxyCodeLine{00157\ \ \ \ \ \ \ \ \ std::string\ name;}
+\DoxyCodeLine{00158\ }
+\DoxyCodeLine{00159\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (faceList!=NULL)}
+\DoxyCodeLine{00160\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00161\ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ *item=faceList-\/>get(0).asList();}
+\DoxyCodeLine{00162\ \ \ \ \ \ \ \ \ \ \ \ \ name\ =\ item-\/>get(4).asString().c\_str();}
+\DoxyCodeLine{00163\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}NAME\ IS\ "{}}\ <<\ name;}
+\DoxyCodeLine{00164\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00165\ }
+\DoxyCodeLine{00166\ \ \ \ \ \ \ \ \ std::stringstream\ s(question);}
+\DoxyCodeLine{00167\ \ \ \ \ \ \ \ \ std::string\ word;}
+\DoxyCodeLine{00168\ }
+\DoxyCodeLine{00169\ \ \ \ \ \ \ \ \ std::string\ speech\ =\ \textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{00170\ }
+\DoxyCodeLine{00171\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ greeting\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00172\ }
+\DoxyCodeLine{00173\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp\ (question.c\_str(),\ \textcolor{stringliteral}{"{}how\ are\ you"{}})\ ==\ 0\ ||\ strcmp\ (question.c\_str(),\ \textcolor{stringliteral}{"{}how\ are\ you\ robot"{}})\ ==\ 0\ ||\ strcmp\ (question.c\_str(),\ \textcolor{stringliteral}{"{}how\ are\ you\ doing"{}})\ ==\ 0)}
+\DoxyCodeLine{00174\ \ \ \ \ \ \ \ \ \ \ \ \ greeting\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00175\ }
+\DoxyCodeLine{00176\ \ \ \ \ \ \ \ \ \textcolor{comment}{//format\ it\ correctly\ for\ START}}
+\DoxyCodeLine{00177\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ 0;\ s\ >>\ word;\ i++)\{}
+\DoxyCodeLine{00178\ \ \ \ \ \ \ \ \ \ \ \ \ speech\ +=\ word.c\_str();}
+\DoxyCodeLine{00179\ }
+\DoxyCodeLine{00180\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp\ (speech.c\_str(),\ \textcolor{stringliteral}{"{}hello"{}}\ )\ ==\ 0\ ||\ strcmp\ (speech.c\_str(),\ \textcolor{stringliteral}{"{}hi"{}}\ )\ ==\ 0)}
+\DoxyCodeLine{00181\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ greeting\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00182\ }
+\DoxyCodeLine{00183\ \ \ \ \ \ \ \ \ \ \ \ \ speech\ +=\ \textcolor{stringliteral}{"{}+"{}};}
+\DoxyCodeLine{00184\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00185\ }
+\DoxyCodeLine{00186\ \ \ \ \ \ \ \ \ \textcolor{comment}{//clean\ it}}
+\DoxyCodeLine{00187\ \ \ \ \ \ \ \ \ speech.erase(speech.size()-\/1,1);}
+\DoxyCodeLine{00188\ }
+\DoxyCodeLine{00189\ \ \ \ \ \ \ \ \ \textcolor{comment}{//string\ port\ =\ "{}http://start.csail.mit.edu:80/askstart.cgi?te=formatted-\/text\&query="{};}}
+\DoxyCodeLine{00190\ \ \ \ \ \ \ \ \ std::string\ port\ =\ \textcolor{stringliteral}{"{}http://start.csail.mit.edu:80/justanswer.php?te=formatted-\/text\&query="{}};}
+\DoxyCodeLine{00191\ }
+\DoxyCodeLine{00192\ \ \ \ \ \ \ \ \ std::string\ query\ =\ port\ +\ speech;}
+\DoxyCodeLine{00193\ }
+\DoxyCodeLine{00194\ \ \ \ \ \ \ \ \ portURL.addOutput(query.c\_str());}
+\DoxyCodeLine{00195\ \ \ \ \ \ \ \ \ yarp::os::Bottle\ cmd,\ reply;}
+\DoxyCodeLine{00196\ \ \ \ \ \ \ \ \ cmd.addString(\textcolor{stringliteral}{"{}1"{}});\ \textcolor{comment}{//\ send\ any\ message\ you\ like,\ it\ is\ ignored}}
+\DoxyCodeLine{00197\ \ \ \ \ \ \ \ \ portURL.write(cmd,reply);}
+\DoxyCodeLine{00198\ }
+\DoxyCodeLine{00199\ \ \ \ \ \ \ \ \ std::string\ html;}
+\DoxyCodeLine{00200\ \ \ \ \ \ \ \ \ std::vector<std::string>\ \ \ \ testtags;}
+\DoxyCodeLine{00201\ \ \ \ \ \ \ \ \ std::vector<std::string>\ \ \ \ testtext;}
+\DoxyCodeLine{00202\ }
+\DoxyCodeLine{00203\ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}query\ is:\ \%s\(\backslash\)n"{}},\ query.c\_str());}
+\DoxyCodeLine{00204\ }
+\DoxyCodeLine{00205\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/Start\ cleaning\ up\ session-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\(\backslash\)n"{}};}
+\DoxyCodeLine{00206\ }
+\DoxyCodeLine{00207\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (reply.size()>0)\{}
+\DoxyCodeLine{00208\ }
+\DoxyCodeLine{00209\ \ \ \ \ \ \ \ \ \ \ \ \ html\ =\ reply.toString().c\_str();}
+\DoxyCodeLine{00210\ }
+\DoxyCodeLine{00211\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//clean\ the\ start.}}
+\DoxyCodeLine{00212\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ tags\ =\ \textcolor{stringliteral}{"{}<P><p>"{}};}
+\DoxyCodeLine{00213\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ initial\ =\ html.find(tags);}
+\DoxyCodeLine{00214\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (initial!=std::string::npos)}
+\DoxyCodeLine{00215\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00216\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Response\ found\ "{}}<<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ initial\ <<\ \textcolor{stringliteral}{"{}\ with\ length\ "{}}\ <<\ tags.length();}
+\DoxyCodeLine{00217\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.erase\ (0,initial+tags.length());}
+\DoxyCodeLine{00218\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00219\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00220\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00221\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ tags.clear();}
+\DoxyCodeLine{00222\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ tags\ =\ \textcolor{stringliteral}{"{}</P>\(\backslash\)\(\backslash\)n\(\backslash\)\(\backslash\)n"{}};}
+\DoxyCodeLine{00223\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ initial\ =\ html.find(tags);}
+\DoxyCodeLine{00224\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (initial!=std::string::npos)}
+\DoxyCodeLine{00225\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00226\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Response\ found\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ initial\ <<\ \textcolor{stringliteral}{"{}\ with\ length\ "{}}\ <<\ tags.length();}
+\DoxyCodeLine{00227\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.erase\ (0,initial+tags.length());}
+\DoxyCodeLine{00228\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00229\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00230\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00231\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ tags.clear();}
+\DoxyCodeLine{00232\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ tags\ =\ \textcolor{stringliteral}{"{}</P>"{}};}
+\DoxyCodeLine{00233\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ initial\ =\ html.find(tags);}
+\DoxyCodeLine{00234\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (initial!=std::string::npos)}
+\DoxyCodeLine{00235\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00236\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Response\ found\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ initial\ <<\ \textcolor{stringliteral}{"{}\ with\ length\ "{}}\ <<\ tags.length();}
+\DoxyCodeLine{00237\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.erase\ (0,initial+tags.length());}
+\DoxyCodeLine{00238\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00239\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00240\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yError()\ <<\ \textcolor{stringliteral}{"{}Cannot\ seem\ to\ find\ any\ info\ in\ the\ initial\ part\ of\ the\ response"{}};}
+\DoxyCodeLine{00241\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00242\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00243\ }
+\DoxyCodeLine{00244\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//clean\ the\ end.}}
+\DoxyCodeLine{00245\ \ \ \ \ \ \ \ \ \ \ \ \ tags.clear();}
+\DoxyCodeLine{00246\ \ \ \ \ \ \ \ \ \ \ \ \ tags=\textcolor{stringliteral}{"{}</p></P>"{}};}
+\DoxyCodeLine{00247\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ \textcolor{keyword}{final}\ =\ html.find(tags);}
+\DoxyCodeLine{00248\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\textcolor{keyword}{final}!=std::string::npos)}
+\DoxyCodeLine{00249\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00250\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Complex\ response\ found\ "{}}<<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ \textcolor{keyword}{final}\ <<\ \textcolor{stringliteral}{"{}\ with\ length\ "{}}\ <<\ tags.length();}
+\DoxyCodeLine{00251\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.erase\ (html.begin()+\textcolor{keyword}{final},\ html.end());}
+\DoxyCodeLine{00252\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00253\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00254\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00255\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ tags.clear();}
+\DoxyCodeLine{00256\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ tags\ =\ \textcolor{stringliteral}{"{}<STRONG>"{}};}
+\DoxyCodeLine{00257\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ \textcolor{keyword}{final}\ =\ html.find(tags);}
+\DoxyCodeLine{00258\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\textcolor{keyword}{final}!=std::string::npos)}
+\DoxyCodeLine{00259\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00260\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Normal\ response\ found\ "{}}<<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ \textcolor{keyword}{final}\ <<\ \textcolor{stringliteral}{"{}\ with\ length\ "{}}\ <<\ tags.length();}
+\DoxyCodeLine{00261\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.erase\ (html.begin()+\textcolor{keyword}{final},\ html.end());}
+\DoxyCodeLine{00262\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00263\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00264\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00265\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ tags.clear();}
+\DoxyCodeLine{00266\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ tags\ =\ \textcolor{stringliteral}{"{}</body>"{}};}
+\DoxyCodeLine{00267\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ \textcolor{keyword}{final}\ =\ html.find(tags);}
+\DoxyCodeLine{00268\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\textcolor{keyword}{final}!=std::string::npos)}
+\DoxyCodeLine{00269\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00270\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Response\ found\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ \textcolor{keyword}{final}\ <<\ \textcolor{stringliteral}{"{}\ with\ length\ "{}}\ <<\ tags.length();}
+\DoxyCodeLine{00271\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.erase\ (html.begin()+\textcolor{keyword}{final},\ html.end());}
+\DoxyCodeLine{00272\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00273\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00274\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yError()\ <<\ \textcolor{stringliteral}{"{}Cannot\ seem\ to\ find\ any\ info\ in\ the\ final\ part\ of\ the\ response"{}};}
+\DoxyCodeLine{00275\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00276\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00277\ }
+\DoxyCodeLine{00278\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cleaning\ "{}line\ feed"{}.}}
+\DoxyCodeLine{00279\ }
+\DoxyCodeLine{00280\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ n;}
+\DoxyCodeLine{00281\ \ \ \ \ \ \ \ \ \ \ \ \ tags=\textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)n"{}};}
+\DoxyCodeLine{00282\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (\ (n\ =\ html.find(tags))\ !=\ html.npos)}
+\DoxyCodeLine{00283\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00284\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Cleaning\ up\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ n;}
+\DoxyCodeLine{00285\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.replace(n,tags.length(),\textcolor{stringliteral}{"{}\ "{}});}
+\DoxyCodeLine{00286\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00287\ }
+\DoxyCodeLine{00288\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cleaning\ "{}i\ know\ about"{}.}}
+\DoxyCodeLine{00289\ }
+\DoxyCodeLine{00290\ \ \ \ \ \ \ \ \ \ \ \ \ tags.clear();}
+\DoxyCodeLine{00291\ \ \ \ \ \ \ \ \ \ \ \ \ tags=\textcolor{stringliteral}{"{}I\ know\ about"{}};}
+\DoxyCodeLine{00292\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ iknow\ =\ html.find(tags);}
+\DoxyCodeLine{00293\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (iknow!=std::string::npos)}
+\DoxyCodeLine{00294\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00295\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Response\ found\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ iknow\ <<\ \textcolor{stringliteral}{"{}\ with\ length\ "{}}\ <<\ tags.length();}
+\DoxyCodeLine{00296\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.erase\ (html.begin()+iknow,\ html.end());}
+\DoxyCodeLine{00297\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00298\ }
+\DoxyCodeLine{00299\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cleaning\ "{}numeric\ entry"{}.}}
+\DoxyCodeLine{00300\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ numericEntry;}
+\DoxyCodeLine{00301\ \ \ \ \ \ \ \ \ \ \ \ \ tags=\textcolor{stringliteral}{"{}\&\#160;"{}};}
+\DoxyCodeLine{00302\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (\ (numericEntry\ =\ html.find(tags))\ !=\ html.npos)}
+\DoxyCodeLine{00303\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00304\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Cleaning\ up\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ numericEntry;}
+\DoxyCodeLine{00305\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.replace(numericEntry,tags.length(),\textcolor{stringliteral}{"{}\ "{}});}
+\DoxyCodeLine{00306\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00307\ }
+\DoxyCodeLine{00308\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cleaning\ "{}en\ dash"{}.}}
+\DoxyCodeLine{00309\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ enDash;}
+\DoxyCodeLine{00310\ \ \ \ \ \ \ \ \ \ \ \ \ tags=\textcolor{stringliteral}{"{}\&\#8211;"{}};}
+\DoxyCodeLine{00311\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (\ (enDash\ =\ html.find(tags))\ !=\ html.npos)}
+\DoxyCodeLine{00312\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00313\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Cleaning\ up\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ enDash;}
+\DoxyCodeLine{00314\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.replace(enDash,tags.length(),\textcolor{stringliteral}{"{},"{}});}
+\DoxyCodeLine{00315\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00316\ }
+\DoxyCodeLine{00317\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cleaning\ "{}en\ dash"{}.}}
+\DoxyCodeLine{00318\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ enDash2;}
+\DoxyCodeLine{00319\ \ \ \ \ \ \ \ \ \ \ \ \ tags=\textcolor{stringliteral}{"{}\&\#8212;"{}};}
+\DoxyCodeLine{00320\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (\ (enDash2\ =\ html.find(tags))\ !=\ html.npos)}
+\DoxyCodeLine{00321\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00322\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Cleaning\ up\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ enDash2;}
+\DoxyCodeLine{00323\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.replace(enDash2,tags.length(),\textcolor{stringliteral}{"{},"{}});}
+\DoxyCodeLine{00324\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00325\ }
+\DoxyCodeLine{00326\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//to\ REMOVE\ \ \ \&\#1071;\ \&\#1090;\&\#1074;\&\#1086;\&\#1081;\ \&\#1089;\&\#1083;\&\#1091;\&\#1075;\&\#1072;}}
+\DoxyCodeLine{00327\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//and\ \ \ \&\#1071;\ \&\#1090;\&\#1074;\&\#1086;\&\#1081;\ \&\#1088;\&\#1072;\&\#1073;\&\#1086;\&\#1090;\&\#1085;\&\#1080;\&\#1082;}}
+\DoxyCodeLine{00328\ }
+\DoxyCodeLine{00329\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cleaning\ "{}nonSpace"{}.}}
+\DoxyCodeLine{00330\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ nonSpace;}
+\DoxyCodeLine{00331\ \ \ \ \ \ \ \ \ \ \ \ \ tags=\textcolor{stringliteral}{"{}\&nbsp;"{}};}
+\DoxyCodeLine{00332\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (\ (nonSpace\ =\ html.find(tags))\ !=\ html.npos)}
+\DoxyCodeLine{00333\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00334\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Cleaning\ up\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ nonSpace;}
+\DoxyCodeLine{00335\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.replace(nonSpace,tags.length(),\textcolor{stringliteral}{"{},"{}});}
+\DoxyCodeLine{00336\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00337\ }
+\DoxyCodeLine{00338\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cleaning\ "{}quote"{}.}}
+\DoxyCodeLine{00339\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ quote;}
+\DoxyCodeLine{00340\ \ \ \ \ \ \ \ \ \ \ \ \ tags=\textcolor{stringliteral}{"{}\(\backslash\)"{}"{}};}
+\DoxyCodeLine{00341\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (\ (quote\ =\ html.find(tags))\ !=\ html.npos)}
+\DoxyCodeLine{00342\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00343\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Cleaning\ up\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ quote;}
+\DoxyCodeLine{00344\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.replace(quote,tags.length(),\textcolor{stringliteral}{"{}\ "{}});}
+\DoxyCodeLine{00345\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00346\ }
+\DoxyCodeLine{00347\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cleaning\ "{}forward\ slashes"{}.}}
+\DoxyCodeLine{00348\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ fslash;}
+\DoxyCodeLine{00349\ \ \ \ \ \ \ \ \ \ \ \ \ tags=\textcolor{stringliteral}{"{}/"{}};}
+\DoxyCodeLine{00350\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (\ (fslash\ =\ html.find(tags))\ !=\ html.npos)}
+\DoxyCodeLine{00351\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00352\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Cleaning\ up\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ fslash;}
+\DoxyCodeLine{00353\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.replace(fslash,tags.length(),\textcolor{stringliteral}{"{}\ "{}});}
+\DoxyCodeLine{00354\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00355\ }
+\DoxyCodeLine{00356\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cleaning\ "{}back\ slashes"{}.}}
+\DoxyCodeLine{00357\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ bslash;}
+\DoxyCodeLine{00358\ \ \ \ \ \ \ \ \ \ \ \ \ tags=\textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)"{}};}
+\DoxyCodeLine{00359\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (\ (bslash\ =\ html.find(tags))\ !=\ html.npos)}
+\DoxyCodeLine{00360\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00361\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Cleaning\ up\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ bslash;}
+\DoxyCodeLine{00362\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.replace(bslash,tags.length(),\textcolor{stringliteral}{"{}\ "{}});}
+\DoxyCodeLine{00363\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00364\ }
+\DoxyCodeLine{00365\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cleaning\ "{}dashes"{}.}}
+\DoxyCodeLine{00366\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ dash;}
+\DoxyCodeLine{00367\ \ \ \ \ \ \ \ \ \ \ \ \ tags=\textcolor{stringliteral}{"{}-\/"{}};}
+\DoxyCodeLine{00368\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (\ (dash\ =\ html.find(tags))\ !=\ html.npos)}
+\DoxyCodeLine{00369\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00370\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Cleaning\ up\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ dash;}
+\DoxyCodeLine{00371\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.replace(dash,tags.length(),\textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00372\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00373\ }
+\DoxyCodeLine{00374\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//cleaning\ "{}dashes"{}.}}
+\DoxyCodeLine{00375\ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ amp;}
+\DoxyCodeLine{00376\ \ \ \ \ \ \ \ \ \ \ \ \ tags=\textcolor{stringliteral}{"{}\&amp;"{}};}
+\DoxyCodeLine{00377\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (\ (amp\ =\ html.find(tags))\ !=\ html.npos)}
+\DoxyCodeLine{00378\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00379\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}Cleaning\ up\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ amp;}
+\DoxyCodeLine{00380\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html.replace(amp,tags.length(),\textcolor{stringliteral}{"{}\&"{}});}
+\DoxyCodeLine{00381\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00382\ }
+\DoxyCodeLine{00383\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/Done\ the\ first\ cleaning\ up\ session-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/"{}};}
+\DoxyCodeLine{00384\ }
+\DoxyCodeLine{00385\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(\textcolor{keywordtype}{int}\ i=0;\ i<html.length();\ i++)}
+\DoxyCodeLine{00386\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00387\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ \ startpos;}
+\DoxyCodeLine{00388\ }
+\DoxyCodeLine{00389\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ startpos\ =\ html.find(\textcolor{charliteral}{'<'});}
+\DoxyCodeLine{00390\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(startpos\ ==\ std::string::npos)}
+\DoxyCodeLine{00391\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00392\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ no\ tags\ left\ only\ text!}}
+\DoxyCodeLine{00393\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ testtext.push\_back(html);}
+\DoxyCodeLine{00394\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00395\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00396\ }
+\DoxyCodeLine{00397\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ handle\ the\ text\ before\ the\ tag}}
+\DoxyCodeLine{00398\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(0\ !=\ startpos)}
+\DoxyCodeLine{00399\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00400\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ testtext.push\_back(html.substr(0,\ startpos));}
+\DoxyCodeLine{00401\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html\ =\ html.substr(startpos,\ html.size()\ -\/\ startpos);}
+\DoxyCodeLine{00402\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ startpos\ =\ 0;}
+\DoxyCodeLine{00403\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00404\ }
+\DoxyCodeLine{00405\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ \ skip\ all\ the\ text\ in\ the\ html\ tag}}
+\DoxyCodeLine{00406\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string::size\_type\ endpos;}
+\DoxyCodeLine{00407\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(endpos\ =\ startpos;\ endpos\ <\ html.size()\ \&\&\ html[endpos]\ !=\ \textcolor{charliteral}{'>'};\ ++endpos)}
+\DoxyCodeLine{00408\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00409\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ since\ '>'\ can\ appear\ inside\ of\ an\ attribute\ string\ we\ need}}
+\DoxyCodeLine{00410\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ to\ make\ sure\ we\ process\ it\ properly.}}
+\DoxyCodeLine{00411\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(html[endpos]\ ==\ \textcolor{charliteral}{'"{}'})}
+\DoxyCodeLine{00412\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00413\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ endpos++;}
+\DoxyCodeLine{00414\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}(endpos\ <\ html.size()\ \&\&\ html[endpos]\ !=\ \textcolor{charliteral}{'"{}'})}
+\DoxyCodeLine{00415\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ endpos++;}
+\DoxyCodeLine{00416\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00417\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00418\ }
+\DoxyCodeLine{00419\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ \ Handle\ text\ and\ end\ of\ html\ that\ has\ beginning\ of\ tag\ but\ not\ the\ end}}
+\DoxyCodeLine{00420\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(endpos\ ==\ html.size())}
+\DoxyCodeLine{00421\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00422\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html\ =\ html.substr(endpos,\ html.size()\ -\/\ endpos);}
+\DoxyCodeLine{00423\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00424\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00425\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00426\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00427\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ \ handle\ the\ entire\ tag}}
+\DoxyCodeLine{00428\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ endpos++;}
+\DoxyCodeLine{00429\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ testtags.push\_back(html.substr(startpos,\ endpos\ -\/\ startpos));}
+\DoxyCodeLine{00430\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html\ =\ html.substr(endpos,\ html.size()\ -\/\ endpos);}
+\DoxyCodeLine{00431\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00432\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00433\ }
+\DoxyCodeLine{00434\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//yInfo()\ <<\ "{}tags:\(\backslash\)n-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/"{};}}
+\DoxyCodeLine{00435\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//for(size\_t\ i\ =\ 0;\ i\ <\ testtags.size();\ i++)}}
+\DoxyCodeLine{00436\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//yInfo()\ <<\ testtags[i];}}
+\DoxyCodeLine{00437\ }
+\DoxyCodeLine{00438\ \ \ \ \ \ \ \ \ \ \ \ \ html.clear();}
+\DoxyCodeLine{00439\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}(\textcolor{keywordtype}{size\_t}\ i\ =\ 0;\ i\ <\ testtext.size();\ i++)}
+\DoxyCodeLine{00440\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ html\ =\ html\ +\ testtext[i];}
+\DoxyCodeLine{00441\ }
+\DoxyCodeLine{00442\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/Starting\ specific\ cleaning-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/"{}};}
+\DoxyCodeLine{00443\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\ check\ for\ [\ ]\ removal\ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/"{}};}
+\DoxyCodeLine{00444\ }
+\DoxyCodeLine{00445\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ first\ =\ \textcolor{stringliteral}{"{}["{}};}
+\DoxyCodeLine{00446\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ second\ =\ \textcolor{stringliteral}{"{}]"{}};}
+\DoxyCodeLine{00447\ }
+\DoxyCodeLine{00448\ \ \ \ \ \ \ \ \ \ \ \ \ removetags(first,\ second,\ html);}
+\DoxyCodeLine{00449\ }
+\DoxyCodeLine{00450\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\ check\ for\ (\ )\ removal\ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/"{}};}
+\DoxyCodeLine{00451\ \ \ \ \ \ \ \ \ \ \ \ \ first.clear();}
+\DoxyCodeLine{00452\ \ \ \ \ \ \ \ \ \ \ \ \ second.clear();}
+\DoxyCodeLine{00453\ \ \ \ \ \ \ \ \ \ \ \ \ first\ =\ \textcolor{stringliteral}{"{}("{}};}
+\DoxyCodeLine{00454\ \ \ \ \ \ \ \ \ \ \ \ \ second\ =\ \textcolor{stringliteral}{"{})"{}};}
+\DoxyCodeLine{00455\ }
+\DoxyCodeLine{00456\ \ \ \ \ \ \ \ \ \ \ \ \ removetags(first,\ second,\ html);}
+\DoxyCodeLine{00457\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00458\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00459\ \ \ \ \ \ \ \ \ \ \ \ \ yError(\textcolor{stringliteral}{"{}Something\ is\ wrong\ with\ the\ reply\ from\ START"{}});}
+\DoxyCodeLine{00460\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (greeting\ \&\&\ name.size()>0)}
+\DoxyCodeLine{00461\ \ \ \ \ \ \ \ \ \ \ \ \ html\ =\ name\ +\ \textcolor{stringliteral}{"{},\ "{}}\ +\ html;}
+\DoxyCodeLine{00462\ }
+\DoxyCodeLine{00463\ \ \ \ \ \ \ \ \ \textcolor{keyword}{final}.addString(html.c\_str());}
+\DoxyCodeLine{00464\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n\(\backslash\)n\(\backslash\)n"{}};}
+\DoxyCodeLine{00465\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}The\ original\ answer\ was:\(\backslash\)n\ "{}}\ <<\ reply.toString().c\_str();}
+\DoxyCodeLine{00466\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n\(\backslash\)n\(\backslash\)n"{}};}
+\DoxyCodeLine{00467\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}The\ answer\ is:\(\backslash\)n\ "{}}\ <<\ \textcolor{keyword}{final}.toString().c\_str();}
+\DoxyCodeLine{00468\ \ \ \ \ \ \ \ \ startOutPort.write();}
+\DoxyCodeLine{00469\ \ \ \ \ \}\textcolor{keywordflow}{else}}
+\DoxyCodeLine{00470\ \ \ \ \ \ \ \ \ yError(\textcolor{stringliteral}{"{}Something\ is\ wrong\ with\ the\ query"{}});}
+\DoxyCodeLine{00471\ \}}
+\DoxyCodeLine{00472\ }
+\DoxyCodeLine{00473\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00474\ \textcolor{keywordtype}{void}\ STARTManager::removetags(std::string\ \&first,\ std::string\ \&second,\ std::string\ \&text)}
+\DoxyCodeLine{00475\ \{}
+\DoxyCodeLine{00476\ \ \ \ \ std::string\ tags\ =\ first;}
+\DoxyCodeLine{00477\ }
+\DoxyCodeLine{00478\ \ \ \ \ std::vector<size\_t>\ startPos;}
+\DoxyCodeLine{00479\ \ \ \ \ std::vector<size\_t>\ endPos;}
+\DoxyCodeLine{00480\ }
+\DoxyCodeLine{00481\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ pos\ =\ text.find(tags);}
+\DoxyCodeLine{00482\ \ \ \ \ \textcolor{keywordflow}{while}(pos\ !=\ std::string::npos)}
+\DoxyCodeLine{00483\ \ \ \ \ \{}
+\DoxyCodeLine{00484\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}found\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ pos;}
+\DoxyCodeLine{00485\ \ \ \ \ \ \ \ \ startPos.push\_back(pos);}
+\DoxyCodeLine{00486\ \ \ \ \ \ \ \ \ pos\ =\ text.find(tags,\ pos+1);}
+\DoxyCodeLine{00487\ \ \ \ \ \}}
+\DoxyCodeLine{00488\ }
+\DoxyCodeLine{00489\ \ \ \ \ tags.clear();}
+\DoxyCodeLine{00490\ \ \ \ \ tags=second;}
+\DoxyCodeLine{00491\ \ \ \ \ pos\ =\ 0;}
+\DoxyCodeLine{00492\ \ \ \ \ pos\ =\ text.find(tags);}
+\DoxyCodeLine{00493\ \ \ \ \ \textcolor{keywordflow}{while}(pos\ !=\ std::string::npos)}
+\DoxyCodeLine{00494\ \ \ \ \ \{}
+\DoxyCodeLine{00495\ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}found\ "{}}\ <<\ tags\ <<\ \textcolor{stringliteral}{"{}\ @\ "{}}\ <<\ pos;}
+\DoxyCodeLine{00496\ \ \ \ \ \ \ \ \ endPos.push\_back(pos);}
+\DoxyCodeLine{00497\ \ \ \ \ \ \ \ \ pos\ =\ text.find(tags,\ pos+1);}
+\DoxyCodeLine{00498\ \ \ \ \ \}}
+\DoxyCodeLine{00499\ }
+\DoxyCodeLine{00500\ \ \ \ \ \textcolor{keywordtype}{int}\ shift\ =\ 0;}
+\DoxyCodeLine{00501\ }
+\DoxyCodeLine{00502\ \ \ \ \ std::vector<size\_t>\ tmpstartPos\ =\ startPos;}
+\DoxyCodeLine{00503\ \ \ \ \ std::vector<size\_t>\ tmpendPos\ =\ endPos;}
+\DoxyCodeLine{00504\ }
+\DoxyCodeLine{00505\ \ \ \ \ \textcolor{keywordflow}{if}\ (tmpstartPos.size()\ ==\ tmpendPos.size())\ \textcolor{comment}{//check\ for\ consistencies}}
+\DoxyCodeLine{00506\ \ \ \ \ \{}
+\DoxyCodeLine{00507\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =0;\ i<tmpstartPos.size();\ i++)}
+\DoxyCodeLine{00508\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00509\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//check\ if\ tag\ occurs\ withing\ another\ tag}}
+\DoxyCodeLine{00510\ }
+\DoxyCodeLine{00511\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\ i\ !=\ tmpstartPos.size()-\/1\ \&\&\ tmpendPos[i]\ >\ tmpstartPos[i+1]\ )}
+\DoxyCodeLine{00512\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00513\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ startPos.erase(startPos.begin()+1);}
+\DoxyCodeLine{00514\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ endPos.erase(endPos.begin());}
+\DoxyCodeLine{00515\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00516\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00517\ }
+\DoxyCodeLine{00518\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =0;\ i<startPos.size();\ i++)}
+\DoxyCodeLine{00519\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00520\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (i>0)}
+\DoxyCodeLine{00521\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ shift\ =\ shift\ +\ (endPos[i-\/1]\ -\/\ startPos[i-\/1]\ +\ 1\ );}
+\DoxyCodeLine{00522\ }
+\DoxyCodeLine{00523\ \ \ \ \ \ \ \ \ \ \ \ \ yInfo()\ <<\ \textcolor{stringliteral}{"{}deleting\ pos\ "{}}\ <<\ startPos[i]\ <<\ \textcolor{stringliteral}{"{}\ until\ "{}}\ <<\ endPos[i]\ <<\ \textcolor{stringliteral}{"{}\ with\ shift\ "{}}\ <<\ shift;}
+\DoxyCodeLine{00524\ }
+\DoxyCodeLine{00525\ \ \ \ \ \ \ \ \ \ \ \ \ text.erase\ (text.begin()+(startPos[i]-\/shift),\ text.begin()+(endPos[i]\ +\ 1\ -\/\ shift));}
+\DoxyCodeLine{00526\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00527\ \ \ \ \ \}}
+\DoxyCodeLine{00528\ \}}
+\DoxyCodeLine{00529\ }
+\DoxyCodeLine{00530\ \textcolor{comment}{//empty\ line\ to\ make\ gcc\ happy}}
+
+\end{DoxyCode}

@@ -1,0 +1,392 @@
+\doxysection{start-\/inspect.cpp}
+\label{start-inspect_8cpp_source}\index{/home/runner/work/speech/speech/gh-\/pages/speech-\/interpreters/start/inspect/src/start-\/inspect.cpp@{/home/runner/work/speech/speech/gh-\/pages/speech-\/interpreters/start/inspect/src/start-\/inspect.cpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Copyright\ (C)\ 2017\ Department\ of\ Robotics\ Brain\ and\ Cognitive\ Sciences\ -\/\ Istituto\ Italiano\ di\ Tecnologia}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Author:\ Vadim\ Tikhanoff}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ email:\ \ vadim.tikhanoff@iit.it}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ *\ Permission\ is\ granted\ to\ copy,\ distribute,\ and/or\ modify\ this\ program}}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ *\ under\ the\ terms\ of\ the\ GNU\ General\ Public\ License,\ version\ 2\ or\ any}}
+\DoxyCodeLine{00007\ \textcolor{comment}{\ *\ later\ version\ published\ by\ the\ Free\ Software\ Foundation.}}
+\DoxyCodeLine{00008\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00009\ \textcolor{comment}{\ *\ A\ copy\ of\ the\ license\ can\ be\ found\ at}}
+\DoxyCodeLine{00010\ \textcolor{comment}{\ *\ http://www.robotcub.org/icub/license/gpl.txt}}
+\DoxyCodeLine{00011\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00012\ \textcolor{comment}{\ *\ This\ program\ is\ distributed\ in\ the\ hope\ that\ it\ will\ be\ useful,\ but}}
+\DoxyCodeLine{00013\ \textcolor{comment}{\ *\ WITHOUT\ ANY\ WARRANTY;\ without\ even\ the\ implied\ warranty\ of}}
+\DoxyCodeLine{00014\ \textcolor{comment}{\ *\ MERCHANTABILITY\ or\ FITNESS\ FOR\ A\ PARTICULAR\ PURPOSE.\ See\ the\ GNU\ General}}
+\DoxyCodeLine{00015\ \textcolor{comment}{\ *\ Public\ License\ for\ more\ details}}
+\DoxyCodeLine{00016\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#include\ "{}start-\/inspect.h"{}}}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#include\ <yarp/os/Log.h>}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#include\ <yarp/os/LogStream.h>}}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00023\ \textcolor{keywordtype}{bool}\ STARTModule::configure(yarp::os::ResourceFinder\ \&rf)}
+\DoxyCodeLine{00024\ \{}
+\DoxyCodeLine{00025\ \ \ \ \ moduleName\ =\ rf.check(\textcolor{stringliteral}{"{}name"{}},\ yarp::os::Value(\textcolor{stringliteral}{"{}interpretSTART"{}}),\ \textcolor{stringliteral}{"{}module\ name\ (string)"{}}).asString();}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \ \ \ \ setName(moduleName.c\_str());}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \ \ \ \ handlerPortName\ =\ \ \textcolor{stringliteral}{"{}/"{}};}
+\DoxyCodeLine{00030\ \ \ \ \ handlerPortName\ +=\ getName();}
+\DoxyCodeLine{00031\ \ \ \ \ handlerPortName\ +=\ \ \textcolor{stringliteral}{"{}/rpc:i"{}};}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordflow}{if}\ (!rpcPort.open(handlerPortName.c\_str()))}
+\DoxyCodeLine{00034\ \ \ \ \ \{}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ yError(\ \textcolor{stringliteral}{"{}\%s\ :\ Unable\ to\ open\ port\ \%s\(\backslash\)n"{}},\ getName().c\_str(),\ handlerPortName.c\_str());}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00037\ \ \ \ \ \}}
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00039\ \ \ \ \ attach(rpcPort);}
+\DoxyCodeLine{00040\ }
+\DoxyCodeLine{00041\ \ \ \ \ \textcolor{comment}{/*\ create\ the\ thread\ and\ pass\ pointers\ to\ the\ module\ parameters\ */}}
+\DoxyCodeLine{00042\ \ \ \ \ startManager\ =\ \textcolor{keyword}{new}\ STARTManager(\ moduleName\ );}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \ \ \ \ \textcolor{comment}{/*\ now\ start\ the\ thread\ to\ do\ the\ work\ */}}
+\DoxyCodeLine{00045\ \ \ \ \ startManager-\/>open();}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ \ \ \ \ \textcolor{keywordflow}{return}\ true\ ;}
+\DoxyCodeLine{00048\ \}}
+\DoxyCodeLine{00049\ }
+\DoxyCodeLine{00050\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00051\ \textcolor{keywordtype}{bool}\ STARTModule::interruptModule()}
+\DoxyCodeLine{00052\ \{}
+\DoxyCodeLine{00053\ \ \ \ \ rpcPort.interrupt();}
+\DoxyCodeLine{00054\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00055\ \}}
+\DoxyCodeLine{00056\ }
+\DoxyCodeLine{00057\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00058\ \textcolor{keywordtype}{bool}\ STARTModule::close()}
+\DoxyCodeLine{00059\ \{}
+\DoxyCodeLine{00060\ \ \ \ \ rpcPort.close();}
+\DoxyCodeLine{00061\ \ \ \ \ yInfo(\ \textcolor{stringliteral}{"{}starting\ the\ shutdown\ procedure\(\backslash\)n"{}});}
+\DoxyCodeLine{00062\ \ \ \ \ startManager-\/>interrupt();}
+\DoxyCodeLine{00063\ \ \ \ \ startManager-\/>close();}
+\DoxyCodeLine{00064\ \ \ \ \ yInfo(\ \textcolor{stringliteral}{"{}deleting\ thread\(\backslash\)n"{}});}
+\DoxyCodeLine{00065\ \ \ \ \ \textcolor{keyword}{delete}\ startManager;}
+\DoxyCodeLine{00066\ \ \ \ \ yInfo(\ \textcolor{stringliteral}{"{}done\ deleting\ thread\(\backslash\)n"{}});}
+\DoxyCodeLine{00067\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00068\ \}}
+\DoxyCodeLine{00069\ }
+\DoxyCodeLine{00070\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00071\ \textcolor{keywordtype}{bool}\ STARTModule::updateModule()}
+\DoxyCodeLine{00072\ \{}
+\DoxyCodeLine{00073\ \ \ \ \ \textcolor{keywordflow}{return}\ !closing;}
+\DoxyCodeLine{00074\ \}}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00076\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00077\ \textcolor{keywordtype}{double}\ STARTModule::getPeriod()}
+\DoxyCodeLine{00078\ \{}
+\DoxyCodeLine{00079\ \ \ \ \ \textcolor{keywordflow}{return}\ 0.1;}
+\DoxyCodeLine{00080\ \}}
+\DoxyCodeLine{00081\ }
+\DoxyCodeLine{00082\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00083\ STARTManager::\string~STARTManager()}
+\DoxyCodeLine{00084\ \{}
+\DoxyCodeLine{00085\ }
+\DoxyCodeLine{00086\ \}}
+\DoxyCodeLine{00087\ }
+\DoxyCodeLine{00088\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00089\ STARTManager::STARTManager(\ \textcolor{keyword}{const}\ std::string\ \&moduleName\ )}
+\DoxyCodeLine{00090\ \{}
+\DoxyCodeLine{00091\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}initialising\ Variables\(\backslash\)n"{}});}
+\DoxyCodeLine{00092\ \ \ \ \ this-\/>moduleName\ =\ moduleName;}
+\DoxyCodeLine{00093\ \ \ \ \ objectDetails\ =\ NULL;}
+\DoxyCodeLine{00094\ \}}
+\DoxyCodeLine{00095\ }
+\DoxyCodeLine{00096\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00097\ \textcolor{keywordtype}{bool}\ STARTManager::open()}
+\DoxyCodeLine{00098\ \{}
+\DoxyCodeLine{00099\ \ \ \ \ this-\/>useCallback();}
+\DoxyCodeLine{00100\ }
+\DoxyCodeLine{00101\ \ \ \ \ \textcolor{comment}{//create\ all\ ports}}
+\DoxyCodeLine{00102\ \ \ \ \ inSpeechPortName\ =\ \textcolor{stringliteral}{"{}/"{}}\ +\ moduleName\ +\ \textcolor{stringliteral}{"{}/speech:i"{}};}
+\DoxyCodeLine{00103\ \ \ \ \ BufferedPort<yarp::os::Bottle\ >::open(\ inSpeechPortName.c\_str()\ );}
+\DoxyCodeLine{00104\ }
+\DoxyCodeLine{00105\ \ \ \ \ outSTARTPortName\ =\ \textcolor{stringliteral}{"{}/"{}}\ +\ moduleName\ +\ \textcolor{stringliteral}{"{}/start:o"{}};}
+\DoxyCodeLine{00106\ \ \ \ \ startOutPort.open(\ outSTARTPortName.c\_str()\ );}
+\DoxyCodeLine{00107\ }
+\DoxyCodeLine{00108\ \ \ \ \ yarp::os::Network::connect(\textcolor{stringliteral}{"{}/start-\/speech/start:o"{}},\ inSpeechPortName);}
+\DoxyCodeLine{00109\ }
+\DoxyCodeLine{00110\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00111\ \}}
+\DoxyCodeLine{00112\ }
+\DoxyCodeLine{00113\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00114\ \textcolor{keywordtype}{void}\ STARTManager::close()}
+\DoxyCodeLine{00115\ \{}
+\DoxyCodeLine{00116\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}now\ closing\ ports...\(\backslash\)n"{}});}
+\DoxyCodeLine{00117\ \ \ \ \ startOutPort.close();}
+\DoxyCodeLine{00118\ \ \ \ \ BufferedPort<yarp::os::Bottle\ >::close();}
+\DoxyCodeLine{00119\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}finished\ closing\ the\ read\ port...\(\backslash\)n"{}});}
+\DoxyCodeLine{00120\ \}}
+\DoxyCodeLine{00121\ }
+\DoxyCodeLine{00122\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00123\ \textcolor{keywordtype}{void}\ STARTManager::interrupt()}
+\DoxyCodeLine{00124\ \{}
+\DoxyCodeLine{00125\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}cleaning\ up...\(\backslash\)n"{}});}
+\DoxyCodeLine{00126\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}attempting\ to\ interrupt\ ports\(\backslash\)n"{}});}
+\DoxyCodeLine{00127\ \ \ \ \ BufferedPort<yarp::os::Bottle\ >::interrupt();}
+\DoxyCodeLine{00128\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}finished\ interrupt\ ports\(\backslash\)n"{}});}
+\DoxyCodeLine{00129\ \}}
+\DoxyCodeLine{00130\ }
+\DoxyCodeLine{00131\ \textcolor{comment}{/**********************************************************/}}
+\DoxyCodeLine{00132\ \textcolor{keywordtype}{void}\ STARTManager::onRead(yarp::os::Bottle\ \&bot)}
+\DoxyCodeLine{00133\ \{}
+\DoxyCodeLine{00134\ \ \ \ \ yarp::os::Bottle\ \&\textcolor{keyword}{final}\ =\ startOutPort.prepare();}
+\DoxyCodeLine{00135\ \ \ \ \ \textcolor{keyword}{final}.clear();}
+\DoxyCodeLine{00136\ }
+\DoxyCodeLine{00137\ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}bot\ size\ =\ \%d"{}},\ bot.size());}
+\DoxyCodeLine{00138\ }
+\DoxyCodeLine{00139\ \ \ \ \ std::vector<std::string>\ action;}
+\DoxyCodeLine{00140\ \ \ \ \ std::string\ query\ =\ bot.get(0).asList()-\/>toString();}
+\DoxyCodeLine{00141\ }
+\DoxyCodeLine{00142\ \ \ \ \ \textcolor{keywordflow}{if}\ (bot.size()\ ==\ 1)}
+\DoxyCodeLine{00143\ \ \ \ \ \{}
+\DoxyCodeLine{00144\ }
+\DoxyCodeLine{00145\ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}Got\ a\ special\ query:\ \%s\ "{}},\ query.c\_str());}
+\DoxyCodeLine{00146\ \ \ \ \ \ \ \ \ action.push\_back(\ bot.get(0).asList()-\/>get(0).asString().c\_str());}
+\DoxyCodeLine{00147\ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&list\ =\ \textcolor{keyword}{final}.addList();}
+\DoxyCodeLine{00148\ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&actList\ =\ list.addList();}
+\DoxyCodeLine{00149\ \ \ \ \ \ \ \ \ actList.addString(\textcolor{stringliteral}{"{}verb"{}});}
+\DoxyCodeLine{00150\ \ \ \ \ \ \ \ \ action[0][0]\ =\ toupper(action[0][0]);\ \textcolor{comment}{//\ Make\ first\ characther\ upper\ case}}
+\DoxyCodeLine{00151\ \ \ \ \ \ \ \ \ actList.addString(action[0].c\_str());}
+\DoxyCodeLine{00152\ }
+\DoxyCodeLine{00153\ \ \ \ \ \}}
+\DoxyCodeLine{00154\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00155\ \ \ \ \ \{}
+\DoxyCodeLine{00156\ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}Got\ a\ new\ query:\ \%s\ "{}},\ query.c\_str());}
+\DoxyCodeLine{00157\ }
+\DoxyCodeLine{00158\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ sizeBot\ =\ bot.get(1).asList()-\/>size();}
+\DoxyCodeLine{00159\ }
+\DoxyCodeLine{00160\ \ \ \ \ \ \ \ \ objectDetails\ =\ \textcolor{keyword}{new}\ Object\ [bot.get(0).asList()-\/>size()];}
+\DoxyCodeLine{00161\ }
+\DoxyCodeLine{00162\ \ \ \ \ \ \ \ \ std::vector<std::string>\ subject;}
+\DoxyCodeLine{00163\ }
+\DoxyCodeLine{00164\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ numObjects\ =\ 0;}
+\DoxyCodeLine{00165\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ numActions\ =\ 0;}
+\DoxyCodeLine{00166\ \ \ \ \ \ \ \ \ std::string\ tmpString;}
+\DoxyCodeLine{00167\ \ \ \ \ \ \ \ \ std::string\ location;}
+\DoxyCodeLine{00168\ \ \ \ \ \ \ \ \ std::string\ tmpAction;}
+\DoxyCodeLine{00169\ }
+\DoxyCodeLine{00170\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ 1\ -\/\ check\ for\ objects\ in\ list\ (hasdet\ definite)}}
+\DoxyCodeLine{00171\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ 2\ -\/\ add\ actions}}
+\DoxyCodeLine{00172\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i=0;\ i<\ sizeBot;\ i++)}
+\DoxyCodeLine{00173\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00174\ }
+\DoxyCodeLine{00175\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param1\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(1).asString().c\_str();}
+\DoxyCodeLine{00176\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param2\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(2).asString().c\_str();}
+\DoxyCodeLine{00177\ }
+\DoxyCodeLine{00178\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(param1.c\_str(),\ \textcolor{stringliteral}{"{}hasdet"{}})\ ==\ 0\ \&\&\ (strcmp(param2.c\_str(),\ \textcolor{stringliteral}{"{}definite"{}})\ ==\ 0\ ||\ strcmp(param2.c\_str(),\ \textcolor{stringliteral}{"{}indefinite"{}})\ ==\ 0)\ )\{}
+\DoxyCodeLine{00179\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ objectDetails[numObjects].name\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(0).asString().c\_str();}
+\DoxyCodeLine{00180\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ numObjects\ ++;}
+\DoxyCodeLine{00181\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00182\ }
+\DoxyCodeLine{00183\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(param1.c\_str(),\ \textcolor{stringliteral}{"{}ismain"{}})\ ==\ 0\ \&\&\ strcmp(param2.c\_str(),\ \textcolor{stringliteral}{"{}Yes"{}})\ ==\ 0)\{}
+\DoxyCodeLine{00184\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ action.push\_back(bot.get(1).asList()-\/>get(i).asList()-\/>get(0).asString().c\_str());}
+\DoxyCodeLine{00185\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ tmpString\ =\ action[numActions].c\_str();}
+\DoxyCodeLine{00186\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ numActions++;}
+\DoxyCodeLine{00187\ }
+\DoxyCodeLine{00188\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ y=0;\ y<numActions;\ y++)\{}
+\DoxyCodeLine{00189\ }
+\DoxyCodeLine{00190\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(action[y].c\_str(),\ \textcolor{stringliteral}{"{}be"{}}\ )\ ==\ 0)\{}
+\DoxyCodeLine{00191\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i=0;\ i<\ sizeBot;\ i++)\{}
+\DoxyCodeLine{00192\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param1\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(0).asString().c\_str();}
+\DoxyCodeLine{00193\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param2\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(1).asString().c\_str();}
+\DoxyCodeLine{00194\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(param1.c\_str(),\ action[y].c\_str())\ ==\ 0\ \&\&\ strcmp(param2.c\_str(),\ \textcolor{stringliteral}{"{}haslocation"{}})\ ==\ 0)\{}
+\DoxyCodeLine{00195\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ action.erase(std::remove(action.begin(),\ action.end(),\ tmpString),\ action.end());}
+\DoxyCodeLine{00196\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ action.push\_back(bot.get(1).asList()-\/>get(i).asList()-\/>get(2).asString().c\_str());}
+\DoxyCodeLine{00197\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00198\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00199\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00200\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(action[y].c\_str(),\ \textcolor{stringliteral}{"{}isa"{}}\ )\ ==\ 0)\{}
+\DoxyCodeLine{00201\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i=0;\ i<\ sizeBot;\ i++)\{}
+\DoxyCodeLine{00202\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param1\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(1).asString().c\_str();}
+\DoxyCodeLine{00203\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param2\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(2).asString().c\_str();}
+\DoxyCodeLine{00204\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(param1.c\_str(),\ action[y].c\_str())\ ==\ 0)\{}
+\DoxyCodeLine{00205\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ action.erase(std::remove(action.begin(),\ action.end(),\ tmpString),\ action.end());}
+\DoxyCodeLine{00206\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ action.push\_back(param2.c\_str());}
+\DoxyCodeLine{00207\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00208\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00209\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00210\ }
+\DoxyCodeLine{00211\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i=0;\ i<\ sizeBot;\ i++)\{}
+\DoxyCodeLine{00212\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param1\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(0).asString().c\_str();}
+\DoxyCodeLine{00213\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param2\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(1).asString().c\_str();}
+\DoxyCodeLine{00214\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param3\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(2).asString().c\_str();}
+\DoxyCodeLine{00215\ }
+\DoxyCodeLine{00216\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(param1.c\_str(),\ action[y].c\_str())\ ==\ 0\ \&\&\ (strcmp(param2.c\_str(),\ \textcolor{stringliteral}{"{}to"{}})\ ==\ 0\ ||\ (strcmp(param2.c\_str(),\ \textcolor{stringliteral}{"{}on"{}})\ ==\ 0)\ ||\ (strcmp(param2.c\_str(),\ \textcolor{stringliteral}{"{}from"{}})\ ==\ 0)))\{}
+\DoxyCodeLine{00217\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}\ action\ \%s\ param1\ \%s\ param2\ \%s\ param3\ \%s"{}},\ action[y].c\_str(),\ param1.c\_str(),\ param2.c\_str(),\ param3.c\_str());}
+\DoxyCodeLine{00218\ }
+\DoxyCodeLine{00219\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ tmpAction\ =\ action[y].c\_str();}
+\DoxyCodeLine{00220\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//making\ first\ character\ upper\ case\ for\ later\ comparison}}
+\DoxyCodeLine{00221\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ tmpAction[0]\ =\ toupper(tmpAction[0]);}
+\DoxyCodeLine{00222\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ location\ =\ param3.c\_str();}
+\DoxyCodeLine{00223\ }
+\DoxyCodeLine{00224\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00225\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00226\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00227\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00228\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00229\ }
+\DoxyCodeLine{00230\ \ \ \ \ \textcolor{comment}{//\ Fill\ in\ the\ subjects}}
+\DoxyCodeLine{00231\ \ \ \ \ \textcolor{comment}{//making\ sure\ that\ objects\ and\ actions\ are\ the\ same}}
+\DoxyCodeLine{00232\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (numActions\ >\ numObjects)\{}
+\DoxyCodeLine{00233\ \ \ \ \ \ \ \ \ \ \ \ \ numObjects\ ++;}
+\DoxyCodeLine{00234\ \ \ \ \ \ \ \ \ \ \ \ \ objectDetails[numObjects-\/(numObjects/2)].name\ =\ objectDetails[numObjects-\/numObjects].name.c\_str();}
+\DoxyCodeLine{00235\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00236\ }
+\DoxyCodeLine{00237\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ y=0;\ y<\ numActions;\ y++)\{}
+\DoxyCodeLine{00238\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i=0;\ i<\ sizeBot;\ i++)\{}
+\DoxyCodeLine{00239\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param1\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(0).asString().c\_str();}
+\DoxyCodeLine{00240\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param2\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(1).asString().c\_str();}
+\DoxyCodeLine{00241\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param3\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(2).asString().c\_str();}
+\DoxyCodeLine{00242\ }
+\DoxyCodeLine{00243\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(param2.c\_str(),\ action[y].c\_str())\ ==\ 0\ \&\&\ strcmp(param3.c\_str(),\ objectDetails[y].name.c\_str())\ ==\ 0)\{}
+\DoxyCodeLine{00244\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ subject.push\_back(param1.c\_str());}
+\DoxyCodeLine{00245\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00246\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00247\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00248\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00249\ }
+\DoxyCodeLine{00250\ \ \ \ \ \ \ \ \ \textcolor{comment}{//yInfo("{}num\ objs\ \%d"{},\ subject.size());}}
+\DoxyCodeLine{00251\ }
+\DoxyCodeLine{00252\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (subject.size()\ <\ 1)}
+\DoxyCodeLine{00253\ \ \ \ \ \ \ \ \ \ \ \ \ subject.push\_back(\textcolor{stringliteral}{"{}you"{}});}
+\DoxyCodeLine{00254\ }
+\DoxyCodeLine{00255\ \ \ \ \ \ \ \ \ subject.erase(std::remove(subject.begin(),\ subject.end(),\ \textcolor{stringliteral}{"{}"{}}),\ subject.end());}
+\DoxyCodeLine{00256\ \ \ \ \ \ \ \ \ subject.push\_back(\textcolor{stringliteral}{"{}you"{}});}
+\DoxyCodeLine{00257\ }
+\DoxyCodeLine{00258\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ y=0;\ y<\ subject.size();\ y++)\{}
+\DoxyCodeLine{00259\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i=0;\ i<\ sizeBot;\ i++)\{}
+\DoxyCodeLine{00260\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param1\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(0).asString().c\_str();}
+\DoxyCodeLine{00261\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param2\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(1).asString().c\_str();}
+\DoxyCodeLine{00262\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param3\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(2).asString().c\_str();}
+\DoxyCodeLine{00263\ }
+\DoxyCodeLine{00264\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//yInfo("{}\%s\ \%s\ "{},\ param1.c\_str(),\ subject[y].c\_str());}}
+\DoxyCodeLine{00265\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(param1.c\_str(),\ subject[y].c\_str())\ ==\ 0\ \&\&\ strcmp(param2.c\_str(),\ \textcolor{stringliteral}{"{}hasproperty"{}})\ ==\ 0)\{}
+\DoxyCodeLine{00266\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//yInfo("{}in\ here"{});}}
+\DoxyCodeLine{00267\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ adj\ =\ param3.c\_str();}
+\DoxyCodeLine{00268\ }
+\DoxyCodeLine{00269\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i=0;\ i<\ sizeBot;\ i++)\{}
+\DoxyCodeLine{00270\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param1\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(0).asString().c\_str();}
+\DoxyCodeLine{00271\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param2\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(1).asString().c\_str();}
+\DoxyCodeLine{00272\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param3\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(2).asString().c\_str();}
+\DoxyCodeLine{00273\ }
+\DoxyCodeLine{00274\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(param1.c\_str(),\ adj.c\_str())\ ==\ 0\ \&\&\ strcmp(param2.c\_str(),\ \textcolor{stringliteral}{"{}hascategory"{}})\ ==\ 0\ \&\&\ strcmp(param3.c\_str(),\ \textcolor{stringliteral}{"{}adj"{}})\ ==\ 0)\{}
+\DoxyCodeLine{00275\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//yInfo("{}\%s\ is\ an\ adjective,\ adding\ it\ as\ a\ parameter\ of\ \%s"{},\ param1.c\_str(),\ subject[y].c\_str());}}
+\DoxyCodeLine{00276\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00277\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00278\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00279\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00280\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00281\ }
+\DoxyCodeLine{00282\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ if\ no\ objects\ are\ found\ it\ might\ be\ that\ the\ query\ is\ particular\ therefore\ need\ to\ check\ if\ property\ is\ available\ instead}}
+\DoxyCodeLine{00283\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (numObjects<1)\{}
+\DoxyCodeLine{00284\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i=0;\ i<\ sizeBot;\ i++)\{}
+\DoxyCodeLine{00285\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param1\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(1).asString().c\_str();}
+\DoxyCodeLine{00286\ }
+\DoxyCodeLine{00287\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\ strcmp(param1.c\_str(),\ \textcolor{stringliteral}{"{}hasproperty"{}})\ ==\ 0\ )\{}
+\DoxyCodeLine{00288\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ objectDetails[numObjects].name\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(0).asString().c\_str();}
+\DoxyCodeLine{00289\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ numObjects\ ++;}
+\DoxyCodeLine{00290\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00291\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00292\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00293\ }
+\DoxyCodeLine{00294\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ add\ properties\ to\ the\ objects\ (if\ any)}}
+\DoxyCodeLine{00295\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ y=0;\ y<\ numObjects;\ y++)\{}
+\DoxyCodeLine{00296\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i=0;\ i<\ sizeBot;\ i++)}
+\DoxyCodeLine{00297\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00298\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param1\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(0).asString().c\_str();}
+\DoxyCodeLine{00299\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param2\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(1).asString().c\_str();}
+\DoxyCodeLine{00300\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param3\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(2).asString().c\_str();}
+\DoxyCodeLine{00301\ }
+\DoxyCodeLine{00302\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(param1.c\_str(),\ objectDetails[y].name.c\_str())\ ==\ 0\ \&\&\ strcmp(param2.c\_str(),\ \textcolor{stringliteral}{"{}hasproperty"{}})\ ==\ 0)\{}
+\DoxyCodeLine{00303\ }
+\DoxyCodeLine{00304\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ objectDetails[y].property.push\_back(param3.c\_str());}
+\DoxyCodeLine{00305\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00306\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00307\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00308\ }
+\DoxyCodeLine{00309\ \ \ \ \ \ \ \ \ \textcolor{comment}{//check\ relatedto}}
+\DoxyCodeLine{00310\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ isProperty\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00311\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i=0;\ i<\ sizeBot;\ i++)\{}
+\DoxyCodeLine{00312\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param1\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(0).asString().c\_str();}
+\DoxyCodeLine{00313\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param2\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(1).asString().c\_str();}
+\DoxyCodeLine{00314\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ param3\ =\ bot.get(1).asList()-\/>get(i).asList()-\/>get(2).asString().c\_str();}
+\DoxyCodeLine{00315\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(param2.c\_str(),\ \textcolor{stringliteral}{"{}relatedto"{}})\ ==\ 0\ )}
+\DoxyCodeLine{00316\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00317\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ isProperty\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00318\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00319\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00320\ }
+\DoxyCodeLine{00321\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i=0;\ i<numActions;\ i++)\{}
+\DoxyCodeLine{00322\ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&list\ =\ \textcolor{keyword}{final}.addList();}
+\DoxyCodeLine{00323\ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&subjList\ =\ list.addList();}
+\DoxyCodeLine{00324\ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&actList\ =\ list.addList();}
+\DoxyCodeLine{00325\ }
+\DoxyCodeLine{00326\ \ \ \ \ \ \ \ \ \ \ \ \ subjList.addString(\textcolor{stringliteral}{"{}subject"{}});}
+\DoxyCodeLine{00327\ \ \ \ \ \ \ \ \ \ \ \ \ subject[i][0]\ =\ toupper(subject[i][0]);}
+\DoxyCodeLine{00328\ \ \ \ \ \ \ \ \ \ \ \ \ subjList.addString(subject[i].c\_str());}
+\DoxyCodeLine{00329\ }
+\DoxyCodeLine{00330\ \ \ \ \ \ \ \ \ \ \ \ \ actList.addString(\textcolor{stringliteral}{"{}verb"{}});}
+\DoxyCodeLine{00331\ \ \ \ \ \ \ \ \ \ \ \ \ action[i][0]\ =\ toupper(action[i][0]);\ \textcolor{comment}{//\ Make\ first\ characther\ upper\ case}}
+\DoxyCodeLine{00332\ \ \ \ \ \ \ \ \ \ \ \ \ actList.addString(action[i].c\_str());}
+\DoxyCodeLine{00333\ }
+\DoxyCodeLine{00334\ \ \ \ \ \ \ \ \ \ \ \ \ yDebug()\ <<\ \textcolor{stringliteral}{"{}location\ is"{}}\ <<\ location.c\_str()\ <<\ \textcolor{stringliteral}{"{}tmpAction\ is\ "{}}\ <<\ tmpAction.c\_str()\ <<\ \textcolor{stringliteral}{"{}action\ is\ "{}}\ <<\ action[i].c\_str();}
+\DoxyCodeLine{00335\ }
+\DoxyCodeLine{00336\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (location.size()>0\ \&\&\ strcmp(tmpAction.c\_str(),\ action[i].c\_str())\ ==\ 0\ )\{}
+\DoxyCodeLine{00337\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&posList\ =\ list.addList();}
+\DoxyCodeLine{00338\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ posList.addString(\textcolor{stringliteral}{"{}location"{}});}
+\DoxyCodeLine{00339\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//location[0]\ =\ toupper(location[0]);}}
+\DoxyCodeLine{00340\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ posList.addString(location.c\_str());}
+\DoxyCodeLine{00341\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00342\ }
+\DoxyCodeLine{00343\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i=0;\ i<numObjects;\ i++)\{}
+\DoxyCodeLine{00344\ }
+\DoxyCodeLine{00345\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//Bottle\ \&list\ =\ final.addList();}}
+\DoxyCodeLine{00346\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(location.c\_str(),\ objectDetails[i].name.c\_str())\ ==\ 0\ )\{}
+\DoxyCodeLine{00347\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}AVOIDING\ object\ as\ location\ is\ equal\ to\ object\ \%s"{}},\ objectDetails[i].name.c\_str());}
+\DoxyCodeLine{00348\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00349\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00350\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00351\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&objList\ =\ list.addList();}
+\DoxyCodeLine{00352\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (isProperty)\{}
+\DoxyCodeLine{00353\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ objList.addString(\textcolor{stringliteral}{"{}property"{}});}
+\DoxyCodeLine{00354\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ isProperty\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00355\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00356\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00357\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ objList.addString(\textcolor{stringliteral}{"{}object"{}});}
+\DoxyCodeLine{00358\ }
+\DoxyCodeLine{00359\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ objectDetails[i].name[0]\ =\ toupper(objectDetails[i].name[0]);}
+\DoxyCodeLine{00360\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ objList.addString(objectDetails[i].name.c\_str());}
+\DoxyCodeLine{00361\ }
+\DoxyCodeLine{00362\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (objectDetails[i].property.size()\ >\ 0)\{}
+\DoxyCodeLine{00363\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&propList\ =\ list.addList();}
+\DoxyCodeLine{00364\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ propList.addString(\textcolor{stringliteral}{"{}properties"{}});}
+\DoxyCodeLine{00365\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ yarp::os::Bottle\ \&propElem\ =\ propList.addList();}
+\DoxyCodeLine{00366\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ y=0;\ y<objectDetails[i].property.size();\ y++)\{}
+\DoxyCodeLine{00367\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ objectDetails[i].property[y][0]\ =\ toupper(objectDetails[i].property[y][0]);}
+\DoxyCodeLine{00368\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ propElem.addString(objectDetails[i].property[y].c\_str());}
+\DoxyCodeLine{00369\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00370\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00371\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00372\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00373\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00374\ \ \ \ \ \}}
+\DoxyCodeLine{00375\ }
+\DoxyCodeLine{00376\ \ \ \ \ \textcolor{comment}{//yInfo("{}actions\ is:\ [\%s]\ and\ object\ is:\ [\%s]"{},\ action.c\_str(),\ object.c\_str());}}
+\DoxyCodeLine{00377\ }
+\DoxyCodeLine{00378\ \ \ \ \ \textcolor{keywordflow}{if}\ (\textcolor{keyword}{final}.size()\ <\ 1)}
+\DoxyCodeLine{00379\ \ \ \ \ \ \ \ \ yError(\textcolor{stringliteral}{"{}Something\ is\ wrong\ with\ the\ reply\ from\ START"{}});}
+\DoxyCodeLine{00380\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00381\ \ \ \ \ \ \ \ \ yInfo(\textcolor{stringliteral}{"{}output\ is:\ \%s\ \(\backslash\)n"{}},\ \textcolor{keyword}{final}.toString().c\_str());}
+\DoxyCodeLine{00382\ }
+\DoxyCodeLine{00383\ }
+\DoxyCodeLine{00384\ \ \ \ \ startOutPort.write();}
+\DoxyCodeLine{00385\ \}}
+\DoxyCodeLine{00386\ \textcolor{comment}{//empty\ line\ to\ make\ gcc\ happy}}
+
+\end{DoxyCode}
