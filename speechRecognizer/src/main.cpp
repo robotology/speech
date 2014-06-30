@@ -13,7 +13,7 @@
  * Public License for more details
  */
 
-/*
+/**
 \defgroup icub_speechRecognizer Process to speech recognition, 
           and online vocabulory / grammar management.
 
@@ -88,9 +88,7 @@ None.
 Windows 7. 
 
 \author Stephane Lallee 
-
-This file can be edited at icub/contrib/src/interactiveObjectsLearning/speechRecognizer/program.cs.
-**/
+*/
 
 #include "SpeechRecognizerModule.h"
 
