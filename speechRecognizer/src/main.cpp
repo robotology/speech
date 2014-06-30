@@ -14,8 +14,7 @@
  */
 
 /**
-\defgroup icub_speechRecognizer "Process to speech recognition,
-          online vocabulory and grammar management".
+\defgroup icub_speechRecognizer speechRecognizer
 
 \section intro_sec Description
 The module based on Microsoft Speech API. It is made to recognize speech based on runtime grammar in different formats:
