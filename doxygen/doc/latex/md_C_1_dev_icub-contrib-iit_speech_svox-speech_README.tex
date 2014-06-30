@@ -1,0 +1,53 @@
+A simple text to speech using $\ast$$\ast${\ttfamily S\+V\+O\+X\+P\+I\+CO}$\ast$$\ast$.
+
+\subsection*{Requirements }
+
+The current implementation requires Linux $\ast$$\ast${\ttfamily aplay}$\ast$$\ast$ command (in the {\ttfamily alsa-\/utils} package) to play the generated wave file. This can/should be easily replaced with the {\ttfamily yarp portaudio} device (audio player).
+
+On Windows systems {\ttfamily powershell} is employed to play the wave file.
+
+\subsection*{Installation }
+
+
+\begin{DoxyItemize}
+\item {\ttfamily \$ cd svox-\/speech}
+\item {\ttfamily \$ mkdir build \&\& cd build}
+\item {\ttfamily \$ cmake ..}
+\item tick on the driver {\ttfamily speech}.
+\item select a convenient location for installation via {\ttfamily C\+M\+A\+K\+E\+\_\+\+I\+N\+S\+T\+A\+L\+L\+\_\+\+P\+R\+E\+F\+IX} (refer to this location as {\ttfamily \$\+I\+N\+S\+T\+\_\+\+D\+IR}).
+\item {\ttfamily \$ make install}
+\item append to the environment variable $\ast$$\ast${\ttfamily Y\+A\+R\+P\+\_\+\+D\+A\+T\+A\+\_\+\+D\+I\+RS}$\ast$$\ast$ the path {\ttfamily \$\+I\+N\+S\+T\+\_\+\+D\+IR/share/speech}.
+\end{DoxyItemize}
+
+\subsection*{Testing }
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$ yarpdev --device speech --lingware-context speech --default-language en-US --pitch 100 --speed 100}
+\end{DoxyCode}
+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$ yarp rpc /icub/speech:rpc}
+\DoxyCodeLine{>>help}
+\DoxyCodeLine{Responses:}
+\DoxyCodeLine{  *** Available commands:}
+\DoxyCodeLine{  setLanguage}
+\DoxyCodeLine{  setSpeed}
+\DoxyCodeLine{  setPitch}
+\DoxyCodeLine{  getSpeed}
+\DoxyCodeLine{  getPitch}
+\DoxyCodeLine{  getSupportedLang}
+\DoxyCodeLine{  say}
+\DoxyCodeLine{  help}
+\end{DoxyCode}
+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{>> say "Hello iCub!"}
+\DoxyCodeLine{>> setPitch 200}
+\DoxyCodeLine{>> say "Hello iCub!"}
+\end{DoxyCode}
+ 
