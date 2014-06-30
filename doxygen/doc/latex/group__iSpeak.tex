@@ -1,0 +1,63 @@
+\doxysection{i\+Speak}
+\label{group__iSpeak}\index{iSpeak@{iSpeak}}
+
+
+Acquire sentences over a yarp port and then let the robot utter them, also controlling the facial expressions.  
+
+
+Acquire sentences over a yarp port and then let the robot utter them, also controlling the facial expressions. 
+
+\hypertarget{group__windows-tts_intro_sec}{}\doxysubsection{Description}\label{group__windows-tts_intro_sec}
+The behavior is pretty intuitive and does not need any further detail.~\newline
+ \hypertarget{group__windows-tts_lib_sec}{}\doxysubsection{Libraries}\label{group__windows-tts_lib_sec}
+
+\begin{DoxyItemize}
+\item YARP libraries.
+\item Packages for speech synthesis (e.\+g. speech-\/dev, festival, espeak, ...).
+\end{DoxyItemize}\hypertarget{group__windows-tts_parameters_sec}{}\doxysubsection{Parameters}\label{group__windows-tts_parameters_sec}
+--name {\itshape name} 
+\begin{DoxyItemize}
+\item The parameter {\itshape name} identifies the unique stem-\/name used to open all relevant ports.
+\end{DoxyItemize}
+
+--period {\itshape T} 
+\begin{DoxyItemize}
+\item The period given in \mbox{[}ms\mbox{]} for controlling the mouth.
+\end{DoxyItemize}
+
+--equalize\+\_\+time {\itshape time} 
+\begin{DoxyItemize}
+\item The time given in \mbox{[}s\mbox{]} for equalizing the start of facial expressions control with the start of speech synthesis. Default value is 0.\+0 \mbox{[}s\mbox{]}.
+\end{DoxyItemize}
+
+--package {\itshape pck} 
+\begin{DoxyItemize}
+\item The parameter {\itshape pck} specifies the package used for utterance; e.\+g. \char`\"{}speech-\/dev\char`\"{}, \char`\"{}festival\char`\"{}, \char`\"{}acapela-\/tts\char`\"{}, \char`\"{}espeak\char`\"{}, ...~\newline
+ If {\itshape speech-\/dev} is specified then the yarp speech device is employed.
+\end{DoxyItemize}
+
+--package\+\_\+options {\itshape opt} 
+\begin{DoxyItemize}
+\item The parameter {\itshape opt} is a string specifying further command-\/line options to be used with the chosen package. Refer to the package documentation for the available options. In case the {\itshape speech-\/dev} package is used, this option should contain property-\/like rpc commands.
+\end{DoxyItemize}\hypertarget{group__windows-tts_portsc_sec}{}\doxysubsection{Ports Created}\label{group__windows-tts_portsc_sec}
+
+\begin{DoxyItemize}
+\item {\itshape /} $<$name$>$\+: this port receives the string for speech synthesis. In case a double is received in place of a string, then the mouth will be controlled without actually uttering any word; that double accounts for the uttering time. ~\newline
+ Optionally, as second parameter available in both modalities, an integer can be provided that overrides the default period used to control the mouth, expressed in \mbox{[}ms\mbox{]}. Negative values are not processed and serve as placeholders. ~\newline
+ Finally, available only in string mode, a third double can be provided that establishes the uttering duration in seconds, irrespective of the words actually spoken.
+\item {\itshape /} $<$name$>$/emotions\+:o\+: this port serves to command the facial expressions of the i\+Cub.
+\item {\itshape /} $<$name$>$/r1\+:rpc\+: this port serves to command the R1\textquotesingle{}s mouth.
+\item {\itshape /} $<$name$>$/rpc\+: a remote procedure call port used for the following run-\/time querie\+: ~\newline
+
+\begin{DoxyItemize}
+\item \mbox{[}stat\mbox{]}\+: returns \char`\"{}speaking\char`\"{} or \char`\"{}quiet\char`\"{}.
+\item \mbox{[}set\mbox{]} \mbox{[}opt\mbox{]} \char`\"{}package\+\_\+options\char`\"{}\+: set new package dependent command-\/line options.
+\item \mbox{[}get\mbox{]} \mbox{[}opt\mbox{]}\+: returns a string containing the current package dependent command-\/line options.
+\end{DoxyItemize}
+\item {\itshape /} $<$name$>$/speech-\/dev/rpc\+: this port serves to talk to speech yarp device.
+\end{DoxyItemize}\hypertarget{group__windows-tts_tested_os_sec}{}\doxysubsection{Tested OS}\label{group__windows-tts_tested_os_sec}
+Linux and Windows.
+
+\begin{DoxyAuthor}{Author}
+Ugo Pattacini 
+\end{DoxyAuthor}

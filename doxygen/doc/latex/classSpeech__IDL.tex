@@ -1,0 +1,157 @@
+\doxysection{Speech\+\_\+\+IDL Class Reference}
+\label{classSpeech__IDL}\index{Speech\_IDL@{Speech\_IDL}}
+
+
+\mbox{\hyperlink{classSpeech__IDL}{Speech\+\_\+\+IDL}}.  
+
+
+
+
+{\ttfamily \#include $<$Speech\+\_\+\+IDL.\+h$>$}
+
+
+
+Inherits yarp\+::os\+::\+Wire.
+
+
+
+Inherited by yarp\+::dev\+::\+Speech.
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \mbox{\hyperlink{classSpeech__IDL_abd517ac2ab8310d2eb0dcd756782ed85}{set\+Language}} (const std\+::string \&language)
+\begin{DoxyCompactList}\small\item\em set the speech langauge \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classSpeech__IDL_ac4e0fe8f295cc10ed6cc2c3f5326db8e}{set\+Speed}} (const int16\+\_\+t speed)
+\begin{DoxyCompactList}\small\item\em set the speech speed \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classSpeech__IDL_a76a3da1b097f0e7b6cd79e77135ddf43}{set\+Pitch}} (const int16\+\_\+t pitch)
+\begin{DoxyCompactList}\small\item\em set the speech pitch \end{DoxyCompactList}\item 
+virtual int16\+\_\+t \mbox{\hyperlink{classSpeech__IDL_a41f5ec2698b26193b2819c5acc095ed2}{get\+Speed}} ()
+\begin{DoxyCompactList}\small\item\em get the speech speed \end{DoxyCompactList}\item 
+virtual int16\+\_\+t \mbox{\hyperlink{classSpeech__IDL_a273ed2a855520a7ab6babcb6bffa02fc}{get\+Pitch}} ()
+\begin{DoxyCompactList}\small\item\em get the speech pitch \end{DoxyCompactList}\item 
+virtual std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{classSpeech__IDL_a003d0864e1211db39b8b395e8462f249}{get\+Supported\+Lang}} ()
+\begin{DoxyCompactList}\small\item\em get the available languages \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classSpeech__IDL_a0cc774034f1da13dcaf091c5e65f5a56}{say}} (const std\+::string \&text)
+\begin{DoxyCompactList}\small\item\em render and play the speech \end{DoxyCompactList}\item 
+\mbox{\label{classSpeech__IDL_a9b3187a4d3fd105cef6af2c71cde0eb6}} 
+virtual bool \mbox{\hyperlink{classSpeech__IDL_a9b3187a4d3fd105cef6af2c71cde0eb6}{play}} ()
+\begin{DoxyCompactList}\small\item\em play the previously rendered or paused speech \end{DoxyCompactList}\item 
+\mbox{\label{classSpeech__IDL_adf9121298211c3f5e566fa110ca1e4b4}} 
+virtual bool \mbox{\hyperlink{classSpeech__IDL_adf9121298211c3f5e566fa110ca1e4b4}{pause}} ()
+\begin{DoxyCompactList}\small\item\em pause the current speech \end{DoxyCompactList}\item 
+\mbox{\label{classSpeech__IDL_ac1fc021a6936bf5fd650e41a298d2bec}} 
+virtual bool \mbox{\hyperlink{classSpeech__IDL_ac1fc021a6936bf5fd650e41a298d2bec}{stop}} ()
+\begin{DoxyCompactList}\small\item\em stop playing the current speech \end{DoxyCompactList}\item 
+\mbox{\label{classSpeech__IDL_aa8c2f07970c4db9f3aa0206575bc43b3}} 
+virtual bool {\bfseries read} (yarp\+::os\+::\+Connection\+Reader \&connection)
+\item 
+\mbox{\label{classSpeech__IDL_afac3d091f15a6847aa8edb7f8ddc7652}} 
+virtual std\+::vector$<$ std\+::string $>$ {\bfseries help} (const std\+::string \&function\+Name=\char`\"{}-\/-\/all\char`\"{})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\mbox{\hyperlink{classSpeech__IDL}{Speech\+\_\+\+IDL}}. 
+
+Definition at line 16 of file Speech\+\_\+\+IDL.\+h.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\label{classSpeech__IDL_a273ed2a855520a7ab6babcb6bffa02fc}} 
+\index{Speech\_IDL@{Speech\_IDL}!getPitch@{getPitch}}
+\index{getPitch@{getPitch}!Speech\_IDL@{Speech\_IDL}}
+\doxysubsubsection{\texorpdfstring{getPitch()}{getPitch()}}
+{\footnotesize\ttfamily virtual int16\+\_\+t Speech\+\_\+\+IDL\+::get\+Pitch (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+get the speech pitch 
+
+\begin{DoxyReturn}{Returns}
+the pitch 
+\end{DoxyReturn}
+\mbox{\label{classSpeech__IDL_a41f5ec2698b26193b2819c5acc095ed2}} 
+\index{Speech\_IDL@{Speech\_IDL}!getSpeed@{getSpeed}}
+\index{getSpeed@{getSpeed}!Speech\_IDL@{Speech\_IDL}}
+\doxysubsubsection{\texorpdfstring{getSpeed()}{getSpeed()}}
+{\footnotesize\ttfamily virtual int16\+\_\+t Speech\+\_\+\+IDL\+::get\+Speed (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+get the speech speed 
+
+\begin{DoxyReturn}{Returns}
+the speed 
+\end{DoxyReturn}
+\mbox{\label{classSpeech__IDL_a003d0864e1211db39b8b395e8462f249}} 
+\index{Speech\_IDL@{Speech\_IDL}!getSupportedLang@{getSupportedLang}}
+\index{getSupportedLang@{getSupportedLang}!Speech\_IDL@{Speech\_IDL}}
+\doxysubsubsection{\texorpdfstring{getSupportedLang()}{getSupportedLang()}}
+{\footnotesize\ttfamily virtual std\+::vector$<$std\+::string$>$ Speech\+\_\+\+IDL\+::get\+Supported\+Lang (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+get the available languages 
+
+\begin{DoxyReturn}{Returns}
+a list of the supported language 
+\end{DoxyReturn}
+\mbox{\label{classSpeech__IDL_a0cc774034f1da13dcaf091c5e65f5a56}} 
+\index{Speech\_IDL@{Speech\_IDL}!say@{say}}
+\index{say@{say}!Speech\_IDL@{Speech\_IDL}}
+\doxysubsubsection{\texorpdfstring{say()}{say()}}
+{\footnotesize\ttfamily virtual bool Speech\+\_\+\+IDL\+::say (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{text }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+render and play the speech 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure 
+\end{DoxyReturn}
+\mbox{\label{classSpeech__IDL_abd517ac2ab8310d2eb0dcd756782ed85}} 
+\index{Speech\_IDL@{Speech\_IDL}!setLanguage@{setLanguage}}
+\index{setLanguage@{setLanguage}!Speech\_IDL@{Speech\_IDL}}
+\doxysubsubsection{\texorpdfstring{setLanguage()}{setLanguage()}}
+{\footnotesize\ttfamily virtual bool Speech\+\_\+\+IDL\+::set\+Language (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{language }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+set the speech langauge 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure 
+\end{DoxyReturn}
+\mbox{\label{classSpeech__IDL_a76a3da1b097f0e7b6cd79e77135ddf43}} 
+\index{Speech\_IDL@{Speech\_IDL}!setPitch@{setPitch}}
+\index{setPitch@{setPitch}!Speech\_IDL@{Speech\_IDL}}
+\doxysubsubsection{\texorpdfstring{setPitch()}{setPitch()}}
+{\footnotesize\ttfamily virtual bool Speech\+\_\+\+IDL\+::set\+Pitch (\begin{DoxyParamCaption}\item[{const int16\+\_\+t}]{pitch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+set the speech pitch 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure 
+\end{DoxyReturn}
+\mbox{\label{classSpeech__IDL_ac4e0fe8f295cc10ed6cc2c3f5326db8e}} 
+\index{Speech\_IDL@{Speech\_IDL}!setSpeed@{setSpeed}}
+\index{setSpeed@{setSpeed}!Speech\_IDL@{Speech\_IDL}}
+\doxysubsubsection{\texorpdfstring{setSpeed()}{setSpeed()}}
+{\footnotesize\ttfamily virtual bool Speech\+\_\+\+IDL\+::set\+Speed (\begin{DoxyParamCaption}\item[{const int16\+\_\+t}]{speed }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+set the speech speed 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/runner/work/speech/speech/gh-\/pages/svox-\/speech/idl\+\_\+dox/Speech\+\_\+\+IDL.\+h\end{DoxyCompactItemize}

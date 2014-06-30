@@ -1,0 +1,33 @@
+This folder includes different modules which use Google Cloud Services.
+\begin{DoxyItemize}
+\item {\bfseries{google\+Speech\+Process}}\+: it reveals the structure and the syntax of your textual or vocal input by analyzing also the sentiments of your phrases;
+\item {\bfseries{google\+Speech}}\+: it performs speech-\/to-\/text;
+\item {\bfseries{google\+Synthesis}}\+: it performs text-\/to-\/speech;
+\item {\bfseries{google\+Dialog}}\+: it allows to carry on a conversation about a specific theme, corresponding to your own dialog flow created in your Google project.
+\end{DoxyItemize}
+
+In order to use them, the user have to register, create and download a {\itshape private key} from Google Cloud. Below the instructions on how to do\+:
+\begin{DoxyEnumerate}
+\item Browse to \href{https://console.cloud.google.com}{\texttt{ Cloud Console}} and create an account. This requires the user to insert a credit card\+: this process is mandatory in order to run the application, but you will not pay anything
+\item Starting from the Dashboard page, under the Project info section, use the button {\bfseries{Go to Project Settings}} which will lead you to the Settings
+\item Browse to {\bfseries{Service Accounts}} using the left navigation bar
+\item In the table you will find all the service accounts active for your projects. Use the {\bfseries{Actions}} button related to the {\itshape dialog flow service} and select {\bfseries{Create key}} choosing the JSON format.
+\end{DoxyEnumerate}\hypertarget{md__home_runner_work_speech_speech_gh_pages_speechInteraction_README_autotoc_md1}{}\doxysubsection{Some useful information for the user\+:}\label{md__home_runner_work_speech_speech_gh_pages_speechInteraction_README_autotoc_md1}
+In order to inform the user about what is happening in the background while he is interacting with the module, the {\ttfamily /module\+Name/state\+:o} port has been created, which shows different states of the module\+:
+
+\tabulinesep=1mm
+\begin{longtabu}spread 0pt [c]{*{2}{|X[-1]}|}
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ State   }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Meaning    }\\\cline{1-2}
+\endfirsthead
+\hline
+\endfoot
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ State   }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Meaning    }\\\cline{1-2}
+\endhead
+Listening ({\itshape specific for {\bfseries{google\+Speech}}})   &Audio is captured by the microphone    \\\cline{1-2}
+Done   &The google request has been smoothly performed and the response is not empty    \\\cline{1-2}
+Empty   &The google request has been smoothly performed but the response is empty    \\\cline{1-2}
+Failure\+\_\+$<$Status\+Code$>$   &The google request has not been performed; $<$Status\+Code$>$ depends on the type of failure    \\\cline{1-2}
+Reset ({\itshape specific for {\bfseries{google\+Dialog}}})   &The session of the dialogflow has been cleaned   \\\cline{1-2}
+\end{longtabu}

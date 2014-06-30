@@ -1,0 +1,40 @@
+\doxysection{speech\+Recognizer}
+\label{group__icub__speechRecognizer}\index{speechRecognizer@{speechRecognizer}}
+\hypertarget{group__windows-tts_intro_sec}{}\doxysubsection{Description}\label{group__windows-tts_intro_sec}
+The module based on Microsoft Speech API. It is made to recognize speech based on runtime grammar in different formats\+: XML W3C specification \char`\"{}custom\char`\"{} simple format closed to the one used in the CSLU RAD Toolkit. The class Robot\+Grammar\+Manager maintains a dictionary of various vocabulories usefull in HRI (Objects, Agents, Actions...) which can be expanded at runtime and can be used in grammars.\hypertarget{group__windows-tts_lib_sec}{}\doxysubsection{Libraries}\label{group__windows-tts_lib_sec}
+Microsoft speech sdk \href{http://msdn.microsoft.com/en-us/library/hh361572(v=office.14).aspx}{\texttt{ http\+://msdn.\+microsoft.\+com/en-\/us/library/hh361572(v=office.\+14).\+aspx}}\hypertarget{group__windows-tts_parameters_sec}{}\doxysubsection{Parameters}\label{group__windows-tts_parameters_sec}
+--grammar\+File specify the name of the grammar file to load at startup --talkback if specified the program will use TTS to repeat every sentence recognized\hypertarget{group__windows-tts_portsa_sec}{}\doxysubsection{Ports Accessed}\label{group__windows-tts_portsa_sec}
+If i\+Speak is running then all text to speech commands will be forwarded to i\+Speak.\hypertarget{group__windows-tts_portsc_sec}{}\doxysubsection{Ports Created}\label{group__windows-tts_portsc_sec}
+/modulename/recog/continuous\+:o broadcast commands recognized by the asynchronous grammar (see rpc commands \char`\"{}asynrecog\char`\"{} ) /module\+Name/rpc handles rpc commands of type \char`\"{}tts\char`\"{} \char`\"{}sentence to say\char`\"{} Say a sentence
+
+\char`\"{}asyncrecog\char`\"{} \begin{DoxyVerb}"addGrammar"...
+\end{DoxyVerb}
+ Add a simple grammar (uses current state of RGM) to the asynchronous grammar
+
+\char`\"{}clear\char`\"{}... Reset the asynchrnous grammar to its original state
+
+\char`\"{}recog\char`\"{} \begin{DoxyVerb}"timeout" "ms"
+\end{DoxyVerb}
+ Set the timeout for all recognition actions
+
+\char`\"{}choices\char`\"{} \char`\"{}choice1\char`\"{} \char`\"{}choice2\char`\"{}... Run a recognition over the list of choices passed in arguments. Returns the word/sentence recognized
+
+\char`\"{}dictation\char`\"{} Run a recognition of open dictation
+
+\char`\"{}grammar\+XML\char`\"{} \char`\"{}xml formatted grammar\char`\"{} Run the recognition of a grammar specified in the W3C SRGS xml format (\href{http://www.w3.org/TR/speech-grammar/}{\texttt{ http\+://www.\+w3.\+org/\+TR/speech-\/grammar/}})
+
+\char`\"{}grammar\+Simple\char`\"{} \char`\"{}grammar to recognize\char`\"{} Run a recognition on a custom format using Robot\+Grammar\+Manager, refer to Robot\+Grammar\+Specification.\+txt
+
+\char`\"{}\+RGM\char`\"{} \char`\"{}vocabulory\char`\"{} \char`\"{}get\char`\"{} \char`\"{}vocabulory\+Name\char`\"{} \mbox{[}NOT IMPLEMENTED YET\mbox{]} return a string containing all the vocabulory words
+
+\char`\"{}add\char`\"{} \char`\"{}vocabulory\+Name\char`\"{} \char`\"{}word\char`\"{} Expand a given vocabulory with a specific word
+
+\char`\"{}add\+Auto\char`\"{} \char`\"{}vocabulory\+Name\char`\"{} Expand a given vocabulory by putting the system in dictation mode and asking confirmation of what is being recognized\hypertarget{group__windows-tts_in_files_sec}{}\doxysubsection{Input Data Files}\label{group__windows-tts_in_files_sec}
+None.\hypertarget{group__windows-tts_out_data_sec}{}\doxysubsection{Output Data Files}\label{group__windows-tts_out_data_sec}
+None.\hypertarget{group__windows-tts_conf_file_sec}{}\doxysubsection{Configuration Files}\label{group__windows-tts_conf_file_sec}
+None.\hypertarget{group__windows-tts_tested_os_sec}{}\doxysubsection{Tested OS}\label{group__windows-tts_tested_os_sec}
+Windows 7.
+
+\begin{DoxyAuthor}{Author}
+Stephane Lallee 
+\end{DoxyAuthor}

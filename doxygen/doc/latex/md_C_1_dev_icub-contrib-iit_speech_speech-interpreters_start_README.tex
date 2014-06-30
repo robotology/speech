@@ -1,0 +1,12 @@
+These modules use the \href{http://start.csail.mit.edu/index.php}{\texttt{ {\bfseries{S\+T\+A\+RT Natural Language Question Answering System}}}} in order to retrieve information about the speech query.
+
+{\bfseries{S\+T\+A\+RT}}, the world\textquotesingle{}s first {\ttfamily Web-\/based question answering system}, has been on-\/line and continuously operating since December, 1993. It has been developed by {\ttfamily Boris Katz} and his associates of the Info\+Lab Group at the {\ttfamily M\+IT Computer Science and Artificial Intelligence Laboratory}. Unlike information retrieval systems (e.\+g., search engines), S\+T\+A\+RT aims to supply users with \char`\"{}just the right information,\char`\"{} instead of merely providing a list of hits. Currently, the system can answer millions of English questions about places (e.\+g., cities, countries, lakes, coordinates, weather, maps, demographics, political and economic systems), movies (e.\+g., titles, actors, directors), people (e.\+g., birth dates, biographies), dictionary definitions, and much, much more.
+
+The repository contains the following modules\+:
+
+
+\begin{DoxyEnumerate}
+\item {\bfseries{ask\+:}} This module is the question based interface to the {\bfseries{S\+T\+A\+RT}} answering system. It takes as an input a question and outputs the reply from {\bfseries{S\+T\+A\+RT}}
+\item {\bfseries{input\+:}} This module interfaces with the {\bfseries{S\+T\+A\+RT}} server to retrieve semantic information about a query.
+\item {\bfseries{inspect\+:}} This module serves of a helper to the {\bfseries{input}} module described above interpreting the its output for ease of use. 
+\end{DoxyEnumerate}
