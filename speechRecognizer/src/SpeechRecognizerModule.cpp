@@ -328,10 +328,10 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
         string vocabuloryType = cmd.get(1).asString();;
         cout<<"Trying to enrich the "<<vocabuloryType<<" vocabulary."<<endl;
 
-        say("Let's increase my vocabulary.");
+        say("Let's improve my dictionary.");
         
         //Try first with open dictation
-        int TRIALS_BEFORE_SPELLING = 3;
+        int TRIALS_BEFORE_SPELLING = 2;
         bool isFine = false;
         int trial=0;
         string newWord = "";
@@ -363,7 +363,7 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
         }
 
         //Try then with spelling
-        int TRIALS_BEFORE_GIVING_UP = 3;
+        int TRIALS_BEFORE_GIVING_UP = 2;
         trial =0;
         while(!isFine && trial<TRIALS_BEFORE_GIVING_UP)
         {
