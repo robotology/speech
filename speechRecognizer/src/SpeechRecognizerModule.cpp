@@ -206,7 +206,11 @@ bool SpeechRecognizerModule::updateModule()
                                 std::cout << "word : " <<  ws2s(pPhrase->pElements[i].pszDisplayText) << std::endl;
                             }
                             std::cout<<"Raw sentence: "<<rawPhrase<<std::endl;
-                        
+                            if (&pPhrase->Rule == NULL)
+                            {
+                                cerr<<"Cannot parse the sentence!"<<endl;
+                                return true;
+                            }
                             //--------------------------------------------------- 2. 2nd subottle : Word/Role ---------------------------------------------------//
                             Bottle bOutGrammar;
                             bOutGrammar.addString(rawPhrase.c_str());
@@ -214,7 +218,10 @@ bool SpeechRecognizerModule::updateModule()
                             cout<<"Sending semantic bottle : "<<bOutGrammar.toString()<<endl;
                             m_portContinuousRecognitionGrammar.write(bOutGrammar);
                             ::CoTaskMemFree(pPhrase);
-                        } 
+                        }
+
+                        if (m_useTalkBack)
+                            say(fullSentence);
                     }
                 }
                 break;
@@ -659,6 +666,8 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
             result->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, TRUE, &dstrText, NULL);
             string fullSentence = ws2s(dstrText);
             cout<<fullSentence<<endl;
+            if (m_useTalkBack)
+                say(fullSentence);
             bOutGrammar.addString(fullSentence);
 
             SPPHRASE* pPhrase = NULL;
@@ -700,6 +709,9 @@ list< pair<string, double> > SpeechRecognizerModule::waitNextRecognitionLEGACY(i
             result->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, TRUE, &dstrText, NULL);
             string fullSentence = ws2s(dstrText);
             cout<<fullSentence<<endl;
+            
+            if (m_useTalkBack)
+                say(fullSentence);
             vector<string> words = split(fullSentence,' ');
             for(int w=0;w<words.size();w++)
             {
