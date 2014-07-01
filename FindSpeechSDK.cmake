@@ -1,5 +1,5 @@
 
-IF(DEFINED $ENV{SPEECH_SDK_DIR})
+IF(DEFINED ENV{SPEECH_SDK_DIR})
 	message("SPEECH_SDK_DIR is defined. Overriding the standard location.")
 	SET(SpeechSDK_ROOT_DIR "$ENV{SPEECH_SDK_DIR}")
 ELSE()
