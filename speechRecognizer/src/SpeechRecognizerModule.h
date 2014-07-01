@@ -40,7 +40,9 @@ class SpeechRecognizerModule: public RFModule
     CComPtr<ISpRecoContext>     m_cpRecoCtxt;
     CComPtr<ISpRecoGrammar>     m_cpGrammarFromFile;  
     CComPtr<ISpRecoGrammar>     m_cpGrammarRuntime; 
-    CComPtr<ISpRecoGrammar>     m_cpGrammarDictation;
+    CComPtr<ISpRecoGrammar>     m_cpGrammarDictation;   
+    BOOL                        m_bInSound;
+    BOOL                        m_bGotReco;
 
     //My Grammar management related
     int m_timeout; //ms
@@ -73,6 +75,9 @@ public:
 
     /************************************************************************/
     bool setGrammarCustom(CComPtr<ISpRecoGrammar> grammarToModify, string grammar, bool append);
+
+    /************************************************************************/
+    string getFromDictaction(int timeout);
 
     /************************************************************************/
     list< pair<string, double> > waitNextRecognitionLEGACY(int timeout);

@@ -68,11 +68,16 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
     HRESULT hr;
     everythingIsFine &= SUCCEEDED( m_cpRecoEngine.CoCreateInstance(CLSID_SpInprocRecognizer));
     everythingIsFine &= SUCCEEDED( SpCreateDefaultObjectFromCategoryId(SPCAT_AUDIOIN, &m_cpAudio));
-    everythingIsFine &= SUCCEEDED( m_cpRecoEngine->SetInput(m_cpAudio, TRUE));
     everythingIsFine &= SUCCEEDED( m_cpRecoEngine->CreateRecoContext( &m_cpRecoCtxt ));
 
-    everythingIsFine &=  SUCCEEDED(hr = m_cpRecoCtxt->SetNotifyWin32Event()) ;
-    everythingIsFine &= SUCCEEDED(hr = m_cpRecoCtxt->SetInterest(SPFEI(SPEI_RECOGNITION), SPFEI(SPEI_RECOGNITION))) ;
+    // Here, all we are interested in is the beginning and ends of sounds, as well as
+    // when the engine has recognized something
+    const ULONGLONG ullInterest = SPFEI(SPEI_RECOGNITION);
+    everythingIsFine &= SUCCEEDED(m_cpRecoCtxt->SetInterest(ullInterest, ullInterest));
+
+    // set the input for the engine
+    everythingIsFine &= SUCCEEDED( m_cpRecoEngine->SetInput(m_cpAudio, TRUE));
+    everythingIsFine &= SUCCEEDED( m_cpRecoEngine->SetRecoState( SPRST_ACTIVE ));
 
     //Load grammar from file
     everythingIsFine &= SUCCEEDED( m_cpRecoCtxt->CreateGrammar( 1, &m_cpGrammarFromFile ));
@@ -85,9 +90,8 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
     everythingIsFine &= SUCCEEDED( m_cpGrammarRuntime->SetGrammarState(SPGS_DISABLED));
 
     //Create a dictation grammar
-    everythingIsFine &= SUCCEEDED( m_cpRecoCtxt->CreateGrammar( 0, &m_cpGrammarDictation ));
-    everythingIsFine &= SUCCEEDED( m_cpGrammarDictation->SetGrammarState(SPGS_DISABLED));
-    everythingIsFine &= SUCCEEDED(hr =m_cpGrammarDictation->LoadDictation(NULL, SPLO_STATIC));
+    everythingIsFine &= SUCCEEDED(m_cpRecoCtxt->CreateGrammar( GID_DICTATION, &m_cpGrammarDictation ));
+    everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->LoadDictation(NULL, SPLO_STATIC));
     everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState(SPRS_INACTIVE));
 
     if( everythingIsFine )
@@ -121,18 +125,10 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
         attach(m_portRPC);
 
         //Start recognition
-        everythingIsFine &= SUCCEEDED(m_cpRecoEngine->SetRecoState(SPRST_ACTIVE_ALWAYS));
-        everythingIsFine &= SUCCEEDED(m_cpRecoCtxt->SetInterest(SPFEI(SPEI_RECOGNITION), SPFEI(SPEI_RECOGNITION)));
+        //everythingIsFine &= SUCCEEDED(m_cpRecoEngine->SetRecoState(SPRST_ACTIVE_ALWAYS));
         everythingIsFine &= SUCCEEDED(m_cpGrammarFromFile->SetRuleState(NULL, NULL, SPRS_ACTIVE));
         everythingIsFine &= SUCCEEDED( m_cpGrammarFromFile->SetGrammarState(SPGS_ENABLED));
-
-        //setRuntimeGrammar_Custom("take the toy|take the banana");
     }
-
-    Bottle bTemp,  bReply;
-    bTemp.addString("clear");
-
-//  everythingIsFine &= SUCCEEDED( m_cpGrammarFromFile->LoadCmdFromFile(cwgrammarfile, SPLO_DYNAMIC));
 
     return (everythingIsFine);
 }
@@ -140,63 +136,84 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
 /************************************************************************/
 bool SpeechRecognizerModule::updateModule()
 {
-    std::cout<<".";
-    const float ConfidenceThreshold = 0.3f;
-    SPEVENT curEvent;
-    ULONG fetched = 0;
-    HRESULT hr = S_OK;
+    cout<<".";
+    USES_CONVERSION;
+    CSpEvent event;
 
-    m_cpRecoCtxt->GetEvents(1, &curEvent, &fetched);
-
-    while (fetched > 0)
+    // Process all of the recognition events
+    while (event.GetFrom(m_cpRecoCtxt) == S_OK)
     {
-        ISpRecoResult* result = reinterpret_cast<ISpRecoResult*>(curEvent.lParam);
-        ISpRecoGrammar* resGram = reinterpret_cast<ISpRecoGrammar*>(curEvent.lParam);
-        SPPHRASE* pPhrase = NULL;
-
-        //Convert the catched sentence and send it directly through yarp (we loose all the semantic information)
-        CSpDynamicString dstrText;
-        result->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, TRUE, &dstrText, NULL);
-        string fullSentence = ws2s(dstrText);
-        cout<<endl<< fullSentence <<endl;
-
-        int confidence=SP_LOW_CONFIDENCE;
-
-        //Do some smarter stuff with the recognition
-        hr = result->GetPhrase(&pPhrase);
-        if (SUCCEEDED(hr))
+        switch (event.eEventId)
         {
-            confidence=pPhrase->Rule.Confidence;
+            case SPEI_SOUND_START:
+                {
+                    m_bInSound = TRUE;
+				    cout<<"Sound in..."<<endl;
+                    break;
+                }
 
-            //--------------------------------------------------- 1. 1st subBottle : raw Sentence -----------------------------------------------//
-            int wordCount = pPhrase->Rule.ulCountOfElements;
-            string rawPhrase = "";
-            for(int i=0; i< wordCount; i++){
-                rawPhrase += ws2s(pPhrase->pElements[i].pszDisplayText) + " ";
-                std::cout << "word : " <<  ws2s(pPhrase->pElements[i].pszDisplayText) << std::endl;
-            }
-            std::cout<<"Raw sentence: "<<rawPhrase<<std::endl;
+            case SPEI_SOUND_END:
+                if (m_bInSound)
+                {
+                    m_bInSound = FALSE;
+                    if (!m_bGotReco)
+                    {
+                        // The sound has started and ended, 
+                        // but the engine has not succeeded in recognizing anything
+						cout<<"Chunk of sound detected: Recognition is null"<<endl;
+                    }
+                    m_bGotReco = FALSE;
+                }
+                break;
 
-            //--------------------------------------------------- 2. 2nd subottle : Word/Role ---------------------------------------------------//
-            Bottle bOutGrammar;
-            bOutGrammar.addString(rawPhrase.c_str());
-            bOutGrammar.addList()=toBottle(pPhrase,&pPhrase->Rule);
-            cout<<"Sending semantic bottle : "<<bOutGrammar.toString()<<endl;
-            m_portContinuousRecognitionGrammar.write(bOutGrammar);
-            ::CoTaskMemFree(pPhrase);
+            case SPEI_RECOGNITION:
+                // There may be multiple recognition results, so get all of them
+                {
+                    m_bGotReco = TRUE;
+                    static const WCHAR wszUnrecognized[] = L"<Unrecognized>";
+
+                    CSpDynamicString dstrText;
+                    if (SUCCEEDED(event.RecoResult()->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, TRUE, 
+                                                            &dstrText, NULL)))
+                    {
+                        string fullSentence = ws2s(dstrText);
+						cout<<"Recognized "<<fullSentence<<endl;
+
+                        //Send over yarp
+                        int confidence=SP_LOW_CONFIDENCE;
+                        Bottle bOut;
+                        bOut.addString(fullSentence.c_str());
+                        bOut.addInt(confidence);
+                        m_portContinuousRecognition.write(bOut);
+
+                        //Treat the semantic
+                        SPPHRASE* pPhrase = NULL;
+                        if (SUCCEEDED(event.RecoResult()->GetPhrase(&pPhrase)))
+                        {
+                            confidence=pPhrase->Rule.Confidence;
+                        
+                            //--------------------------------------------------- 1. 1st subBottle : raw Sentence -----------------------------------------------//
+                            int wordCount = pPhrase->Rule.ulCountOfElements;
+                            string rawPhrase = "";
+                            for(int i=0; i< wordCount; i++){
+                                rawPhrase += ws2s(pPhrase->pElements[i].pszDisplayText) + " ";
+                                std::cout << "word : " <<  ws2s(pPhrase->pElements[i].pszDisplayText) << std::endl;
+                            }
+                            std::cout<<"Raw sentence: "<<rawPhrase<<std::endl;
+                        
+                            //--------------------------------------------------- 2. 2nd subottle : Word/Role ---------------------------------------------------//
+                            Bottle bOutGrammar;
+                            bOutGrammar.addString(rawPhrase.c_str());
+                            bOutGrammar.addList()=toBottle(pPhrase,&pPhrase->Rule);
+                            cout<<"Sending semantic bottle : "<<bOutGrammar.toString()<<endl;
+                            m_portContinuousRecognitionGrammar.write(bOutGrammar);
+                            ::CoTaskMemFree(pPhrase);
+                        } 
+                    }
+                }
+                break;
         }
-
-        Bottle bOut;
-        bOut.addString(fullSentence.c_str());
-        bOut.addInt(confidence);
-        m_portContinuousRecognition.write(bOut);
-
-        if (m_useTalkBack)
-            say(fullSentence);
-
-        m_cpRecoCtxt->GetEvents(1, &curEvent, &fetched);
     }
-
     return true;
 }
 
@@ -295,8 +312,41 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
 
     if (firstVocab == "addAuto")
     {
-        //todo implement
-        refreshFromVocabulories(m_cpGrammarFromFile);
+        string vocabuloryType = cmd.get(1).asString();;
+        cout<<"Trying to enrich the "<<vocabuloryType<<" vocabulory."<<endl;
+
+        say("Let's increase my vocabulory. Please state the new word.");
+        string newWord = getFromDictaction(m_timeout);
+        say("I understood "+ newWord + ". Is that right?");
+        
+        Bottle cmdTmp, replyTmp;
+        cmdTmp.addString("grammarSimple");
+        cmdTmp.addString("Yes it is. | No it is not.");
+
+        int TRIALS_BEFORE_SPELLING = 3;
+        bool isFine = false;
+        int trial=0;
+        while(!isFine && trial<TRIALS_BEFORE_SPELLING)
+        {
+            handleRecognitionCmd(cmdTmp,replyTmp);
+            cout<<"Reply is "<<replyTmp.toString()<<endl;
+            if ( replyTmp.get(0).asString() == "Yes")
+                isFine = true;
+            else
+                trial++;
+        }
+
+        if (!isFine)
+        {
+            say("Please, spell this word for me?");
+            //todo spelling state
+        }
+        else
+        {
+            say("Ok, I will now know the word: " + newWord);
+            m_vocabulories["#object"].push_back(newWord);
+            refreshFromVocabulories(m_cpGrammarFromFile);
+        }
         reply.addInt(true);
         return true;
     }
@@ -396,6 +446,34 @@ bool SpeechRecognizerModule::refreshFromVocabulories(CComPtr<ISpRecoGrammar> gra
 
     return everythingIsFine;
 }
+    
+/************************************************************************/
+string SpeechRecognizerModule::getFromDictaction(int timeout)
+{
+    bool everythingIsFine = TRUE;
+    everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState( SPRS_ACTIVE ));
+    cout<<"Dictation is on..."<<endl;
+    Bottle botTmp;
+    if (!USE_LEGACY)
+    {
+        botTmp = waitNextRecognition(m_timeout);
+    }
+    else
+    {   
+        list< pair<string, double> > results = waitNextRecognitionLEGACY(m_timeout);
+        for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
+        {
+            botTmp.addString(it->first.c_str());
+            botTmp.addDouble(it->second);
+        }
+    }
+    cout<<"Dictation is off..."<<endl;
+    cout<<"Got : "<<botTmp.toString()<<endl;
+    //Turn off dictation and go back to the file grammar
+    everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState( SPRS_INACTIVE ));
+    everythingIsFine &=SUCCEEDED(m_cpGrammarFromFile->SetGrammarState(SPGS_ENABLED));
+    return botTmp.toString();
+}
 
 /************************************************************************/
 bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& reply)
@@ -411,10 +489,32 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
 
     else if (firstVocab == "dictation")
     {
-        //todo
-        cout<<"Dictation is not implemented yet."<<endl;
-        return false;
+        bool everythingIsFine = TRUE;
+        everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState( SPRS_ACTIVE ));
+        cout<<"Dictation is on..."<<endl;
+
+        if (!USE_LEGACY)
+        {
+            reply.addList() = waitNextRecognition(m_timeout);
+        }
+        else
+        {   
+            list< pair<string, double> > results = waitNextRecognitionLEGACY(m_timeout);
+            for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
+            {
+                reply.addString(it->first.c_str());
+                reply.addDouble(it->second);
+            }
+        }
+        cout<<"Dictation is off..."<<endl;
+
+        //Turn off dictation and go back to the file grammar
+        everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState( SPRS_INACTIVE ));
+        everythingIsFine &=SUCCEEDED(m_cpGrammarFromFile->SetGrammarState(SPGS_ENABLED));  
+        reply.addInt(true);
+        return true;
     }    
+    // If we are not in dictation then we set and switch to the runtimeGrammar
     else if (firstVocab == "grammarXML")
     {
         string xml = cmd.get(1).asString().c_str();
@@ -445,7 +545,6 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
         }
         setGrammarCustom(m_cpGrammarRuntime,choices,false);
     }
-
     else if (firstVocab == "grammarSimple")
     {
         string RADStyle = cmd.get(1).asString().c_str();

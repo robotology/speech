@@ -1,4 +1,11 @@
-SET(SpeechSDK_ROOT_DIR "$ENV{SPEECH_SDK_DIR}")
+
+IF(DEFINED $ENV{SPEECH_SDK_DIR})
+	message("SPEECH_SDK_DIR is defined. Overriding the standard location.")
+	SET(SpeechSDK_ROOT_DIR "$ENV{SPEECH_SDK_DIR}")
+ELSE()
+	SET(SpeechSDK_ROOT_DIR "C:/Program Files (x86)/Microsoft SDKs/Windows/v7.1A")
+ENDIF()
+
 SET(SpeechSDK_LIB_DIR "${SpeechSDK_ROOT_DIR}/Lib/")
 SET(SpeechSDK_INCLUDE_DIR "${SpeechSDK_ROOT_DIR}/Include")
 SET(SpeechSDK_LIBRARIES 
