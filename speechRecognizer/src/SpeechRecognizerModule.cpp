@@ -66,7 +66,7 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
     //Initialise the speech crap
     bool everythingIsFine = true;
     HRESULT hr;
-    everythingIsFine &= SUCCEEDED( m_cpRecoEngine.CoCreateInstance(CLSID_SpInprocRecognizer));
+    everythingIsFine = SUCCEEDED( m_cpRecoEngine.CoCreateInstance(CLSID_SpInprocRecognizer));
     everythingIsFine &= SUCCEEDED( SpCreateDefaultObjectFromCategoryId(SPCAT_AUDIOIN, &m_cpAudio));
     everythingIsFine &= SUCCEEDED( m_cpRecoEngine->CreateRecoContext( &m_cpRecoCtxt ));
 
@@ -106,16 +106,16 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
         pName += "/recog/continuousGrammar:o";
         m_portContinuousRecognitionGrammar.open( pName.c_str() );
 
-        //pName = "/";
-        //pName += getName();
-        //pName += "/iSpeak:o"; 
-        //m_port2iSpeak.open( pName.c_str() );
-        //if (Network::connect(m_port2iSpeak.getName().c_str(),"/iSpeak"))
-        //{
-        //  cout<<"Connection to iSpeak succesfull"<<endl;
-        //  say("Speech recognizer is running");
-        //}
-        //else
+        pName = "/";
+        pName += getName();
+        pName += "/iSpeak:o"; 
+        m_port2iSpeak.open( pName.c_str() );
+        if (Network::connect(m_port2iSpeak.getName().c_str(),"/iSpeak"))
+        {
+          cout<<"Connection to iSpeak succesfull"<<endl;
+          say("Speech recognizer is running");
+        }
+        else
             cout<<"Unable to connect to iSpeak. Connect manually."<<endl;
 
         pName = "/";
@@ -315,31 +315,57 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
         string vocabuloryType = cmd.get(1).asString();;
         cout<<"Trying to enrich the "<<vocabuloryType<<" vocabulory."<<endl;
 
-        say("Let's increase my vocabulory. Please state the new word.");
-        string newWord = getFromDictaction(m_timeout);
-        say("I understood "+ newWord + ". Is that right?");
+        say("Let's increase my vocabulory.");
         
-        Bottle cmdTmp, replyTmp;
-        cmdTmp.addString("grammarSimple");
-        cmdTmp.addString("Yes it is. | No it is not.");
-
+        //Try first with open dictation
         int TRIALS_BEFORE_SPELLING = 3;
         bool isFine = false;
         int trial=0;
+        string newWord = "";
         while(!isFine && trial<TRIALS_BEFORE_SPELLING)
         {
+            say("Please, say the word.");
+            string newWord = getFromDictaction(m_timeout);
+            say("I understood "+ newWord + ". Is that right?");
+                    
+            Bottle cmdTmp, replyTmp;
+            cmdTmp.addString("grammarSimple");
+            cmdTmp.addString("Yes it is.|No it is not.");
             handleRecognitionCmd(cmdTmp,replyTmp);
-            cout<<"Reply is "<<replyTmp.toString()<<endl;
+            //cout<<"Reply is "<<replyTmp.toString()<<endl;
             if ( replyTmp.get(0).asString() == "Yes")
                 isFine = true;
             else
                 trial++;
         }
 
+        //Try then with spelling
+        int TRIALS_BEFORE_GIVING_UP = 3;
+        trial =0;
+        while(!isFine && trial<TRIALS_BEFORE_GIVING_UP)
+        {
+            say("Sorry, I cannot get it. Please, spell this word for me?");
+            string spelledWord =  "";
+            while(spelledWord == "")
+                spelledWord=getFromDictaction(m_timeout,SPTOPIC_SPELLING);
+            newWord = spelledWord;
+
+            say("I understood "+ newWord + ". Is that right?");
+            
+            Bottle cmdTmp, replyTmp;
+            cmdTmp.addString("grammarSimple");
+            cmdTmp.addString("Yes it is.|No it is not.");
+            handleRecognitionCmd(cmdTmp,replyTmp);
+            //cout<<"Reply is "<<replyTmp.toString()<<endl;
+            if ( replyTmp.get(0).asString() == "Yes")
+                isFine = true;
+            else
+                trial++;
+        }
+        //Give up
         if (!isFine)
         {
-            say("Please, spell this word for me?");
-            //todo spelling state
+            say("Sorry, I think we should give up with this word.");
         }
         else
         {
@@ -448,9 +474,11 @@ bool SpeechRecognizerModule::refreshFromVocabulories(CComPtr<ISpRecoGrammar> gra
 }
     
 /************************************************************************/
-string SpeechRecognizerModule::getFromDictaction(int timeout)
+string SpeechRecognizerModule::getFromDictaction(int timeout, LPCWSTR options )
 {
     bool everythingIsFine = TRUE;
+    everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->UnloadDictation());
+    everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->LoadDictation(options, SPLO_STATIC));
     everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState( SPRS_ACTIVE ));
     cout<<"Dictation is on..."<<endl;
     Bottle botTmp;
@@ -583,7 +611,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
 /************************************************************************/
 Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
 {
-    std::cout<<"Recognition: blocking mode on";
+    std::cout<<"Recognition: blocking mode on"<<endl;
     Bottle bOutGrammar;
 
     bool gotSomething = false;
@@ -615,14 +643,14 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
             m_cpRecoCtxt->GetEvents(1, &curEvent, &fetched);
         }
     }
-    std::cout<<"Recognition: blocking mode off";
+    std::cout<<"Recognition: blocking mode off"<<endl;
     return bOutGrammar;
 }
 
 /************************************************************************/
 list< pair<string, double> > SpeechRecognizerModule::waitNextRecognitionLEGACY(int timeout)
 {
-    std::cout<<"Recognition: blocking mode on";
+    std::cout<<"Recognition: blocking mode on"<<endl;
     list< pair<string, double> > recognitionResults;
 
     bool gotSomething = false;
@@ -640,7 +668,6 @@ list< pair<string, double> > SpeechRecognizerModule::waitNextRecognitionLEGACY(i
         while (fetched > 0)
         {
             gotSomething = true;
-            cout<<"ON A UN TRUC"<<endl;
             ISpRecoResult* result = reinterpret_cast<ISpRecoResult*>(curEvent.lParam);
 
             //Convert the catched sentence to strings. 
@@ -657,7 +684,7 @@ list< pair<string, double> > SpeechRecognizerModule::waitNextRecognitionLEGACY(i
             m_cpRecoCtxt->GetEvents(1, &curEvent, &fetched);
         }
     }
-    std::cout<<"Recognition: blocking mode off";
+    std::cout<<"Recognition: blocking mode off"<<endl;
     return recognitionResults;
 }
 

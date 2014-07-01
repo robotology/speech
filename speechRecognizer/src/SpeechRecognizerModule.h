@@ -77,7 +77,7 @@ public:
     bool setGrammarCustom(CComPtr<ISpRecoGrammar> grammarToModify, string grammar, bool append);
 
     /************************************************************************/
-    string getFromDictaction(int timeout);
+    string getFromDictaction(int timeout, LPCWSTR options=NULL);
 
     /************************************************************************/
     list< pair<string, double> > waitNextRecognitionLEGACY(int timeout);
@@ -97,12 +97,20 @@ public:
     /************************************************************************/
     bool interruptModule()
     {
+        m_portRPC.interrupt();
+        m_portContinuousRecognition.interrupt();
+        m_portContinuousRecognitionGrammar.interrupt();
+        m_port2iSpeak.interrupt();
         return true;
     }
 
     /************************************************************************/
     bool close()
-    {
+    {        
+        m_portRPC.close();
+        m_portContinuousRecognition.close();
+        m_portContinuousRecognitionGrammar.close();
+        m_port2iSpeak.close();
         return true;
     }
 
