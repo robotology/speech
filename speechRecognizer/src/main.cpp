@@ -56,10 +56,10 @@ If iSpeak is running then all text to speech commands will be forwarded to iSpea
     Run a recognition over the list of choices passed in arguments. Returns the word/sentence recognized
     
     ** "dictation"
-    [NOT IMPLEMENTED YET] Run a recognition of open dictation
+    Run a recognition of open dictation
  
     ** "grammarXML" "xml formatted grammar"
-     [NOT IMPLEMENTED YET] Run the recognition of a grammar specified in the W3C SRGS xml format (http://www.w3.org/TR/speech-grammar/)
+    Run the recognition of a grammar specified in the W3C SRGS xml format (http://www.w3.org/TR/speech-grammar/)
  
     ** "grammarSimple" "grammar to recognize"
     Run a recognition on a custom format using RobotGrammarManager, refer to RobotGrammarSpecification.txt
@@ -72,7 +72,7 @@ If iSpeak is running then all text to speech commands will be forwarded to iSpea
     Expand a given vocabulory with a specific word
  
     ** "addAuto" "vocabuloryName"
-     [NOT IMPLEMENTED YET] Expand a given vocabulory by putting the system in dictation mode and asking confirmation of what is being recognized
+    Expand a given vocabulory by putting the system in dictation mode and asking confirmation of what is being recognized
 
 \section in_files_sec Input Data Files
 None.
