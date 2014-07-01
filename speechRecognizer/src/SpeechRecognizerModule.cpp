@@ -53,7 +53,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 bool SpeechRecognizerModule::configure(ResourceFinder &rf )
 {
     setName( rf.check("name",Value("speechRecognizer")).asString().c_str() );
-    m_timeout = rf.check("timeout",Value(5000)).asInt();
+    m_timeout = rf.check("timeout",Value(10000)).asInt();
     USE_LEGACY = !rf.check("noLegacy");
 
     //Deal with speech recognition
@@ -106,11 +106,17 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
         pName += "/recog/continuousGrammar:o";
         m_portContinuousRecognitionGrammar.open( pName.c_str() );
 
+        //iSpeak
         pName = "/";
         pName += getName();
         pName += "/iSpeak:o"; 
         m_port2iSpeak.open( pName.c_str() );
-        if (Network::connect(m_port2iSpeak.getName().c_str(),"/iSpeak"))
+                
+        pName = "/";
+        pName += getName();
+        pName += "/iSpeak/rpc"; 
+        m_port2iSpeakRpc.open( pName.c_str() );
+        if (Network::connect(m_port2iSpeak.getName().c_str(),"/iSpeak")&&Network::connect(m_port2iSpeakRpc.getName().c_str(),"/iSpeak/rpc"))
         {
           cout<<"Connection to iSpeak succesfull"<<endl;
           say("Speech recognizer is running");
@@ -313,9 +319,9 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
     if (firstVocab == "addAuto")
     {
         string vocabuloryType = cmd.get(1).asString();;
-        cout<<"Trying to enrich the "<<vocabuloryType<<" vocabulory."<<endl;
+        cout<<"Trying to enrich the "<<vocabuloryType<<" vocabulary."<<endl;
 
-        say("Let's increase my vocabulory.");
+        say("Let's increase my vocabulary.");
         
         //Try first with open dictation
         int TRIALS_BEFORE_SPELLING = 3;
@@ -325,13 +331,23 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
         while(!isFine && trial<TRIALS_BEFORE_SPELLING)
         {
             say("Please, say the word.");
-            string newWord = getFromDictaction(m_timeout);
+            string newWord = "";
+            while(newWord=="")
+                newWord=getFromDictaction(m_timeout);
             say("I understood "+ newWord + ". Is that right?");
                     
             Bottle cmdTmp, replyTmp;
             cmdTmp.addString("grammarSimple");
             cmdTmp.addString("Yes it is.|No it is not.");
-            handleRecognitionCmd(cmdTmp,replyTmp);
+            bool gotAConfirmation = false;
+            while(!gotAConfirmation)
+            {
+                handleRecognitionCmd(cmdTmp,replyTmp);
+                gotAConfirmation = 
+                    replyTmp.size()>0 &&
+                    (replyTmp.get(0).asString() == "Yes" ||
+                    replyTmp.get(0).asString() == "No");
+            }
             //cout<<"Reply is "<<replyTmp.toString()<<endl;
             if ( replyTmp.get(0).asString() == "Yes")
                 isFine = true;
@@ -355,7 +371,16 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
             Bottle cmdTmp, replyTmp;
             cmdTmp.addString("grammarSimple");
             cmdTmp.addString("Yes it is.|No it is not.");
-            handleRecognitionCmd(cmdTmp,replyTmp);
+            bool gotAConfirmation = false;
+            while(!gotAConfirmation)
+            {
+                handleRecognitionCmd(cmdTmp,replyTmp);
+                cout<<"DEBUG="<<replyTmp.toString()<<endl;
+                gotAConfirmation = 
+                    replyTmp.size()>0 &&
+                    (replyTmp.get(0).asString() == "Yes" ||
+                    replyTmp.get(0).asString() == "No");
+            }
             //cout<<"Reply is "<<replyTmp.toString()<<endl;
             if ( replyTmp.get(0).asString() == "Yes")
                 isFine = true;
@@ -492,7 +517,7 @@ string SpeechRecognizerModule::getFromDictaction(int timeout, LPCWSTR options )
         for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
         {
             botTmp.addString(it->first.c_str());
-            botTmp.addDouble(it->second);
+            //botTmp.addDouble(it->second);
         }
     }
     cout<<"Dictation is off..."<<endl;
@@ -689,12 +714,29 @@ list< pair<string, double> > SpeechRecognizerModule::waitNextRecognitionLEGACY(i
 }
 
 /************************************************************************/
-void SpeechRecognizerModule::say(string s)
+void SpeechRecognizerModule::say(string s, bool wait)
 {
     cout<<"TTS: "<<s<<endl;
     Bottle b;
     b.addString(s.c_str());
     m_port2iSpeak.write(b);
+    if(wait)
+    {
+        yarp::os::Bottle cmd,reply;
+        cmd.addVocab(VOCAB('s','t','a','t'));
+        std::string status = "speaking";
+        bool speechStarted = false;
+        while(wait&&(!speechStarted ||status=="speaking"))
+        {
+            m_port2iSpeakRpc.write(cmd,reply);
+            status = reply.get(0).asString();
+            if (!speechStarted && status != "quiet")
+            {
+                speechStarted = true;
+            }
+            yarp::os::Time::delay(0.2);
+        }
+    }
 }
 
 /************************************************************************/

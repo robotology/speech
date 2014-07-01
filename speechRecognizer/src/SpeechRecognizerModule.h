@@ -33,6 +33,7 @@ class SpeechRecognizerModule: public RFModule
     Port m_portContinuousRecognition;
     Port m_portContinuousRecognitionGrammar;
     Port m_port2iSpeak;
+    Port m_port2iSpeakRpc;
 
     //SAPI related
     CComPtr<ISpAudio>           m_cpAudio;    
@@ -86,7 +87,7 @@ public:
     Bottle waitNextRecognition(int timeout);
 
     /************************************************************************/
-    void say(string s);
+    void say(string s, bool wait=true);
 
     /************************************************************************/
     Bottle toBottle(SPPHRASE* pPhrase, const SPPHRASERULE* pRule );
@@ -101,6 +102,7 @@ public:
         m_portContinuousRecognition.interrupt();
         m_portContinuousRecognitionGrammar.interrupt();
         m_port2iSpeak.interrupt();
+        m_port2iSpeakRpc.interrupt();
         return true;
     }
 
@@ -111,6 +113,7 @@ public:
         m_portContinuousRecognition.close();
         m_portContinuousRecognitionGrammar.close();
         m_port2iSpeak.close();
+        m_port2iSpeakRpc.close();
         return true;
     }
 
