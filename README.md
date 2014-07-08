@@ -3,5 +3,5 @@ speech
 
 Speech recognition apps
 
-Documentation available here: [http://robotology.github.io/speech](http://robotology.github.io/speech).
+Documentation available here: [http://robotology.github.com/speech](http://robotology.github.com/speech).
 
