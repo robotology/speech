@@ -117,10 +117,7 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
         pName += "/tts/iSpeak/rpc"; 
         m_port2iSpeakRpc.open( pName.c_str() );
         if (Network::connect(m_port2iSpeak.getName().c_str(),"/iSpeak")&&Network::connect(m_port2iSpeakRpc.getName().c_str(),"/iSpeak/rpc"))
-        {
-          cout<<"Connection to iSpeak succesfull"<<endl;
-          say("Speech recognizer is running");
-        }
+            cout<<"Connection to iSpeak succesfull"<<endl;
         else
             cout<<"Unable to connect to iSpeak. Connect manually."<<endl;
 
