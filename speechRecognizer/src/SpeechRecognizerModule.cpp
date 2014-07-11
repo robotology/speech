@@ -109,12 +109,12 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
         //iSpeak
         pName = "/";
         pName += getName();
-        pName += "/iSpeak:o"; 
+        pName += "/tts/iSpeak:o"; 
         m_port2iSpeak.open( pName.c_str() );
                 
         pName = "/";
         pName += getName();
-        pName += "/iSpeak/rpc"; 
+        pName += "/tts/iSpeak/rpc"; 
         m_port2iSpeakRpc.open( pName.c_str() );
         if (Network::connect(m_port2iSpeak.getName().c_str(),"/iSpeak")&&Network::connect(m_port2iSpeakRpc.getName().c_str(),"/iSpeak/rpc"))
         {
