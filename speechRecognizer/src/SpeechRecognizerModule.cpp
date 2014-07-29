@@ -267,34 +267,31 @@ Bottle SpeechRecognizerModule::toBottle(SPPHRASE* pPhrase, const SPPHRASERULE* p
 /************************************************************************/
 bool SpeechRecognizerModule::respond(const Bottle& cmd, Bottle& reply) 
 {
-
+	reply.addString("ACK");
     string firstVocab = cmd.get(0).asString().c_str();
 
     if (firstVocab == "tts")
     {
         string sentence = cmd.get(1).asString().c_str();
         say(sentence);
-        reply.addString("ACK");
+        reply.addString("OK");
     }
     else if (firstVocab == "RGM" || firstVocab == "rgm" )
     {    
         string secondVocab = cmd.get(1).asString().c_str();
         if (secondVocab=="vocabulory")
             handleRGMCmd(cmd.tail().tail(), reply);
-        reply.addString("ACK");
     }
     else if (firstVocab == "recog")
     {
         handleRecognitionCmd(cmd.tail(), reply);
-        reply.addString("ACK");
     }
     else if (firstVocab == "asyncrecog")
     {
         handleAsyncRecognitionCmd(cmd.tail(), reply);
-        reply.addString("ACK");
     }
     else
-        reply.addString("NACK");
+        reply.addString("UNKNOWN");
 
     return true;
 }
@@ -310,13 +307,14 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
         string vocabulory = cmd.get(1).asString().c_str();
         if (vocabulory[0] != '#')
         {
-            reply.addString("Vocabulories have to start with a #. #Dictation and #WildCard are reserved. Aborting.");
-            return true;
+            //reply.addString("Vocabulories have to start with a #. #Dictation and #WildCard are reserved. Aborting.");
+            reply.addString("ERROR");
+			return true;
         }
         string word = cmd.get(2).asString().c_str();
         m_vocabulories[vocabulory].push_back(word);
         refreshFromVocabulories(m_cpGrammarFromFile);
-        reply.addInt(true);
+		reply.addString("OK");
         return true;
     }
 
@@ -395,17 +393,19 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
         if (!isFine)
         {
             say("Sorry, I think we should give up with this word.");
+			reply.addString("ERROR");
         }
         else
         {
             say("Ok, I will now know the word: " + newWord);
             m_vocabulories["#object"].push_back(newWord);
             refreshFromVocabulories(m_cpGrammarFromFile);
+			reply.addString(newWord);
         }
-        reply.addInt(true);
+        
         return true;
     }
-    reply.addInt(false);
+	reply.addString("UNKNOWN");
     return false;
 }
 
@@ -414,6 +414,12 @@ bool SpeechRecognizerModule::handleAsyncRecognitionCmd(const Bottle& cmd, Bottle
 {
     HRESULT hr;
     string firstVocab = cmd.get(0).asString().c_str();
+	if (firstVocab == "getGrammar")
+    {
+		reply.addString("NOT_IMPLEMENTED");
+		return true;
+	}
+
     if (firstVocab == "clear")
     {
         bool everythingIsFine=true;
@@ -425,7 +431,7 @@ bool SpeechRecognizerModule::handleAsyncRecognitionCmd(const Bottle& cmd, Bottle
         everythingIsFine &= SUCCEEDED(m_cpGrammarFromFile->SetGrammarState(SPGS_ENABLED));        
         everythingIsFine &= SUCCEEDED(m_cpGrammarFromFile->SetRuleState(NULL, NULL, SPRS_ACTIVE));
         everythingIsFine &= SUCCEEDED(m_cpRecoCtxt->Resume(0));
-        reply.addInt(everythingIsFine);
+        reply.addString("Cleared");
         return true;
     }
 
@@ -433,7 +439,7 @@ bool SpeechRecognizerModule::handleAsyncRecognitionCmd(const Bottle& cmd, Bottle
     {    
         string grammar = cmd.get(1).asString().c_str();
         bool everythingIsFine = setGrammarCustom(m_cpGrammarFromFile,grammar,true);
-        reply.addInt(everythingIsFine);
+        reply.addString("Added");
         return true;
     }
 
@@ -457,7 +463,7 @@ bool SpeechRecognizerModule::handleAsyncRecognitionCmd(const Bottle& cmd, Bottle
         everythingIsFine &= SUCCEEDED(m_cpRecoCtxt->Resume(0));
 
         refreshFromVocabulories(m_cpGrammarFromFile);
-        reply.addInt(everythingIsFine);
+        reply.addString("Loaded");
         return true;
     }
 
@@ -540,7 +546,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
     if (firstVocab == "timeout")
     {
         m_timeout = cmd.get(1).asInt();
-        reply.addInt(true);
+        //reply.addInt(true);
         return false;
     }
 
@@ -557,18 +563,21 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
         else
         {   
             list< pair<string, double> > results = waitNextRecognitionLEGACY(m_timeout);
-            for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
-            {
-                reply.addString(it->first.c_str());
-                reply.addDouble(it->second);
-            }
+            if (results.size()>0)
+				for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
+				{
+					reply.addString(it->first.c_str());
+					reply.addDouble(it->second);
+				}
+			else
+				reply.addString("-1");
         }
         cout<<"Dictation is off..."<<endl;
 
         //Turn off dictation and go back to the file grammar
         everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState( SPRS_INACTIVE ));
         everythingIsFine &=SUCCEEDED(m_cpGrammarFromFile->SetGrammarState(SPGS_ENABLED));  
-        reply.addInt(true);
+        //reply.addInt(true);
         return true;
     }    
     // If we are not in dictation then we set and switch to the runtimeGrammar
@@ -588,7 +597,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
         everythingIsFine &= SUCCEEDED(m_cpGrammarRuntime->SetRuleState(NULL, NULL, SPRS_ACTIVE));
         
         refreshFromVocabulories(m_cpGrammarRuntime);
-        reply.addInt(everythingIsFine);
+        //reply.addInt(everythingIsFine);
     }
 
     else if (firstVocab == "choices")
@@ -610,7 +619,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
     }
     else 
     {
-        reply.addString("Wrong syntax");
+        reply.addString("UNKNOWN");
         return false;
     }
 
@@ -626,11 +635,14 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
     else
     {   
         list< pair<string, double> > results = waitNextRecognitionLEGACY(m_timeout);
-        for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
-        {
-            reply.addString(it->first.c_str());
-            reply.addDouble(it->second);
-        }
+        if (results.size()>0)
+			for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
+			{
+				reply.addString(it->first.c_str());
+				reply.addDouble(it->second);
+			}
+		else
+			reply.addString("-1");
     }
     //Disable the runtime grammar
     SUCCEEDED(m_cpGrammarRuntime->SetGrammarState(SPGS_DISABLED));   
