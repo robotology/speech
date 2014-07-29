@@ -179,21 +179,22 @@ bool SpeechRecognizerModule::updateModule()
                     if (SUCCEEDED(event.RecoResult()->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, TRUE, 
                                                             &dstrText, NULL)))
                     {
-                        string fullSentence = ws2s(dstrText);
-						cout<<"Recognized "<<fullSentence<<endl;
-
+						SPPHRASE* pPhrase = NULL;
+						bool successGetPhrase = SUCCEEDED(event.RecoResult()->GetPhrase(&pPhrase));  
+                        int confidence=pPhrase->Rule.Confidence;
+						
+						string fullSentence = ws2s(dstrText);
+						cout<<"Recognized "<<fullSentence<<" with confidence "<<confidence<< endl;
+                        
                         //Send over yarp
-                        int confidence=SP_LOW_CONFIDENCE;
                         Bottle bOut;
                         bOut.addString(fullSentence.c_str());
                         bOut.addInt(confidence);
                         m_portContinuousRecognition.write(bOut);
 
                         //Treat the semantic
-                        SPPHRASE* pPhrase = NULL;
-                        if (SUCCEEDED(event.RecoResult()->GetPhrase(&pPhrase)))
+                        if (successGetPhrase)
                         {
-                            confidence=pPhrase->Rule.Confidence;
                         
                             //--------------------------------------------------- 1. 1st subBottle : raw Sentence -----------------------------------------------//
                             int wordCount = pPhrase->Rule.ulCountOfElements;
@@ -333,18 +334,21 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
         while(!isFine && trial<TRIALS_BEFORE_SPELLING)
         {
             say("Please, say the word.");
-            string newWord = "";
+            newWord = "";
             while(newWord=="")
                 newWord=getFromDictaction(m_timeout);
-            say("I understood "+ newWord + ". Is that right?");
+            say("I understood "+ newWord + ". Did you say that?");
                     
             Bottle cmdTmp, replyTmp;
             cmdTmp.addString("grammarSimple");
-            cmdTmp.addString("Yes it is.|No it is not.");
+            cmdTmp.addString("Yes I did.|No I did not.");
             bool gotAConfirmation = false;
             while(!gotAConfirmation)
             {
+				replyTmp.clear();
                 handleRecognitionCmd(cmdTmp,replyTmp);
+                //cout<<"DEBUG="<<replyTmp.toString()<<endl;
+                //cout<<"DEBUG FIRST ELEMENT =|"<<replyTmp.get(0).asString()<<"|"<<endl;
                 gotAConfirmation = 
                     replyTmp.size()>0 &&
                     (replyTmp.get(0).asString() == "Yes" ||
@@ -372,12 +376,14 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
             
             Bottle cmdTmp, replyTmp;
             cmdTmp.addString("grammarSimple");
-            cmdTmp.addString("Yes it is.|No it is not.");
+            cmdTmp.addString("Yes I did.|No I did not.");
             bool gotAConfirmation = false;
             while(!gotAConfirmation)
             {
+				replyTmp.clear();
                 handleRecognitionCmd(cmdTmp,replyTmp);
-                cout<<"DEBUG="<<replyTmp.toString()<<endl;
+                //cout<<"DEBUG="<<replyTmp.toString()<<endl;
+                //cout<<"DEBUG FIRST ELEMENT =|"<<replyTmp.get(0).asString()<<"|"<<endl;
                 gotAConfirmation = 
                     replyTmp.size()>0 &&
                     (replyTmp.get(0).asString() == "Yes" ||
@@ -397,7 +403,7 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
         }
         else
         {
-            say("Ok, I will now know the word: " + newWord);
+            say("Perfect! I know the word " + newWord);
             m_vocabulories["#object"].push_back(newWord);
             refreshFromVocabulories(m_cpGrammarFromFile);
 			reply.addString(newWord);
@@ -800,11 +806,14 @@ bool  SpeechRecognizerModule::setGrammarCustom(CComPtr<ISpRecoGrammar> grammarTo
         SPSTATEHANDLE beforeWordHandle = runtimeRootRule;
         SPSTATEHANDLE afterWordHandle;
         for(vector<string>::iterator itWord = words.begin() ; itWord != words.end() ; itWord++)
-        {            
+        {           
+			if((*itWord)=="")
+				continue;
+
             everythingIsFine &= SUCCEEDED(grammarToModify->CreateNewState(beforeWordHandle, &afterWordHandle));
 
             //Check if the current word is the name of a vocabulory
-            if ( (*itWord)!="" && (*itWord)[0] == '#' && m_vocabulories.find(*itWord) != m_vocabulories.end())
+            if ( (*itWord)[0] == '#' && m_vocabulories.find(*itWord) != m_vocabulories.end())
             {
                 everythingIsFine &= SUCCEEDED(grammarToModify->AddRuleTransition(beforeWordHandle, afterWordHandle, vocabRules[*itWord], 1, NULL));
             }
