@@ -341,7 +341,7 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
                     
             Bottle cmdTmp, replyTmp;
             cmdTmp.addString("grammarSimple");
-            cmdTmp.addString("Yes I did.|No I did not.");
+            cmdTmp.addString("Yes I did.|No I did not.|Skip");
             bool gotAConfirmation = false;
             while(!gotAConfirmation)
             {
@@ -349,6 +349,12 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
                 handleRecognitionCmd(cmdTmp,replyTmp);
                 //cout<<"DEBUG="<<replyTmp.toString()<<endl;
                 //cout<<"DEBUG FIRST ELEMENT =|"<<replyTmp.get(0).asString()<<"|"<<endl;
+				if (replyTmp.get(0).asString() == "Skip")
+				{
+					say("Fine, we give up.");
+					reply.addString("ERROR");
+					return true;
+				}
                 gotAConfirmation = 
                     replyTmp.size()>0 &&
                     (replyTmp.get(0).asString() == "Yes" ||
@@ -376,7 +382,7 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
             
             Bottle cmdTmp, replyTmp;
             cmdTmp.addString("grammarSimple");
-            cmdTmp.addString("Yes I did.|No I did not.");
+            cmdTmp.addString("Yes I did.|No I did not.|Skip");
             bool gotAConfirmation = false;
             while(!gotAConfirmation)
             {
@@ -384,6 +390,13 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
                 handleRecognitionCmd(cmdTmp,replyTmp);
                 //cout<<"DEBUG="<<replyTmp.toString()<<endl;
                 //cout<<"DEBUG FIRST ELEMENT =|"<<replyTmp.get(0).asString()<<"|"<<endl;
+				if (replyTmp.get(0).asString() == "Skip")
+				{
+					say("Fine, we give up.");
+					reply.addString("ERROR");
+					return true;
+				}
+
                 gotAConfirmation = 
                     replyTmp.size()>0 &&
                     (replyTmp.get(0).asString() == "Yes" ||
