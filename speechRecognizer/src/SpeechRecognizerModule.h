@@ -98,29 +98,33 @@ public:
     /************************************************************************/
     bool interruptModule()
     {
+        std::cout<<"Interrupting ports...";
         m_portRPC.interrupt();
         m_portContinuousRecognition.interrupt();
         m_portContinuousRecognitionGrammar.interrupt();
         m_port2iSpeak.interrupt();
         m_port2iSpeakRpc.interrupt();
+        std::cout<<"ok"<<std::endl;
         return true;
     }
 
     /************************************************************************/
     bool close()
-    {        
+    {       
+        std::cout<<"Closing ports..."; 
         m_portRPC.close();
         m_portContinuousRecognition.close();
         m_portContinuousRecognitionGrammar.close();
         m_port2iSpeak.close();
         m_port2iSpeakRpc.close();
+        std::cout<<"ok"<<std::endl;
         return true;
     }
 
     /************************************************************************/
     double getPeriod()
     {
-        return 0.5;
+        return 0.1;
     }
 
     /************************************************************************/
