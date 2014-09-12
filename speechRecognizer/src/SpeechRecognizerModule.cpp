@@ -417,7 +417,7 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
         else
         {
             say("Perfect! I know the word " + newWord);
-            m_vocabulories["#object"].push_back(newWord);
+            m_vocabulories[vocabuloryType].push_back(newWord);
             refreshFromVocabulories(m_cpGrammarFromFile);
 			reply.addString(newWord);
         }
