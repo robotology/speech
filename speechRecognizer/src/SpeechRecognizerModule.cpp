@@ -56,7 +56,7 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
     m_timeout = rf.check("timeout",Value(10000)).asInt();
     USE_LEGACY = !rf.check("noLegacy");
     m_forwardSound = rf.check("forwardSound");
-    m_tmpFileFolder = rf.getContextPath();
+    m_tmpFileFolder = rf.getHomeContextPath().c_str();
 
     //Deal with speech recognition
     string grammarFile = rf.findFile( rf.check("grammarFile",Value("defaultGrammar.grxml")).asString().c_str() );
