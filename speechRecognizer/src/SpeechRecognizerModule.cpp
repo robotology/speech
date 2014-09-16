@@ -55,6 +55,8 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
     setName( rf.check("name",Value("speechRecognizer")).asString().c_str() );
     m_timeout = rf.check("timeout",Value(10000)).asInt();
     USE_LEGACY = !rf.check("noLegacy");
+    m_forwardSound = rf.check("forwardSound");
+    m_tmpFileFolder = rf.getContextPath();
 
     //Deal with speech recognition
     string grammarFile = rf.findFile( rf.check("grammarFile",Value("defaultGrammar.grxml")).asString().c_str() );
@@ -93,6 +95,16 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
     everythingIsFine &= SUCCEEDED(m_cpRecoCtxt->CreateGrammar( GID_DICTATION, &m_cpGrammarDictation ));
     everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->LoadDictation(NULL, SPLO_STATIC));
     everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState(SPRS_INACTIVE));
+    
+    //Setup thing for the raw audio processing
+    everythingIsFine &= SUCCEEDED(m_cAudioFmt.AssignFormat(SPSF_22kHz16BitMono));
+    hr = m_cpRecoCtxt->SetAudioOptions(SPAO_RETAIN_AUDIO, &m_cAudioFmt.FormatId(), m_cAudioFmt.WaveFormatExPtr());
+    //everythingIsFine &= SUCCEEDED(hr = SPBindToFile((const WCHAR *)"C:\\temp.wav", SPFM_CREATE_ALWAYS, &m_streamFormat, &m_cAudioFmt.FormatId(), m_cAudioFmt.WaveFormatExPtr()));
+
+    //CComPtr <ISpStream>     cpStream = NULL;
+    //CSpStreamFormat         cAudioFmt;
+    //hr = cAudioFmt.AssignFormat(SPSF_22kHz16BitMono);
+    //hr = SPBindToFile((const WCHAR *)"c:\\ttstemp.wav", SPFM_CREATE_ALWAYS, &cpStream,  &cAudioFmt.FormatId(), cAudioFmt.WaveFormatExPtr());
 
     if( everythingIsFine )
     {
@@ -105,6 +117,11 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
         pName += getName();
         pName += "/recog/continuousGrammar:o";
         m_portContinuousRecognitionGrammar.open( pName.c_str() );
+
+        pName = "/";
+        pName += getName();
+        pName += "/recog/sound:o";   
+        m_portSound.open(pName.c_str());
 
         //iSpeak
         pName = "/";
@@ -135,6 +152,61 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
 
     return (everythingIsFine);
 }
+yarp::sig::Sound SpeechRecognizerModule::toSound(CComPtr<ISpRecoResult> cpRecoResult)
+{
+    HRESULT hr = S_OK;
+    CComPtr<ISpStreamFormat>      cpStreamFormat = NULL;
+    SPPHRASE* pPhrase;
+    bool successGetPhrase = SUCCEEDED(cpRecoResult->GetPhrase(&pPhrase));
+    hr = cpRecoResult->GetAudio(0, pPhrase->Rule.ulCountOfElements, &cpStreamFormat);
+
+    CComPtr<ISpStream> cpStream;
+    ULONG cbWritten = 0; 
+   
+    string sPath = m_tmpFileFolder + "//tmp.wav";
+    //static const WCHAR path[] = L"C://tmpSnd.wav";
+
+    // create file on hard-disk for storing recognized audio, and specify audio format as the retained audio format
+    hr = SPBindToFile(s2ws(sPath).c_str(), SPFM_CREATE_ALWAYS, &cpStream, &m_cAudioFmt.FormatId(), m_cAudioFmt.WaveFormatExPtr(), SPFEI_ALL_EVENTS);
+
+    //Continuously transfer data between the two streams until no more data is found (i.e. end of stream)
+    //Note only transfer 1000 bytes at a time to creating large chunks of data at one time
+    while (TRUE)
+    {
+        // for logging purposes, the app can retrieve the recognized audio stream length in bytes
+        STATSTG stats;
+        hr = cpStreamFormat->Stat(&stats, NULL);
+        // Check hr
+
+        // create a 1000-byte buffer for transferring
+        BYTE bBuffer[1000];
+        ULONG cbRead;
+
+        // request 1000 bytes of data from the input stream
+        hr = cpStreamFormat->Read(bBuffer, 1000, &cbRead);
+        // if data was returned…
+        if (SUCCEEDED(hr) && cbRead > 0)
+        {
+            //then transfer/write the audio to the file-based stream
+                hr = cpStream->Write(bBuffer, cbRead, &cbWritten);
+            // Check hr
+        }
+
+        // since there is no more data being added to the input stream, if the read request returned less than expected, the end of stream was reached, so break data transfer loop
+        if (cbRead < 1000)
+        {
+            break;
+        }
+    }
+    cpStream->Close();
+    cpStream.Release();
+
+    yarp::sig::Sound s;
+    yarp::sig::file::read(s, sPath.c_str());
+    return s;
+    return true;
+}
+
 
 /************************************************************************/
 bool SpeechRecognizerModule::updateModule()
@@ -186,6 +258,7 @@ bool SpeechRecognizerModule::updateModule()
 						string fullSentence = ws2s(dstrText);
 						cout<<"Recognized "<<fullSentence<<" with confidence "<<confidence<< endl;
                         
+
                         //Send over yarp
                         Bottle bOut;
                         bOut.addString(fullSentence.c_str());
@@ -195,7 +268,14 @@ bool SpeechRecognizerModule::updateModule()
                         //Treat the semantic
                         if (successGetPhrase)
                         {
-                        
+                            //Send sound
+                            if (m_forwardSound)
+                            {
+                                yarp::sig::Sound& rawSnd = m_portSound.prepare();
+                                rawSnd = toSound(event.RecoResult());
+                                m_portSound.write();
+                            }
+
                             //--------------------------------------------------- 1. 1st subBottle : raw Sentence -----------------------------------------------//
                             int wordCount = pPhrase->Rule.ulCountOfElements;
                             string rawPhrase = "";

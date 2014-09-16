@@ -25,6 +25,7 @@
 #define WM_RECOEVENT    WM_APP      // Window message used for recognition events
 using namespace std;
 using namespace yarp::os;
+using namespace yarp::sig;
 
 class SpeechRecognizerModule: public RFModule
 {
@@ -34,6 +35,7 @@ class SpeechRecognizerModule: public RFModule
     Port m_portContinuousRecognitionGrammar;
     Port m_port2iSpeak;
     Port m_port2iSpeakRpc;
+    BufferedPort<Sound> m_portSound;
 
     //SAPI related
     CComPtr<ISpAudio>           m_cpAudio;    
@@ -44,12 +46,16 @@ class SpeechRecognizerModule: public RFModule
     CComPtr<ISpRecoGrammar>     m_cpGrammarDictation;   
     BOOL                        m_bInSound;
     BOOL                        m_bGotReco;
+    CSpStreamFormat             m_cAudioFmt;
+    CComPtr <ISpStream>         m_streamFormat;
 
     //My Grammar management related
     int m_timeout; //ms
     map<string, list<string> >  m_vocabulories;
     bool    m_useTalkBack;
     bool    USE_LEGACY;
+    bool    m_forwardSound;
+    string  m_tmpFileFolder;
 
 public:
 
@@ -104,6 +110,7 @@ public:
         m_portContinuousRecognitionGrammar.interrupt();
         m_port2iSpeak.interrupt();
         m_port2iSpeakRpc.interrupt();
+        m_portSound.interrupt();
         std::cout<<"ok"<<std::endl;
         return true;
     }
@@ -117,6 +124,7 @@ public:
         m_portContinuousRecognitionGrammar.close();
         m_port2iSpeak.close();
         m_port2iSpeakRpc.close();
+        m_portSound.close();
         std::cout<<"ok"<<std::endl;
         return true;
     }
@@ -129,5 +137,8 @@ public:
 
     /************************************************************************/
     bool loadGrammarFromRf(ResourceFinder &RF);
+
+    /************************************************************************/
+    yarp::sig::Sound toSound(CComPtr<ISpRecoResult> cpRecoResult);
 };
 
