@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
 
     std::cout<<"Voice is: "<<voice<<std::endl;
 
-    std::string textInput;
-    std::cin>>textInput;
+    char textInput[256];
+    std::cin.getline(textInput,sizeof(textInput));
     std::cout<<"Text is: "<<textInput<<std::endl;
 
     LPBABTTS lpEngine;    
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
         BabTTS_SetSettings(lpEngine,BABTTS_PARAM_PITCH,pitchMultiplier);
     }    
 
-    BabTTS_Speak(lpEngine,textInput.c_str(),BABTTS_SYNC|BABTTS_TAG_SAPI);
+    BabTTS_Speak(lpEngine,textInput,BABTTS_SYNC|BABTTS_TAG_SAPI);
 
     BabTTS_Close(lpEngine);
     BabTTS_Uninit();
