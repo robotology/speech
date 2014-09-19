@@ -23,7 +23,7 @@
 
 int main(int argc, char *argv[])
 {
-    std::string voice="iCub";
+    std::string voice="iCub_eng";
     if (argc>1)
         voice=argv[1];
 
