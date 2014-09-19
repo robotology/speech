@@ -1,5 +1,6 @@
 
-set(AcapelaSDK_ROOT_DIR $ENV{ACAPELA_SDK_DIR} CACHE PATH "Path to Acapela SDK directory")
+set(AcapelaSDK_ROOT_DIR "C:/Program Files (x86)/Acapela Group/Acapela TTS for Windows/sdk"
+    CACHE PATH "Path to Acapela SDK directory")
 set(AcapelaSDK_INCLUDE_DIRS ${AcapelaSDK_ROOT_DIR}/include)
 
 if(EXISTS ${AcapelaSDK_INCLUDE_DIRS})    
@@ -8,4 +9,4 @@ else()
     set(AcapelaSDK_FOUND FALSE)
 endif()
 
-messagse(STATUS "AcapelaSDK - ${AcapelaSDK_FOUND}.")
+message(STATUS "AcapelaSDK - ${AcapelaSDK_FOUND}.")
