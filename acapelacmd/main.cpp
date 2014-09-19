@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 
     std::cout<<"Voice is: "<<voice<<std::endl;
 
-    string textInput;
+    std::string textInput;
     std::cin>>textInput;
     std::cout<<"Text is: "<<textInput<<std::endl;
 
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
         BabTTS_SetSettings(lpEngine,BABTTS_PARAM_PITCH,pitchMultiplier);
     }    
 
-    BabTTS_Speak(lpEngine,textInput,BABTTS_SYNC|BABTTS_TAG_SAPI);
+    BabTTS_Speak(lpEngine,textInput.c_str(),BABTTS_SYNC|BABTTS_TAG_SAPI);
 
     BabTTS_Close(lpEngine);
     BabTTS_Uninit();
