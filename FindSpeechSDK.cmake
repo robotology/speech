@@ -7,15 +7,15 @@ ELSE()
 ENDIF()
 
 SET(SpeechSDK_LIB_DIR "${SpeechSDK_ROOT_DIR}/Lib/")
-SET(SpeechSDK_INCLUDE_DIR "${SpeechSDK_ROOT_DIR}/Include")
+SET(SpeechSDK_INCLUDE_DIRS "${SpeechSDK_ROOT_DIR}/Include")
 SET(SpeechSDK_LIBRARIES 
 	"${SpeechSDK_LIB_DIR}/sapi.lib"
 )
 SET(SpeechSDK_INCLUDES 
-	"${SpeechSDK_INCLUDE_DIR}/sapi.h"
-	"${SpeechSDK_INCLUDE_DIR}/sapiddk.h"
-	"${SpeechSDK_INCLUDE_DIR}/sperror.h"
-	"${SpeechSDK_INCLUDE_DIR}/sphelper.h"
+	"${SpeechSDK_INCLUDE_DIRS}/sapi.h"
+	"${SpeechSDK_INCLUDE_DIRS}/sapiddk.h"
+	"${SpeechSDK_INCLUDE_DIRS}/sperror.h"
+	"${SpeechSDK_INCLUDE_DIRS}/sphelper.h"
 )
 
 ####################   Macro   #######################
@@ -48,11 +48,11 @@ SET(SpeechSDK_FOUND TRUE)
 CHECK_DIR(SpeechSDK_ROOT_DIR)
 IF(SpeechSDK_FOUND)
 	CHECK_DIR(SpeechSDK_LIB_DIR)
-	CHECK_DIR(SpeechSDK_INCLUDE_DIR)
+	CHECK_DIR(SpeechSDK_INCLUDE_DIRS)
 	
 	IF(SpeechSDK_FOUND)
 		CHECK_FILES(SpeechSDK_LIBRARIES SpeechSDK_LIB_DIR)
-		CHECK_FILES(SpeechSDK_INCLUDES SpeechSDK_INCLUDE_DIR)
+		CHECK_FILES(SpeechSDK_INCLUDES SpeechSDK_INCLUDE_DIRS)
 	ENDIF()
 ENDIF()
 
