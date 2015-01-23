@@ -1,6 +1,6 @@
 ﻿<!--	The	grammar	tag	surrounds	the	entire	CFG	description
 		Specify	the	language	of	the	grammar	as
-		English-American	('409')	-->
+		English-American ('409') English-British ('809') -->
 <GRAMMAR	LANGID="409">
   <!--	Specify	a	set	of	easy-to-read	strings	to
 			represent	specific	values.	Similar	to
