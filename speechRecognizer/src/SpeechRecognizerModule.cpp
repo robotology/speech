@@ -792,7 +792,7 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
 /************************************************************************/
 list< pair<string, double> > SpeechRecognizerModule::waitNextRecognitionLEGACY(int timeout)
 {
-    std::cout<<"Recognition: blocking mode on"<<endl;
+    std::cout<<"Recognition LEGACY: blocking mode on"<<endl;
     list< pair<string, double> > recognitionResults;
 
     bool gotSomething = false;
