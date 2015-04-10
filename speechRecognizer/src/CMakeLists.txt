@@ -5,6 +5,10 @@
 cmake_minimum_required(VERSION 2.8)
 set(PROJECTNAME speechRecognizer)
 project(${PROJECTNAME})
+if(MSVC12)
+	message("Visual Studio 2013 detected. Forcing backcompatibility.")
+	add_definitions(-D_USING_V110_SDK71_)
+endif(MSVC12)
 
 file(GLOB folder_source *.h *.cpp)
 source_group("Source Files" FILES ${folder_source})

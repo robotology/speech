@@ -59,8 +59,10 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
     m_tmpFileFolder = rf.getHomeContextPath().c_str();
 
     //Deal with speech recognition
-    string grammarFile = rf.findFile( rf.check("grammarFile",Value("defaultGrammar.grxml")).asString().c_str() );
-    std::wstring tmp = s2ws(grammarFile);
+    string grammarFile = rf.check("grammarFile",Value("defaultGrammar.grxml")).asString().c_str();
+	grammarFile = rf.findFile(grammarFile).c_str();
+
+	std::wstring tmp = s2ws(grammarFile);
     LPCWSTR cwgrammarfile = tmp.c_str();
 
     m_useTalkBack = rf.check("talkback");
@@ -109,28 +111,28 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
     if( everythingIsFine )
     {
         string pName = "/";
-        pName += getName();
+        pName += getName().c_str();
         pName += "/recog/continuous:o";
         m_portContinuousRecognition.open( pName.c_str() );
 
         pName = "/";
-        pName += getName();
+		pName += getName().c_str();
         pName += "/recog/continuousGrammar:o";
         m_portContinuousRecognitionGrammar.open( pName.c_str() );
 
         pName = "/";
-        pName += getName();
+		pName += getName().c_str();
         pName += "/recog/sound:o";   
         m_portSound.open(pName.c_str());
 
         //iSpeak
         pName = "/";
-        pName += getName();
+		pName += getName().c_str();
         pName += "/tts/iSpeak:o"; 
         m_port2iSpeak.open( pName.c_str() );
                 
         pName = "/";
-        pName += getName();
+		pName += getName().c_str();
         pName += "/tts/iSpeak/rpc"; 
         m_port2iSpeakRpc.open( pName.c_str() );
         if (Network::connect(m_port2iSpeak.getName().c_str(),"/iSpeak")&&Network::connect(m_port2iSpeakRpc.getName().c_str(),"/iSpeak/rpc"))
@@ -139,7 +141,7 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
             cout<<"Unable to connect to iSpeak. Connect manually."<<endl;
 
         pName = "/";
-        pName += getName();
+		pName += getName().c_str();
         pName += "/rpc";
         m_portRPC.open( pName.c_str() );
         attach(m_portRPC);
@@ -293,7 +295,7 @@ bool SpeechRecognizerModule::updateModule()
                             Bottle bOutGrammar;
                             bOutGrammar.addString(rawPhrase.c_str());
                             bOutGrammar.addList()=toBottle(pPhrase,&pPhrase->Rule);
-                            cout<<"Sending semantic bottle : "<<bOutGrammar.toString()<<endl;
+							cout << "Sending semantic bottle : " << bOutGrammar.toString().c_str() << endl;
                             m_portContinuousRecognitionGrammar.write(bOutGrammar);
                             ::CoTaskMemFree(pPhrase);
                         }
