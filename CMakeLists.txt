@@ -18,6 +18,7 @@ icubcontrib_set_default_prefix()
 
 find_package(SpeechSDK REQUIRED)
 add_subdirectory(speechRecognizer)
+add_subdirectory(windowsTTS)
 
 option(BUILD_ACAPELACMD "enable the build of acapela wrapper" ON)
 if(BUILD_ACAPELACMD)
