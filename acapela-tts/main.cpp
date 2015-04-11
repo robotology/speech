@@ -10,7 +10,7 @@
 */
 
 /**
-\defgroup acapelacmd acapelacmd
+\defgroup acapela-tts Acapela Speech Synthesizer
 
 Wrapper to let \ref iSpeak call <a href="http://www.acapela-group.com">Acapela Voice Synthesis</a>.
 

@@ -3,7 +3,7 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
 cmake_minimum_required(VERSION 2.8)
-set(PROJECTNAME windowsTTS)
+set(PROJECTNAME windows-tts)
 project(${PROJECTNAME})
 if(MSVC12)
 	message("Visual Studio 2013 detected. Forcing backcompatibility.")

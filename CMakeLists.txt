@@ -18,13 +18,13 @@ icubcontrib_set_default_prefix()
 
 find_package(SpeechSDK REQUIRED)
 add_subdirectory(speechRecognizer)
-add_subdirectory(windowsTTS)
 add_subdirectory(iSpeak)
+add_subdirectory(windows-tts)
 
-option(BUILD_ACAPELACMD "enable the build of acapela wrapper" ON)
-if(BUILD_ACAPELACMD)
+option(BUILD_ACAPELATTS "enable the build of acapela wrapper" ON)
+if(BUILD_ACAPELATTS)
     find_package(AcapelaSDK REQUIRED)
-    add_subdirectory(acapelacmd)
+    add_subdirectory(acapela-tts)
 endif()
 
 icubcontrib_add_uninstall_target()
