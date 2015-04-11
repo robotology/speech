@@ -10,16 +10,21 @@ find_package(ICUBcontrib REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH}
                               ${ICUBCONTRIB_MODULE_PATH}
                               ${CMAKE_CURRENT_SOURCE_DIR})
-                              
+
 include(YarpInstallationHelpers)
 include(ICUBcontribHelpers)
 include(ICUBcontribOptions)
 icubcontrib_set_default_prefix()
 
-find_package(SpeechSDK REQUIRED)
-add_subdirectory(speechRecognizer)
 add_subdirectory(iSpeak)
-add_subdirectory(windows-tts)
+
+if(WIN32)
+    find_package(SpeechSDK)
+    if(SpeechSDK_FOUND)
+        add_subdirectory(speechRecognizer)
+    endif()
+    add_subdirectory(windows-tts)
+endif()
 
 option(BUILD_ACAPELATTS "enable the build of acapela wrapper" ON)
 if(BUILD_ACAPELATTS)
