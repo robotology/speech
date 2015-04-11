@@ -9,6 +9,13 @@
  * AGREEMENT OR ROYALTY FEES.
 */
 
+/**
+\defgroup acapelacmd acapelacmd
+
+Wrapper to let \ref iSpeak call <a href="http://www.acapela-group.com">Acapela Voice Synthesis</a>.
+
+*/
+
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -33,21 +40,21 @@ int main(int argc, char *argv[])
     std::getline(std::cin,textInput);
     std::cout<<"Text is: "<<textInput<<std::endl;
 
-    LPBABTTS lpEngine;    
+    LPBABTTS lpEngine;
     if (BabTtsInitDllEx(_T("."))==NULL)
     {
         std::cerr<<"Error: Could not load AcaTTS"<<std::endl;
         exit(-1);
     }
-    
+
     if (!BabTTS_Init())
     {
         std::cerr<<"Error: Could not initialize AcaTTS"<<std::endl;
         BabTtsUninitDll();
         exit(-1);
     }
-    
-    lpEngine=BabTTS_Create(); 
+
+    lpEngine=BabTTS_Create();
     if (lpEngine==NULL)
     {
         std::cerr<<"Error: Could not create AcaTTS context"<<std::endl;
@@ -55,7 +62,7 @@ int main(int argc, char *argv[])
         BabTtsUninitDll();
         exit(-1);
     }
-    
+
     if (BabTTS_Open(lpEngine,voice.c_str(),0)!=E_BABTTS_NOERROR)
     {
         std::cerr<<"Error: Could not open "<<voice<<std::endl;
@@ -75,13 +82,13 @@ int main(int argc, char *argv[])
     {
         int pitchMultiplier=atoi(argv[3]);
         BabTTS_SetSettings(lpEngine,BABTTS_PARAM_PITCH,pitchMultiplier);
-    }    
+    }
 
     BabTTS_Speak(lpEngine,textInput.c_str(),BABTTS_SYNC|BABTTS_TAG_SAPI);
 
     BabTTS_Close(lpEngine);
     BabTTS_Uninit();
     BabTtsUninitDll();
-    
+
     return 0;
 }

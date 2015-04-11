@@ -16,7 +16,7 @@
 */
 
 /**
-\defgroup icub_windowsTTS speechSynthesizer
+\defgroup icub_windowsTTS Windows Speech Synthesizer
 
 \section intro_sec Description
 The module based on Microsoft Speech API. 
