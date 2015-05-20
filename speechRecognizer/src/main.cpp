@@ -111,10 +111,10 @@ int main(int argc, char* argv[])
 
         mod.runModule(rf);
         t0 = Time::now();
-        cout<<"Out of the runModule(). You may want to stop the microphone to get back the hand..."<<endl;
+        yInfo() <<"Out of the runModule(). You may want to stop the microphone to get back the hand...";
     }
     ::CoUninitialize();
-    cout<<"Time to give back the hand : "<<Time::now()-t0<<endl;
+    yInfo() <<"Time to give back the hand : "<<Time::now()-t0;
 }
 
 

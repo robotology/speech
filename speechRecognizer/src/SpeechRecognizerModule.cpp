@@ -136,9 +136,9 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
         pName += "/tts/iSpeak/rpc"; 
         m_port2iSpeakRpc.open( pName.c_str() );
         if (Network::connect(m_port2iSpeak.getName().c_str(),"/iSpeak")&&Network::connect(m_port2iSpeakRpc.getName().c_str(),"/iSpeak/rpc"))
-            cout<<"Connection to iSpeak succesfull"<<endl;
+            yInfo() <<"Connection to iSpeak succesfull" ;
         else
-            cout<<"Unable to connect to iSpeak. Connect manually."<<endl;
+            yWarning() <<"Unable to connect to iSpeak. Connect manually." ;
 
         pName = "/";
 		pName += getName().c_str();
@@ -225,7 +225,7 @@ bool SpeechRecognizerModule::updateModule()
             case SPEI_SOUND_START:
                 {
                     m_bInSound = TRUE;
-				    cout<<"Sound in..."<<endl;
+				    yInfo() << "Sound in...";
                     break;
                 }
 
@@ -237,7 +237,7 @@ bool SpeechRecognizerModule::updateModule()
                     {
                         // The sound has started and ended, 
                         // but the engine has not succeeded in recognizing anything
-						cout<<"Chunk of sound detected: Recognition is null"<<endl;
+						yWarning() << "Chunk of sound detected: Recognition is null";
                     }
                     m_bGotReco = FALSE;
                 }
@@ -258,7 +258,7 @@ bool SpeechRecognizerModule::updateModule()
                         int confidence=pPhrase->Rule.Confidence;
 						
 						string fullSentence = ws2s(dstrText);
-						cout<<"Recognized "<<fullSentence<<" with confidence "<<confidence<< endl;
+						yInfo() <<"Recognized "<<fullSentence<<" with confidence "<<confidence ;
                         
 
                         //Send over yarp
@@ -283,19 +283,19 @@ bool SpeechRecognizerModule::updateModule()
                             string rawPhrase = "";
                             for(int i=0; i< wordCount; i++){
                                 rawPhrase += ws2s(pPhrase->pElements[i].pszDisplayText) + " ";
-                                std::cout << "word : " <<  ws2s(pPhrase->pElements[i].pszDisplayText) << std::endl;
+                                yDebug() << "word : " <<  ws2s(pPhrase->pElements[i].pszDisplayText) ;
                             }
-                            std::cout<<"Raw sentence: "<<rawPhrase<<std::endl;
+                            yInfo() <<"Raw sentence: "<<rawPhrase ;
                             if (&pPhrase->Rule == NULL)
                             {
-                                cerr<<"Cannot parse the sentence!"<<endl;
+                                yError() <<"Cannot parse the sentence!";
                                 return true;
                             }
                             //--------------------------------------------------- 2. 2nd subottle : Word/Role ---------------------------------------------------//
                             Bottle bOutGrammar;
                             bOutGrammar.addString(rawPhrase.c_str());
                             bOutGrammar.addList()=toBottle(pPhrase,&pPhrase->Rule);
-							cout << "Sending semantic bottle : " << bOutGrammar.toString().c_str() << endl;
+							yInfo() << "Sending semantic bottle : " << bOutGrammar.toString().c_str() ;
                             m_portContinuousRecognitionGrammar.write(bOutGrammar);
                             ::CoTaskMemFree(pPhrase);
                         }
@@ -329,7 +329,7 @@ Bottle SpeechRecognizerModule::toBottle(SPPHRASE* pPhrase, const SPPHRASERULE* p
         else
         {
             string nodeString = "";
-            for(int i=0; i<siblingRule->ulCountOfElements; i++)
+            for(unsigned int i=0; i<siblingRule->ulCountOfElements; i++)
             {
                 nodeString += ws2s(pPhrase->pElements[siblingRule->ulFirstElement + i].pszDisplayText);
                 if (i<siblingRule->ulCountOfElements-1)
@@ -404,7 +404,7 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
     if (firstVocab == "addAuto")
     {
         string vocabuloryType = cmd.get(1).asString();;
-        cout<<"Trying to enrich the "<<vocabuloryType<<" vocabulary."<<endl;
+        yInfo() <<"Trying to enrich the "<<vocabuloryType<<" vocabulary.";
 
         say("Let's improve my dictionary.");
         
@@ -616,7 +616,7 @@ string SpeechRecognizerModule::getFromDictaction(int timeout, LPCWSTR options )
     everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->UnloadDictation());
     everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->LoadDictation(options, SPLO_STATIC));
     everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState( SPRS_ACTIVE ));
-    cout<<"Dictation is on..."<<endl;
+    yInfo() <<"Dictation is on..." ;
     Bottle botTmp;
     if (!USE_LEGACY)
     {
@@ -631,8 +631,8 @@ string SpeechRecognizerModule::getFromDictaction(int timeout, LPCWSTR options )
             //botTmp.addDouble(it->second);
         }
     }
-    cout<<"Dictation is off..."<<endl;
-    cout<<"Got : "<<botTmp.toString()<<endl;
+    yInfo() <<"Dictation is off...";
+    yInfo() <<"Got : "<<botTmp.toString();
     //Turn off dictation and go back to the file grammar
     everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState( SPRS_INACTIVE ));
     everythingIsFine &=SUCCEEDED(m_cpGrammarFromFile->SetGrammarState(SPGS_ENABLED));
@@ -655,7 +655,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
     {
         bool everythingIsFine = TRUE;
         everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState( SPRS_ACTIVE ));
-        cout<<"Dictation is on..."<<endl;
+        yInfo() <<"Dictation is on..." ;
 
         if (!USE_LEGACY)
         {
@@ -673,7 +673,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
 			else
 				reply.addString("-1");
         }
-        cout<<"Dictation is off..."<<endl;
+        yInfo() <<"Dictation is off...";
 
         //Turn off dictation and go back to the file grammar
         everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState( SPRS_INACTIVE ));
@@ -715,7 +715,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
     else if (firstVocab == "grammarSimple")
     {
         string RADStyle = cmd.get(1).asString().c_str();
-        cout<<"Setting runtime grammar to : "<<RADStyle<<endl;
+        yInfo() <<"Setting runtime grammar to : "<<RADStyle ;
         setGrammarCustom(m_cpGrammarRuntime,RADStyle,false);
     }
     else 
@@ -753,7 +753,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
 /************************************************************************/
 Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
 {
-    std::cout<<"Recognition: blocking mode on"<<endl;
+    yInfo() <<"Recognition: blocking mode on" ;
     Bottle bOutGrammar;
 
     bool gotSomething = false;
@@ -775,7 +775,7 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
             CSpDynamicString dstrText;
             result->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, TRUE, &dstrText, NULL);
             string fullSentence = ws2s(dstrText);
-            cout<<fullSentence<<endl;
+            yInfo() <<fullSentence ;
             if (m_useTalkBack)
                 say(fullSentence);
             bOutGrammar.addString(fullSentence);
@@ -783,18 +783,18 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
             SPPHRASE* pPhrase = NULL;
             result->GetPhrase(&pPhrase);    
             bOutGrammar.addList() = toBottle(pPhrase,&pPhrase->Rule);
-            cout<<"Sending semantic bottle : "<<bOutGrammar.toString()<<endl;
+            yInfo() <<"Sending semantic bottle : "<<bOutGrammar.toString() ;
             m_cpRecoCtxt->GetEvents(1, &curEvent, &fetched);
         }
     }
-    std::cout<<"Recognition: blocking mode off"<<endl;
+    yInfo() <<"Recognition: blocking mode off" ;
     return bOutGrammar;
 }
 
 /************************************************************************/
 list< pair<string, double> > SpeechRecognizerModule::waitNextRecognitionLEGACY(int timeout)
 {
-    std::cout<<"Recognition LEGACY: blocking mode on"<<endl;
+    yInfo() <<"Recognition LEGACY: blocking mode on" ;
     list< pair<string, double> > recognitionResults;
 
     bool gotSomething = false;
@@ -818,12 +818,12 @@ list< pair<string, double> > SpeechRecognizerModule::waitNextRecognitionLEGACY(i
             CSpDynamicString dstrText;
             result->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, TRUE, &dstrText, NULL);
             string fullSentence = ws2s(dstrText);
-            cout<<fullSentence<<endl;
+            yInfo() <<fullSentence ;
             
             if (m_useTalkBack)
                 say(fullSentence);
             vector<string> words = split(fullSentence,' ');
-            for(int w=0;w<words.size();w++)
+            for(unsigned int w=0;w<words.size();w++)
             {
                 //Todo extract the confidence value somehow...
                 recognitionResults.push_back(make_pair(words[w], -1.0));
@@ -831,14 +831,14 @@ list< pair<string, double> > SpeechRecognizerModule::waitNextRecognitionLEGACY(i
             m_cpRecoCtxt->GetEvents(1, &curEvent, &fetched);
         }
     }
-    std::cout<<"Recognition: blocking mode off"<<endl;
+    yInfo() <<"Recognition: blocking mode off" ;
     return recognitionResults;
 }
 
 /************************************************************************/
 void SpeechRecognizerModule::say(string s, bool wait)
 {
-    cout<<"TTS: "<<s<<endl;
+    yInfo() <<"TTS: "<<s ;
     Bottle b;
     b.addString(s.c_str());
     m_port2iSpeak.write(b);
@@ -942,10 +942,10 @@ bool SpeechRecognizerModule::loadGrammarFromRf(ResourceFinder &RF)
 
     Bottle bMessenger, bReply;
 
-    std::cout << "Agents are: " << std::endl;
-    for (unsigned int iBottle = 1 ; iBottle < bAgent.size() ; iBottle++)
+    yInfo() << "Agents are: " ;
+    for (int iBottle = 1 ; iBottle < bAgent.size() ; iBottle++)
     {
-        std::cout << "\t" << bAgent.get(iBottle).toString();
+        yInfo() << "\t" << bAgent.get(iBottle).toString();
         bMessenger.clear();
         bMessenger.addString("add");
         bMessenger.addString("#agent");
@@ -953,13 +953,13 @@ bool SpeechRecognizerModule::loadGrammarFromRf(ResourceFinder &RF)
 
         handleRGMCmd(bMessenger, bReply);
 
-        std::cout << "\t\t" << bReply.toString() << std::endl;
+        yInfo() << "\t\t" << bReply.toString() ;
     }
 
-    std::cout << "\n" << "Actions are: " << std::endl;
-    for (unsigned int iBottle = 1 ; iBottle < bAction.size() ; iBottle++)
+    yInfo() << "\n" << "Actions are: " ;
+    for (int iBottle = 1 ; iBottle < bAction.size() ; iBottle++)
     {
-        std::cout << "\t" << bAction.get(iBottle).toString();
+        yInfo() << "\t" << bAction.get(iBottle).toString();
         bMessenger.clear();
         bMessenger.addString("add");
         bMessenger.addString("#action");
@@ -967,13 +967,13 @@ bool SpeechRecognizerModule::loadGrammarFromRf(ResourceFinder &RF)
 
         handleRGMCmd(bMessenger, bReply);
 
-        std::cout << "\t\t" << bReply.toString() << std::endl;
+        yInfo() << "\t\t" << bReply.toString() ;
     }
 
-    std::cout << "\n" << "Objects are: " << std::endl;
-    for (unsigned int iBottle = 1 ; iBottle < bObject.size() ; iBottle++)
+    yInfo() << "\n" << "Objects are: " ;
+    for (int iBottle = 1 ; iBottle < bObject.size() ; iBottle++)
     {
-        std::cout << "\t" << bObject.get(iBottle).toString();
+        yInfo() << "\t" << bObject.get(iBottle).toString();
         bMessenger.clear();
         bMessenger.addString("add");
         bMessenger.addString("#object");
@@ -981,7 +981,7 @@ bool SpeechRecognizerModule::loadGrammarFromRf(ResourceFinder &RF)
 
         handleRGMCmd(bMessenger, bReply);
 
-        std::cout << "\t\t" << bReply.toString() << std::endl;
+        yInfo() << "\t\t" << bReply.toString() ;
     }
 
     Bottle bGrammarMain, bGrammarDef;
@@ -990,11 +990,11 @@ bool SpeechRecognizerModule::loadGrammarFromRf(ResourceFinder &RF)
     bGrammarMain.addString("addGrammar");
     bGrammarMain.addString("#agent #action #object");
 
-    std::cout << "\n" << bGrammarMain.toString() << std::endl;
+    yInfo() << "\n" << bGrammarMain.toString() ;
 
 //  handleAsyncRecognitionCmd(bGrammarMain, bReply);
 
-    std::cout << "\n" << bReply.toString() << std::endl;
+    yInfo() << "\n" << bReply.toString() ;
 
     return true;
 }
