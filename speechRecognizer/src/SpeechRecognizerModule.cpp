@@ -785,6 +785,14 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
             bOutGrammar.addList() = toBottle(pPhrase,&pPhrase->Rule);
             yInfo() <<"Sending semantic bottle : "<<bOutGrammar.toString() ;
             m_cpRecoCtxt->GetEvents(1, &curEvent, &fetched);
+
+			if (m_forwardSound)
+			{
+				yarp::sig::Sound& rawSnd = m_portSound.prepare();
+				rawSnd = toSound(result);
+				m_portSound.write();
+			}
+
         }
     }
     yInfo() <<"Recognition: blocking mode off" ;
