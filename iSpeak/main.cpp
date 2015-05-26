@@ -334,7 +334,7 @@ public:
     }
     
     /************************************************************************/
-    bool isSpeaking() const
+    bool isSpeaking()
     {
         LockGuard lg(mutex);
         return speaking;
