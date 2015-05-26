@@ -184,10 +184,9 @@ public:
 
         RateThread::suspend();
 
-        mutex.lock();
+        LockGuard lg(mutex);
         state="neu";
         send();
-        mutex.unlock();
     }
 };
 
@@ -208,9 +207,9 @@ class iSpeak : protected BufferedPort<Bottle>,
     /************************************************************************/
     void onRead(Bottle &request)
     {
-        mutex.lock();
+        LockGuard lg(mutex)
         buffer.push_back(request);
-        mutex.unlock();
+        speaking=true;
     }
 
     /************************************************************************/
@@ -264,14 +263,10 @@ class iSpeak : protected BufferedPort<Bottle>,
             if (request.size()>0)
             {
                 if (request.get(0).isString())
-                {
                     phrase=request.get(0).asString().c_str();
-                    speaking=true;
-                }
                 else if (request.get(0).isDouble() || request.get(0).isInt())
                 {
                     time=request.get(0).asDouble();
-                    speaking=true;
                     onlyMouth=true;
                 }
 
@@ -312,7 +307,9 @@ class iSpeak : protected BufferedPort<Bottle>,
             if (resetRate)
                 mouth.setRate(rate);
 
-            speaking=false;
+            LockGuard lg(mutex)
+            if (buffer.size()==0)
+                speaking=false;
         }
     }
 
@@ -339,6 +336,7 @@ public:
     /************************************************************************/
     bool isSpeaking() const
     {
+        LockGuard lg(mutex);
         return speaking;
     }
 
