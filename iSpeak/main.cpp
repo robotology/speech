@@ -207,7 +207,7 @@ class iSpeak : protected BufferedPort<Bottle>,
     /************************************************************************/
     void onRead(Bottle &request)
     {
-        LockGuard lg(mutex)
+        LockGuard lg(mutex);
         buffer.push_back(request);
         speaking=true;
     }
@@ -307,7 +307,7 @@ class iSpeak : protected BufferedPort<Bottle>,
             if (resetRate)
                 mouth.setRate(rate);
 
-            LockGuard lg(mutex)
+            LockGuard lg(mutex);
             if (buffer.size()==0)
                 speaking=false;
         }
