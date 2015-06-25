@@ -57,6 +57,7 @@ class SpeechRecognizerModule: public RFModule
     bool    m_forwardSound;
     string  m_tmpFileFolder;
 
+
 public:
 
     /************************************************************************/

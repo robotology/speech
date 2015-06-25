@@ -170,7 +170,7 @@
   <!--	Keywords	-->
 
   <RULE NAME="ABOUT" DYNAMIC="FALSE">
-    <P>Let's talk about</P>
+    <P>Let us talk about</P>
     <RULEREF NAME="keyword"/>
   </RULE>
 
@@ -203,7 +203,7 @@
   
   
   <RULE NAME="game" DYNAMIC="FALSE">
-    <P>Let's play</P>
+    <P>Let us play</P>
      <L>
       <RULEREF	NAME="pong"/>
       <RULEREF	NAME="ticTacToe"/>

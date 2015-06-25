@@ -602,9 +602,11 @@ bool SpeechRecognizerModule::refreshFromVocabulories(CComPtr<ISpRecoGrammar> gra
     }
 
     everythingIsFine &= SUCCEEDED(grammarToModify->Commit(NULL));
-    everythingIsFine &= SUCCEEDED(grammarToModify->SetGrammarState(SPGS_ENABLED));        
+    everythingIsFine &= SUCCEEDED(grammarToModify->SetGrammarState(SPGS_ENABLED)); 
     everythingIsFine &= SUCCEEDED(grammarToModify->SetRuleState(NULL, NULL, SPRS_ACTIVE));
-    everythingIsFine &= SUCCEEDED(m_cpRecoCtxt->Resume(0));
+    yInfo() << "Grammar is paused, DO NOT SPEAK! (if next message is coming after too long, check your microphone level and lower it!" ;
+    everythingIsFine &= SUCCEEDED(m_cpRecoCtxt->Resume(NULL));
+    yInfo() << "Grammar is resumed : everything is fine = " << everythingIsFine; 
 
     return everythingIsFine;
 }
@@ -696,8 +698,10 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
         everythingIsFine &= SUCCEEDED( m_cpGrammarRuntime->SetGrammarState(SPGS_DISABLED));
         everythingIsFine &= SUCCEEDED( m_cpGrammarRuntime->LoadCmdFromFile(cwgrammarfile, SPLO_DYNAMIC));
         everythingIsFine &= SUCCEEDED(m_cpGrammarRuntime->SetRuleState(NULL, NULL, SPRS_ACTIVE));
-        
+        everythingIsFine &= SUCCEEDED(m_cpRecoCtxt->Resume(0));
+
         refreshFromVocabulories(m_cpGrammarRuntime);
+
         //reply.addInt(everythingIsFine);
     }
 
@@ -758,6 +762,10 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
 
     bool gotSomething = false;
     double endTime = Time::now() + timeout/1000.0;
+
+    cout << endl ;
+    yInfo() << "=========== GO Waiting for recog! ===========" ;
+
     while(Time::now()<endTime && !gotSomething)
     {
         //std::cout<<".";
@@ -770,6 +778,7 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
 
         while (fetched > 0)
         {                   
+            yInfo() << " received something in waitNextRecognition" ;
             gotSomething = true;            
             ISpRecoResult* result = reinterpret_cast<ISpRecoResult*>(curEvent.lParam);
             CSpDynamicString dstrText;
