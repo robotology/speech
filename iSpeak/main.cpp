@@ -185,7 +185,7 @@ public:
         RateThread::suspend();
 
         LockGuard lg(mutex);
-        state="neu";
+        state="hap";
         send();
     }
 };
