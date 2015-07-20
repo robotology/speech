@@ -53,78 +53,80 @@ Windows 7.
 //Helpers for dealing with the weird strings of windows... 
 std::wstring s2ws(const std::string& s)
 {
-	int len;
-	int slength = (int)s.length() + 1;
-	len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, 0, 0);
-	wchar_t* buf = new wchar_t[len];
-	MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, buf, len);
-	std::wstring r(buf);
-	delete[] buf;
-	return r;
+    int len;
+    int slength = (int)s.length() + 1;
+    len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, 0, 0);
+    wchar_t* buf = new wchar_t[len];
+    MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, buf, len);
+    std::wstring r(buf);
+    delete[] buf;
+    return r;
 }
 std::string ws2s(LPCWSTR s)
 {
-	char    *pmbbuf = (char *)malloc(100);
-	wcstombs(pmbbuf, s, 100);
-	return pmbbuf;
+    char    *pmbbuf = (char *)malloc(100);
+    wcstombs(pmbbuf, s, 100);
+    return pmbbuf;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
 {
-	//Parse de parameters. Similar way to acapelaCmd
-	std::string voice = "iCub_eng";
-	if (argc>1)
-		voice = argv[1];
-	std::cout << "Voice is: " << voice << std::endl;
-	std::cout << "TODO : select the right token from this option." << voice << std::endl;
+    //Parse de parameters. Similar way to acapelaCmd
+    std::string voice = "iCub_eng";
+    if (argc>1)
+        voice = argv[1];
+    std::cout << "Voice is: " << voice << std::endl;
+    std::cout << "TODO : select the right token from this option." << voice << std::endl;
 
-	std::string textInput;
-	std::getline(std::cin, textInput);
-	std::cout << "Text is: " << textInput << std::endl;
+    std::string textInput;
+    std::getline(std::cin, textInput);
+    std::cout << "Text is: " << textInput << std::endl;
 
-	if (::CoInitializeEx(NULL, COINIT_MULTITHREADED) == S_OK)
-	{
-		HRESULT hr = S_OK;
-		CComPtr<IEnumSpObjectTokens> cpIEnum;
-		CComPtr<ISpObjectToken> cpToken;
-		CComPtr<ISpVoice> cpVoice;
+    if (::CoInitializeEx(NULL, COINIT_MULTITHREADED) == S_OK)
+    {
+        HRESULT hr = S_OK;
+        CComPtr<IEnumSpObjectTokens> cpIEnum;
+        CComPtr<ISpObjectToken> cpToken;
+        CComPtr<ISpVoice> cpVoice;
 
-		// Enumerate voice tokens that speak US English in a female voice.
-		hr = SpEnumTokens(SPCAT_VOICES, L"Language=409", L"Gender=Female;", &cpIEnum);
+        // Enumerate voice tokens that speak US English in a female voice.
+        hr = SpEnumTokens(SPCAT_VOICES, L"Language=409", L"Gender=Female;", &cpIEnum);
 
-		// Get the best matching token.
-		if (SUCCEEDED(hr))
-		{
-			hr = cpIEnum->Next(1, &cpToken , NULL);
-		}
+        // Get the best matching token.
+        if (SUCCEEDED(hr))
+        {
+            hr = cpIEnum->Next(1, &cpToken , NULL);
+        }
 
-		// Create a voice and set its token to the one we just found.
-		if (SUCCEEDED(hr))
-		{
-			hr = cpVoice.CoCreateInstance(CLSID_SpVoice);
-		}
+        // Create a voice and set its token to the one we just found.
+        if (SUCCEEDED(hr))
+        {
+            hr = cpVoice.CoCreateInstance(CLSID_SpVoice);
+        }
 
-		// Set the voice.
-		if (SUCCEEDED(hr))
-		{
-			hr = cpVoice->SetVoice(cpToken);
-		}
+        // Set the voice.
+        if (SUCCEEDED(hr))
+        {
+            hr = cpVoice->SetVoice(cpToken);
+        }
 
-		// Set the output to the default audio device.
-		if (SUCCEEDED(hr))
-		{
-			hr = cpVoice->SetOutput(NULL, TRUE);
-		}
+        // Set the output to the default audio device.
+        if (SUCCEEDED(hr))
+        {
+            hr = cpVoice->SetOutput(NULL, TRUE);
+        }
 
-		// Speak a string directly.
-		if (SUCCEEDED(hr))
-		{
-			hr = cpVoice->Speak(s2ws(textInput).c_str(), NULL, NULL);
-		}
-	}
-	::CoUninitialize();
+        // Speak a string directly.
+        if (SUCCEEDED(hr))
+        {
+            hr = cpVoice->Speak(s2ws(textInput).c_str(), NULL, NULL);
+        }
+    }
+    ::CoUninitialize();
+
+    return 0;
 }
 
 
