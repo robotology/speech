@@ -412,17 +412,14 @@ public:
                         string cmd2=command.get(2).asString().c_str();
                         speaker.set_package_options(cmd2);
                         reply.addString("ack");
-                    }
-                    else
-                        reply.addString("nack");
-                    return true;
+                        return true;
+                    }                    
                 }
                 else if (cmd0==Vocab::encode("get"))
                 {
                     reply.addString(speaker.get_package_options().c_str());
                     return true;
                 }
-
             }
         }
 
