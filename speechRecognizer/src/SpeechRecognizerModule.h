@@ -55,6 +55,7 @@ class SpeechRecognizerModule: public RFModule
     bool    m_useTalkBack;
     bool    USE_LEGACY;
     bool    m_forwardSound;
+    bool    interruptRecognition;
     string  m_tmpFileFolder;
 
 
@@ -65,6 +66,9 @@ public:
 
     /************************************************************************/
     bool updateModule();
+
+    /************************************************************************/
+    bool handleInterrupt(const Bottle& cmd, Bottle& reply);
 
     /************************************************************************/
     bool handleRGMCmd(const Bottle& cmd, Bottle& reply);

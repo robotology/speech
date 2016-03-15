@@ -57,6 +57,7 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
     USE_LEGACY = !rf.check("noLegacy");
     m_forwardSound = rf.check("forwardSound");
     m_tmpFileFolder = rf.getHomeContextPath().c_str();
+    interruptRecognition = false;
 
     //Deal with speech recognition
     string grammarFile = rf.check("grammarFile",Value("defaultGrammar.grxml")).asString().c_str();
@@ -372,6 +373,9 @@ bool SpeechRecognizerModule::respond(const Bottle& cmd, Bottle& reply)
     else if (firstVocab == "asyncrecog")
     {
         handleAsyncRecognitionCmd(cmd.tail(), reply);
+    }else if (firstVocab == "interrupt")
+    {
+        handleInterrupt(cmd.tail(), reply);
     }
     else
         reply.addString("UNKNOWN");
@@ -379,7 +383,29 @@ bool SpeechRecognizerModule::respond(const Bottle& cmd, Bottle& reply)
     return true;
 }
 
+/************************************************************************/
+bool SpeechRecognizerModule::handleInterrupt(const Bottle& cmd, Bottle& reply)
+{
+    interruptRecognition = true;
+    yarp::os::Time::delay(0.5);
+    //Disable the runtime grammar
+    bool everythingIsFine =true;
+    everythingIsFine &= SUCCEEDED(m_cpGrammarRuntime->SetGrammarState(SPGS_DISABLED));   
+    everythingIsFine &= SUCCEEDED(m_cpGrammarFromFile->SetGrammarState(SPGS_ENABLED));
+    
+    if (everythingIsFine)
+    {
+        reply.addString("OK");
+        return true;
+    }
+    else
+    {
+        yDebug()<< "Could not change the grammar";
+        reply.addString("UNCHANGED");
+        return false;
+    }
 
+}
 
 /************************************************************************/
 bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
@@ -816,7 +842,7 @@ list< pair<string, double> > SpeechRecognizerModule::waitNextRecognitionLEGACY(i
 
     bool gotSomething = false;
     double endTime = Time::now() + timeout/1000.0;
-    while(Time::now()<endTime && !gotSomething)
+    while(Time::now()<endTime && !gotSomething && !interruptRecognition)
     {
         //std::cout<<".";
         const float ConfidenceThreshold = 0.3f;
@@ -848,6 +874,7 @@ list< pair<string, double> > SpeechRecognizerModule::waitNextRecognitionLEGACY(i
             m_cpRecoCtxt->GetEvents(1, &curEvent, &fetched);
         }
     }
+    interruptRecognition = false;
     yInfo() <<"Recognition: blocking mode off" ;
     return recognitionResults;
 }
