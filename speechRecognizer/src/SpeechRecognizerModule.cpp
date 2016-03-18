@@ -373,7 +373,8 @@ bool SpeechRecognizerModule::respond(const Bottle& cmd, Bottle& reply)
     else if (firstVocab == "asyncrecog")
     {
         handleAsyncRecognitionCmd(cmd.tail(), reply);
-    }else if (firstVocab == "interrupt")
+    }
+    else if (firstVocab == "interrupt")
     {
         handleInterrupt(cmd.tail(), reply);
     }
@@ -386,25 +387,10 @@ bool SpeechRecognizerModule::respond(const Bottle& cmd, Bottle& reply)
 /************************************************************************/
 bool SpeechRecognizerModule::handleInterrupt(const Bottle& cmd, Bottle& reply)
 {
+    yInfo() << "Grammar interrupted";
     interruptRecognition = true;
     yarp::os::Time::delay(0.5);
-    //Disable the runtime grammar
-    bool everythingIsFine =true;
-    everythingIsFine &= SUCCEEDED(m_cpGrammarRuntime->SetGrammarState(SPGS_DISABLED));   
-    everythingIsFine &= SUCCEEDED(m_cpGrammarFromFile->SetGrammarState(SPGS_ENABLED));
-    
-    if (everythingIsFine)
-    {
-        reply.addString("OK");
-        return true;
-    }
-    else
-    {
-        yDebug()<< "Could not change the grammar";
-        reply.addString("UNCHANGED");
-        return false;
-    }
-
+    reply.addString("OK");
 }
 
 /************************************************************************/
@@ -792,7 +778,7 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
     cout << endl ;
     yInfo() << "=========== GO Waiting for recog! ===========" ;
 
-    while(Time::now()<endTime && !gotSomething)
+    while(Time::now()<endTime && !gotSomething && !interruptRecognition)
     {
         //std::cout<<".";
         const float ConfidenceThreshold = 0.3f;
@@ -830,7 +816,8 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
 
         }
     }
-    yInfo() <<"Recognition: blocking mode off" ;
+    interruptRecognition = false;
+    yInfo() <<"Recognition: blocking mode off";
     return bOutGrammar;
 }
 
