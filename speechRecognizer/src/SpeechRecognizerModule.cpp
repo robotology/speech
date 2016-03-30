@@ -391,6 +391,7 @@ bool SpeechRecognizerModule::handleInterrupt(const Bottle& cmd, Bottle& reply)
     interruptRecognition = true;
     yarp::os::Time::delay(0.5);
     reply.addString("OK");
+    return true;
 }
 
 /************************************************************************/
