@@ -390,6 +390,7 @@ bool SpeechRecognizerModule::handleInterrupt(const Bottle& cmd, Bottle& reply)
     yInfo() << "Grammar interrupted";
     interruptRecognition = true;
     yarp::os::Time::delay(0.5);
+    interruptRecognition = true; // just in case of a previous race condition
     reply.addString("OK");
     return true;
 }
@@ -775,6 +776,7 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
 
     bool gotSomething = false;
     double endTime = Time::now() + timeout/1000.0;
+    interruptRecognition = false;
 
     cout << endl ;
     yInfo() << "=========== GO Waiting for recog! ===========" ;
@@ -817,7 +819,10 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
 
         }
     }
-    interruptRecognition = false;
+
+    if(interruptRecognition) {
+        yDebug() << "interrupted speech recognizer!";
+    }
     yInfo() <<"Recognition: blocking mode off";
     return bOutGrammar;
 }
