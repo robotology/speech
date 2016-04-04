@@ -83,16 +83,15 @@ bool Speech::open(yarp::os::Searchable &config)
             return false;
         }
 
-    if(!config.check("lingware-path")) {
-        yError()<<"Missing parameter 'lingware-path'";
-        return false;
-    }
-
     setPitch(config.check("pitch") ? config.find("pitch").asInt() : 180);
     setSpeed(config.check("speed") ? config.find("speed").asInt() : 80);
 
-    lingwarePath = config.find("lingware-path").asString();
-    lingwarePath = lingwarePath + "/";
+    ResourceFinder rf;
+    rf.setQuiet();
+    rf.setDefaultContext(config.check("lingware-context",Value("svox-speech")).asString().c_str());
+    rf.configure(0,NULL);
+    lingwarePath=rf.getHomeContextPath();
+    lingwarePath+="/";
 
     this->yarp().attachAsServer(rpcPort);
     if(!rpcPort.open("/icub/speech:rpc")) {

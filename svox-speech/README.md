@@ -5,7 +5,7 @@ A simple text to speech using **`SVOXPICO`**.
 
 Requirements
 ------------
-The current implemnetaion requires Linux **`aplay`** command to play the generated wave file.
+The current implementation requires Linux **`aplay`** command to play the generated wave file.
 This can/should be easily replaced with the `yarp portaudio` device (audio player)  
 
 
@@ -19,7 +19,7 @@ $ cmake ../ && make
 Testing
 -------
 ```sh
-$ yarpdev --device speech --lingware-path <path to the tts-lang dir> --pitch 100 --speed 100
+$ yarpdev --device speech --lingware-context svox-speech --default-language en-US --pitch 100 --speed 100
 ```
 
 ```sh

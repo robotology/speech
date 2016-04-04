@@ -48,4 +48,9 @@ yarp_install(TARGETS speech
 yarp_install(FILES speech.ini
              DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
 
+file(GLOB lang ${CMAKE_CURRENT_SOURCE_DIR}/tts-lang/*.bin)
+yarp_install(FILES ${lang}
+             DESTINATION ${YARP_CONTEXTS_INSTALL_DIR}/${PROJECT_NAME})
+
+
 
