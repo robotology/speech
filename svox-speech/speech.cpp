@@ -14,6 +14,7 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
+#include <yarp/os/ResourceFinder.h>
 #include <yarp/os/LogStream.h>
 
 #include <speech.h>
@@ -195,7 +196,7 @@ const std::string Speech::renderSpeech(const std::string &text) {
     std::string filename = "/tmp/speech.wav";
 
     //<pitch level='70'><speed level='100'></speed></pitch>"
-    char* cmdText = (char*) malloc(text.size()+256);
+    char* cmdText = (char*) std::malloc(text.size()+256);
 #if WIN32
     _snprintf
 #else
@@ -221,7 +222,7 @@ const std::string Speech::renderSpeech(const std::string &text) {
 
     /* option: --lang */
     for(langIndexTmp =0; langIndexTmp<picoNumSupportedVocs; langIndexTmp++) {
-        if(!strcmp(picoSupportedLang[langIndexTmp], lang)) {
+        if(!std::strcmp(picoSupportedLang[langIndexTmp], lang)) {
             langIndex = langIndexTmp;
             break;
         }
@@ -237,32 +238,32 @@ const std::string Speech::renderSpeech(const std::string &text) {
 
     picoSynthAbort = 0;
 
-    picoMemArea = malloc( PICO_MEM_SIZE );
+    picoMemArea = std::malloc( PICO_MEM_SIZE );
     if((ret = pico_initialize( picoMemArea, PICO_MEM_SIZE, &picoSystem ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
-        fprintf(stderr, "Cannot initialize pico (%i): %s\n", ret, outMessage);
+        std::fprintf(stderr, "Cannot initialize pico (%i): %s\n", ret, outMessage);
         releasePico();
         return ("");
     }
 
     /* Load the text analysis Lingware resource file.   */
-    picoTaFileName      = (pico_Char *) malloc( PICO_MAX_DATAPATH_NAME_SIZE + PICO_MAX_FILE_NAME_SIZE );
-    strcpy((char *) picoTaFileName,   lingwarePath.c_str());
-    strcat((char *) picoTaFileName,   (const char *) picoInternalTaLingware[langIndex]);
+    picoTaFileName      = (pico_Char *) std::malloc( PICO_MAX_DATAPATH_NAME_SIZE + PICO_MAX_FILE_NAME_SIZE );
+    std::strcpy((char *) picoTaFileName,   lingwarePath.c_str());
+    std::strcat((char *) picoTaFileName,   (const char *) picoInternalTaLingware[langIndex]);
     if((ret = pico_loadResource( picoSystem, picoTaFileName, &picoTaResource ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
-        fprintf(stderr, "Cannot load text analysis resource file (%i): %s\n", ret, outMessage);
+        std::fprintf(stderr, "Cannot load text analysis resource file (%i): %s\n", ret, outMessage);
         releasePico();
         return ("");
     }
 
     /* Load the signal generation Lingware resource file.   */
-    picoSgFileName      = (pico_Char *) malloc( PICO_MAX_DATAPATH_NAME_SIZE + PICO_MAX_FILE_NAME_SIZE );
-    strcpy((char *) picoSgFileName,   lingwarePath.c_str());
-    strcat((char *) picoSgFileName,   (const char *) picoInternalSgLingware[langIndex]);
+    picoSgFileName      = (pico_Char *) std::malloc( PICO_MAX_DATAPATH_NAME_SIZE + PICO_MAX_FILE_NAME_SIZE );
+    std::strcpy((char *) picoSgFileName,   lingwarePath.c_str());
+    std::strcat((char *) picoSgFileName,   (const char *) picoInternalSgLingware[langIndex]);
     if((ret = pico_loadResource( picoSystem, picoSgFileName, &picoSgResource ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
-        fprintf(stderr, "Cannot load signal generation Lingware resource file (%i): %s\n", ret, outMessage);
+        std::fprintf(stderr, "Cannot load signal generation Lingware resource file (%i): %s\n", ret, outMessage);
         releasePico();
         return ("");
     }
@@ -270,7 +271,7 @@ const std::string Speech::renderSpeech(const std::string &text) {
     /* Load the utpp Lingware resource file if exists - NOTE: this file is optional
        and is currently not used. Loading is only attempted for future compatibility.
        If this file is not present the loading will still succeed.                      //
-    picoUtppFileName      = (pico_Char *) malloc( PICO_MAX_DATAPATH_NAME_SIZE + PICO_MAX_FILE_NAME_SIZE );
+    picoUtppFileName      = (pico_Char *) std::malloc( PICO_MAX_DATAPATH_NAME_SIZE + PICO_MAX_FILE_NAME_SIZE );
     strcpy((char *) picoUtppFileName,   PICO_LINGWARE_PATH);
     strcat((char *) picoUtppFileName,   (const char *) picoInternalUtppLingware[langIndex]);
     ret = pico_loadResource( picoSystem, picoUtppFileName, &picoUtppResource );
@@ -279,19 +280,19 @@ const std::string Speech::renderSpeech(const std::string &text) {
     */
 
     /* Get the text analysis resource name.     */
-    picoTaResourceName  = (pico_Char *) malloc( PICO_MAX_RESOURCE_NAME_SIZE );
+    picoTaResourceName  = (pico_Char *) std::malloc( PICO_MAX_RESOURCE_NAME_SIZE );
     if((ret = pico_getResourceName( picoSystem, picoTaResource, (char *) picoTaResourceName ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
-        fprintf(stderr, "Cannot get the text analysis resource name (%i): %s\n", ret, outMessage);
+        std::fprintf(stderr, "Cannot get the text analysis resource name (%i): %s\n", ret, outMessage);
         releasePico();
         return ("");
     }
 
     /* Get the signal generation resource name. */
-    picoSgResourceName  = (pico_Char *) malloc( PICO_MAX_RESOURCE_NAME_SIZE );
+    picoSgResourceName  = (pico_Char *) std::malloc( PICO_MAX_RESOURCE_NAME_SIZE );
     if((ret = pico_getResourceName( picoSystem, picoSgResource, (char *) picoSgResourceName ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
-        fprintf(stderr, "Cannot get the signal generation resource name (%i): %s\n", ret, outMessage);
+        std::fprintf(stderr, "Cannot get the signal generation resource name (%i): %s\n", ret, outMessage);
         releasePico();
         return ("");
     }
@@ -300,7 +301,7 @@ const std::string Speech::renderSpeech(const std::string &text) {
     /* Create a voice definition.   */
     if((ret = pico_createVoiceDefinition( picoSystem, (const pico_Char *) PICO_VOICE_NAME ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
-        fprintf(stderr, "Cannot create voice definition (%i): %s\n", ret, outMessage);
+        std::fprintf(stderr, "Cannot create voice definition (%i): %s\n", ret, outMessage);
         releasePico();
         return ("");
     }
@@ -308,7 +309,7 @@ const std::string Speech::renderSpeech(const std::string &text) {
     /* Add the text analysis resource to the voice. */
     if((ret = pico_addResourceToVoiceDefinition( picoSystem, (const pico_Char *) PICO_VOICE_NAME, picoTaResourceName ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
-        fprintf(stderr, "Cannot add the text analysis resource to the voice (%i): %s\n", ret, outMessage);
+        std::fprintf(stderr, "Cannot add the text analysis resource to the voice (%i): %s\n", ret, outMessage);
         releasePico();
         return ("");
     }
@@ -316,7 +317,7 @@ const std::string Speech::renderSpeech(const std::string &text) {
     /* Add the signal generation resource to the voice. */
     if((ret = pico_addResourceToVoiceDefinition( picoSystem, (const pico_Char *) PICO_VOICE_NAME, picoSgResourceName ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
-        fprintf(stderr, "Cannot add the signal generation resource to the voice (%i): %s\n", ret, outMessage);
+        std::fprintf(stderr, "Cannot add the signal generation resource to the voice (%i): %s\n", ret, outMessage);
         releasePico();
         return ("");
     }
@@ -324,13 +325,13 @@ const std::string Speech::renderSpeech(const std::string &text) {
     /* Create a new Pico engine. */
     if((ret = pico_newEngine( picoSystem, (const pico_Char *) PICO_VOICE_NAME, &picoEngine ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
-        fprintf(stderr, "Cannot create a new pico engine (%i): %s\n", ret, outMessage);
+        std::fprintf(stderr, "Cannot create a new pico engine (%i): %s\n", ret, outMessage);
         releasePico();
         return ("");
     }
 
     local_text = (pico_Char *) cmdText;
-    text_remaining = strlen((const char *) local_text) + 1;
+    text_remaining = std::strlen((const char *) local_text) + 1;
 
     inp = (pico_Char *) local_text;
 
@@ -344,19 +345,19 @@ const std::string Speech::renderSpeech(const std::string &text) {
     if(TRUE != (done = picoos_sdfOpenOut(common, &sdOutFile,
         (picoos_char *) filename.c_str(), SAMPLE_FREQ_16KHZ, PICOOS_ENC_LIN)))
     {
-        fprintf(stderr, "Cannot open output wave file\n");
+        std::fprintf(stderr, "Cannot open output wave file\n");
         ret = 1;
         releasePico();
         return ("");
     }
 
-    int8_t* buffer = (int8_t*) malloc( bufferSize );
+    int8_t* buffer = (int8_t*) std::malloc( bufferSize );
     /* synthesis loop   */
     while (text_remaining) {
         /* Feed the text into the engine.   */
         if((ret = pico_putTextUtf8( picoEngine, inp, text_remaining, &bytes_sent ))) {
             pico_getSystemStatusMessage(picoSystem, ret, outMessage);
-            fprintf(stderr, "Cannot put Text (%i): %s\n", ret, outMessage);
+            std::fprintf(stderr, "Cannot put Text (%i): %s\n", ret, outMessage);
             releasePico();
             return ("");
         }
@@ -373,13 +374,13 @@ const std::string Speech::renderSpeech(const std::string &text) {
                       MAX_OUTBUF_SIZE, &bytes_recv, &out_data_type );
             if((getstatus !=PICO_STEP_BUSY) && (getstatus !=PICO_STEP_IDLE)){
                 pico_getSystemStatusMessage(picoSystem, getstatus, outMessage);
-                fprintf(stderr, "Cannot get Data (%i): %s\n", getstatus, outMessage);
+                std::fprintf(stderr, "Cannot get Data (%i): %s\n", getstatus, outMessage);
                 releasePico();
                 return ("");
             }
             if (bytes_recv) {
                 if ((bufused + bytes_recv) <= bufferSize) {
-                    memcpy(buffer+bufused, (int8_t *) outbuf, bytes_recv);
+                    std::memcpy(buffer+bufused, (int8_t *) outbuf, bytes_recv);
                     bufused += bytes_recv;
                 } else {
                     done = picoos_sdfPutSamples(
@@ -387,7 +388,7 @@ const std::string Speech::renderSpeech(const std::string &text) {
                                         bufused / 2,
                                         (picoos_int16*) (buffer));
                     bufused = 0;
-                    memcpy(buffer, (int8_t *) outbuf, bytes_recv);
+                    std::memcpy(buffer, (int8_t *) outbuf, bytes_recv);
                     bufused += bytes_recv;
                 }
             }
@@ -403,14 +404,14 @@ const std::string Speech::renderSpeech(const std::string &text) {
     }
 
     if(TRUE != (done = picoos_sdfCloseOut(common, &sdOutFile))) {
-        fprintf(stderr, "Cannot close output wave file\n");
+        std::fprintf(stderr, "Cannot close output wave file\n");
         ret = 1;
-        free(buffer);
+        std::free(buffer);
         releasePico();
         return ("");
     }
 
-    free(buffer);
+    std::free(buffer);
     releasePico();
     return filename;
 }
@@ -443,7 +444,7 @@ void Speech::releasePico() {
         picoSystem = NULL;
     }
     if(picoMemArea) {
-        free(picoMemArea);
+        std::free(picoMemArea);
         picoMemArea = NULL;
     }
 }
