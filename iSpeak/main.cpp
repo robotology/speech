@@ -224,6 +224,8 @@ class iSpeak : protected BufferedPort<Bottle>,
     void threadRelease()
     {
         mouth.stop();
+        if (speechdev.asPort().isOpen())
+            speechdev.close();
         interrupt();
         close();
     }
@@ -398,12 +400,8 @@ public:
     /************************************************************************/
     bool close()
     {
-        if (speechdev.asPort().isOpen())
-            speechdev.close();
-
         rpc.close();
         speaker.stop();
-
         return true;
     }
 
