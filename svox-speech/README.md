@@ -5,8 +5,9 @@ A simple text to speech using **`SVOXPICO`**.
 
 Requirements
 ------------
-The current implementation requires Linux **`aplay`** command to play the generated wave file.
-This can/should be easily replaced with the `yarp portaudio` device (audio player)  
+The current implementation requires Linux **`aplay`** command (in the `alsa-utils` package)
+to play the generated wave file. This can/should be easily replaced with the
+`yarp portaudio` device (audio player)  
 
 
 Installation
