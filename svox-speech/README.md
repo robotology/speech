@@ -7,7 +7,9 @@ Requirements
 ------------
 The current implementation requires Linux **`aplay`** command (in the `alsa-utils` package)
 to play the generated wave file. This can/should be easily replaced with the
-`yarp portaudio` device (audio player)  
+`yarp portaudio` device (audio player).
+  
+On Windows systems `powershell` is employed to play the wave file.
 
 
 Installation
