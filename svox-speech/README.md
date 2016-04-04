@@ -12,9 +12,13 @@ to play the generated wave file. This can/should be easily replaced with the
 
 Installation
 ------------
-$ cd speech
-$ mkdir build && cd build
-$ cmake ../ && make
+- `$ cd svox-speech`
+- `$ mkdir build && cd build`
+- `$ cmake ..`
+- tick on the driver `speech`.
+- select a convenient location for installation via `CMAKE_INSTALL_PREFIX` (refer to this location as `$INST_DIR`).
+- `$ make install`
+- append to the environment variable **`YARP_DATA_DIRS`** the path `$INST_DIR/share/svox_speech`.
 
 
 Testing
@@ -43,4 +47,3 @@ Responses:
 >> setPitch 200
 >> say "Hello iCub!"
 ```
-
