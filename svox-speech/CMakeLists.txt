@@ -31,21 +31,21 @@ file(GLOB svox_header svoxpico/*.h)
 
 yarp_add_idl(IDL_GEN_FILES speech.thrift)
 
-yarp_add_plugin(speech ${svox_source}
-                       ${svox_header}
-                       speech.h
-                       speech.cpp
-                       ${IDL_GEN_FILES})
+yarp_add_plugin(svox_speech ${svox_source}
+                            ${svox_header}
+                            speech.h
+                            speech.cpp
+                            ${IDL_GEN_FILES})
 
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
+target_link_libraries(svox_speech ${YARP_LIBRARIES})
 
-yarp_install(TARGETS ${PROJECT_NAME}
+yarp_install(TARGETS svox_speech
              EXPORT YARP
              COMPONENT runtime
              LIBRARY DESTINATION ${SPEECH_DYNAMIC_PLUGINS_INSTALL_DIR}
              ARCHIVE DESTINATION ${SPEECH_STATIC_PLUGINS_INSTALL_DIR})
 
-yarp_install(FILES speech.ini
+yarp_install(FILES svox_speech.ini
              DESTINATION ${SPEECH_PLUGIN_MANIFESTS_INSTALL_DIR})
 
 file(GLOB lang ${CMAKE_CURRENT_SOURCE_DIR}/tts-lang/*.bin)
