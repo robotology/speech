@@ -14,7 +14,6 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
-#include <yarp/os/ResourceFinder.h>
 #include <yarp/os/LogStream.h>
 
 #include <speech.h>
@@ -86,13 +85,10 @@ bool Speech::open(yarp::os::Searchable &config)
 
     setPitch(config.check("pitch") ? config.find("pitch").asInt() : 180);
     setSpeed(config.check("speed") ? config.find("speed").asInt() : 80);
-
-    ResourceFinder rf;
-    rf.setQuiet();
-    rf.setDefaultContext(config.check("lingware-context",Value("speech")).asString().c_str());
-    rf.configure(0,NULL);
-    lingwarePath=rf.getHomeContextPath();
-    lingwarePath+="/";
+    
+    lingwareRF.setQuiet();
+    lingwareRF.setDefaultContext(config.check("lingware-context",Value("speech")).asString().c_str());
+    lingwareRF.configure(0,NULL);
 
     this->yarp().attachAsServer(rpcPort);
     if(!rpcPort.open("/icub/speech:rpc")) {
@@ -248,8 +244,7 @@ const std::string Speech::renderSpeech(const std::string &text) {
 
     /* Load the text analysis Lingware resource file.   */
     picoTaFileName      = (pico_Char *) std::malloc( PICO_MAX_DATAPATH_NAME_SIZE + PICO_MAX_FILE_NAME_SIZE );
-    std::strcpy((char *) picoTaFileName,   lingwarePath.c_str());
-    std::strcat((char *) picoTaFileName,   (const char *) picoInternalTaLingware[langIndex]);
+    std::strcpy((char *) picoTaFileName,   lingwareRF.findFileByName(picoInternalTaLingware[langIndex]).c_str());    
     if((ret = pico_loadResource( picoSystem, picoTaFileName, &picoTaResource ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
         std::fprintf(stderr, "Cannot load text analysis resource file (%i): %s\n", ret, outMessage);
@@ -259,8 +254,7 @@ const std::string Speech::renderSpeech(const std::string &text) {
 
     /* Load the signal generation Lingware resource file.   */
     picoSgFileName      = (pico_Char *) std::malloc( PICO_MAX_DATAPATH_NAME_SIZE + PICO_MAX_FILE_NAME_SIZE );
-    std::strcpy((char *) picoSgFileName,   lingwarePath.c_str());
-    std::strcat((char *) picoSgFileName,   (const char *) picoInternalSgLingware[langIndex]);
+    std::strcpy((char *) picoSgFileName,   lingwareRF.findFileByName(picoInternalSgLingware[langIndex]).c_str());    
     if((ret = pico_loadResource( picoSystem, picoSgFileName, &picoSgResource ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
         std::fprintf(stderr, "Cannot load signal generation Lingware resource file (%i): %s\n", ret, outMessage);

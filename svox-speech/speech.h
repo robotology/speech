@@ -11,6 +11,7 @@
 #include <yarp/os/Mutex.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/RpcServer.h>
+#include <yarp/os/ResourceFinder.h>
 #include <yarp/dev/PolyDriver.h>
 
 #include <string>
@@ -94,5 +95,5 @@ private: // picotts
     pico_Char *     picoSgResourceName;
     pico_Char *     picoUtppResourceName;
     int picoSynthAbort;
-    std::string lingwarePath;
+    yarp::os::ResourceFinder lingwareRF;
 };
