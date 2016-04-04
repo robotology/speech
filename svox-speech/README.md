@@ -18,13 +18,13 @@ Installation
 - tick on the driver `speech`.
 - select a convenient location for installation via `CMAKE_INSTALL_PREFIX` (refer to this location as `$INST_DIR`).
 - `$ make install`
-- append to the environment variable **`YARP_DATA_DIRS`** the path `$INST_DIR/share/svox_speech`.
+- append to the environment variable **`YARP_DATA_DIRS`** the path `$INST_DIR/share/speech`.
 
 
 Testing
 -------
 ```sh
-$ yarpdev --device speech --lingware-context svox_speech --default-language en-US --pitch 100 --speed 100
+$ yarpdev --device speech --lingware-context speech --default-language en-US --pitch 100 --speed 100
 ```
 
 ```sh

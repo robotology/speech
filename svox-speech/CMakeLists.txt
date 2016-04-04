@@ -3,7 +3,7 @@
 # CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 
 cmake_minimum_required(VERSION 2.8.9)
-project(svox_speech)
+project(speech)
 
 find_package(YARP REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
@@ -18,7 +18,7 @@ include(YarpInstallationHelpers)
 set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "${PROJECT_NAME} is always built with dynamic plugins")
 yarp_configure_external_installation(${PROJECT_NAME} WITH_PLUGINS)
 
-yarp_prepare_device(speech 
+yarp_prepare_device(${PROJECT_NAME} 
                     TYPE yarp::dev::Speech 
                     INCLUDE speech.h)
 
@@ -37,9 +37,9 @@ yarp_add_plugin(speech ${svox_source}
                        speech.cpp
                        ${IDL_GEN_FILES})
 
-target_link_libraries(speech ${YARP_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
-yarp_install(TARGETS speech
+yarp_install(TARGETS ${PROJECT_NAME}
              EXPORT YARP
              COMPONENT runtime
              LIBRARY DESTINATION ${SVOX_SPEECH_DYNAMIC_PLUGINS_INSTALL_DIR}
