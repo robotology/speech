@@ -7,7 +7,7 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <string>
+#include <cstring>
 #include <algorithm>
 
 #include <yarp/os/Thread.h>
@@ -272,8 +272,8 @@ const std::string Speech::renderSpeech(const std::string &text) {
        and is currently not used. Loading is only attempted for future compatibility.
        If this file is not present the loading will still succeed.                      //
     picoUtppFileName      = (pico_Char *) std::malloc( PICO_MAX_DATAPATH_NAME_SIZE + PICO_MAX_FILE_NAME_SIZE );
-    strcpy((char *) picoUtppFileName,   PICO_LINGWARE_PATH);
-    strcat((char *) picoUtppFileName,   (const char *) picoInternalUtppLingware[langIndex]);
+    std::strcpy((char *) picoUtppFileName,   PICO_LINGWARE_PATH);
+    std::strcat((char *) picoUtppFileName,   (const char *) picoInternalUtppLingware[langIndex]);
     ret = pico_loadResource( picoSystem, picoUtppFileName, &picoUtppResource );
     pico_getSystemStatusMessage(picoSystem, ret, outMessage);
     printf("pico_loadResource: %i: %s\n", ret, outMessage);
