@@ -89,7 +89,7 @@ bool Speech::open(yarp::os::Searchable &config)
 
     ResourceFinder rf;
     rf.setQuiet();
-    rf.setDefaultContext(config.check("lingware-context",Value("svox-speech")).asString().c_str());
+    rf.setDefaultContext(config.check("lingware-context",Value("svox_speech")).asString().c_str());
     rf.configure(0,NULL);
     lingwarePath=rf.getHomeContextPath();
     lingwarePath+="/";

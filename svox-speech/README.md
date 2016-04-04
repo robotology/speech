@@ -20,7 +20,7 @@ $ cmake ../ && make
 Testing
 -------
 ```sh
-$ yarpdev --device speech --lingware-context svox-speech --default-language en-US --pitch 100 --speed 100
+$ yarpdev --device speech --lingware-context svox_speech --default-language en-US --pitch 100 --speed 100
 ```
 
 ```sh
@@ -43,3 +43,4 @@ Responses:
 >> setPitch 200
 >> say "Hello iCub!"
 ```
+

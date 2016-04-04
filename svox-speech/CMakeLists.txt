@@ -3,7 +3,7 @@
 # CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 
 cmake_minimum_required(VERSION 2.8.9)
-project(svox-speech)
+project(svox_speech)
 
 find_package(YARP REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
@@ -15,10 +15,8 @@ include(YarpIDL)
 include(YarpPlugin)
 include(YarpInstallationHelpers)
 
-yarp_add_idl(IDL_GEN_FILES speech.thrift)
-
-set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "speech is always built with dynamic plugins")
-yarp_configure_external_installation(yarp)
+set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "${PROJECT_NAME} is always built with dynamic plugins")
+yarp_configure_external_installation(${PROJECT_NAME} WITH_PLUGINS)
 
 yarp_prepare_device(speech 
                     TYPE yarp::dev::Speech 
@@ -31,6 +29,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 file(GLOB svox_source svoxpico/*.c)
 file(GLOB svox_header svoxpico/*.h)
 
+yarp_add_idl(IDL_GEN_FILES speech.thrift)
+
 yarp_add_plugin(speech ${svox_source}
                        ${svox_header}
                        speech.h
@@ -42,15 +42,14 @@ target_link_libraries(speech ${YARP_LIBRARIES})
 yarp_install(TARGETS speech
              EXPORT YARP
              COMPONENT runtime
-             LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
-             ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
+             LIBRARY DESTINATION ${SVOX_SPEECH_DYNAMIC_PLUGINS_INSTALL_DIR}
+             ARCHIVE DESTINATION ${SVOX_SPEECH_STATIC_PLUGINS_INSTALL_DIR})
 
 yarp_install(FILES speech.ini
-             DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+             DESTINATION ${SVOX_SPEECH_PLUGIN_MANIFESTS_INSTALL_DIR})
 
 file(GLOB lang ${CMAKE_CURRENT_SOURCE_DIR}/tts-lang/*.bin)
 yarp_install(FILES ${lang}
-             DESTINATION ${YARP_CONTEXTS_INSTALL_DIR}/${PROJECT_NAME})
-
+             DESTINATION ${SVOX_SPEECH_CONTEXTS_INSTALL_DIR}/${PROJECT_NAME})
 
 
