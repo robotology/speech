@@ -5,12 +5,11 @@
  */
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <algorithm>
+
 #include <yarp/os/Thread.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Semaphore.h>
@@ -22,12 +21,9 @@
 using namespace yarp::os;
 using namespace yarp::dev;
 
-
-
 #define PICO_MEM_SIZE   2500000     /* adaptation layer defines */
 #define DummyLen        100000000
 #define MAX_OUTBUF_SIZE 128         /* string constants */
-
 
 const char * PICO_VOICE_NAME    = "PicoVoice";
 
@@ -156,10 +152,12 @@ bool Speech::setLanguage(const std::string& language) {
 
 bool Speech::setSpeed(const int16_t speed) {
     Speech::speed = speed;
+    return true;
 }
 
 bool Speech::setPitch(const int16_t pitch){
     Speech::pitch = pitch;
+    return true;
 }
 
 std::vector<std::string> Speech::getSupportedLang() {
@@ -199,9 +197,14 @@ const std::string Speech::renderSpeech(const std::string &text) {
 
     //<pitch level='70'><speed level='100'></speed></pitch>"
     char* cmdText = (char*) malloc(text.size()+256);
-    snprintf(cmdText, text.size()+255,
-             "<pitch level='%d'><speed level='%d'> %s </speed></pitch>",
-             pitch, speed, text.c_str());
+#if WIN32
+    _snprintf
+#else
+    snprintf
+#endif
+    (cmdText,text.size()+255,
+    "<pitch level='%d'><speed level='%d'> %s </speed></pitch>",
+    pitch, speed, text.c_str());
     /*
     //pico2wave -len-US -w out.wav "hello!"
     std::string cmd = "pico2wave -l" + language + " -w " + filename;
