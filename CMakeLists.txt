@@ -26,7 +26,7 @@ if(WIN32)
     add_subdirectory(windows-tts)
 endif()
 
-option(BUILD_ACAPELATTS "enable the build of acapela wrapper" ON)
+option(BUILD_ACAPELATTS "enable the build of acapela wrapper" OFF)
 if(BUILD_ACAPELATTS)
     find_package(AcapelaSDK REQUIRED)
     add_subdirectory(acapela-tts)

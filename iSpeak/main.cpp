@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2015 iCub Facility - Istituto Italiano di Tecnologia
  * Author: Ugo Pattacini
  * email:  ugo.pattacini@iit.it
@@ -17,44 +17,41 @@
 
 /**
 \defgroup iSpeak iSpeak
- 
+
 Acquire sentences over a yarp port and then let the robot
-utter them, also controlling the facial expressions. 
+utter them, also controlling the facial expressions.
 
 \section intro_sec Description
 
 The behavior is pretty intuitive and does not need any further
-detail.\n 
- 
-\section lib_sec Libraries 
-- YARP libraries. 
+detail.\n
+
+\section lib_sec Libraries
+- YARP libraries.
 - Packages for speech synthesis (e.g. festival, espeak, ...).
 
 \section parameters_sec Parameters
---name \e name 
-- The parameter \e name identifies the unique stem-name used to 
+--name \e name
+- The parameter \e name identifies the unique stem-name used to
   open all relevant ports.
- 
---robot \e robot 
-- The parameter \e robot specifies the robot to connect to. 
- 
---period \e T 
-- The period given in [ms] for controlling the mouth. 
- 
---package \e pck 
-- The parameter \e pck specifies the package used for utterance; 
-  e.g. "festival", "espeak", ...
- 
---package_options \e opt 
-- The parameter \e opt is a string specifying further 
+
+--robot \e robot
+- The parameter \e robot specifies the robot to connect to.
+
+--period \e T
+- The period given in [ms] for controlling the mouth.
+
+--package \e pck
+- The parameter \e pck specifies the package used for utterance;
+  e.g. "festival", "espeak", ...\n
+  If \e speech-dev is specified then the yarp speech device is employed. 
+
+--package_options \e opt
+- The parameter \e opt is a string specifying further
   command-line options to be used with the chosen package. Refer
   to the package documentation for the available options.
- 
-\section portsa_sec Ports Accessed
-At startup an attempt is made to connect to 
-/<robot>/face/emotions/in port. 
 
-\section portsc_sec Ports Created 
+\section portsc_sec Ports Created
 - \e /<name>: this port receives the string for speech
   synthesis. In case a double is received in place of a string,
   then the mouth will be controlled without actually uttering
@@ -66,11 +63,11 @@ At startup an attempt is made to connect to
   available only in string mode, a third double can be provided
   that establishes the uttering duration in seconds,
   irrespective of the words actually spoken.
- 
+
 - \e /<name>/emotions:o: this port serves to command the facial
   expressions.
- 
-- \e /<name>/rpc: a remote procedure call port used for the 
+
+- \e /<name>/rpc: a remote procedure call port used for the
   following run-time querie: \n
   - [stat]: returns "speaking" or "quiet".
   - [set] [opt] "package_options": set new package dependent
@@ -78,11 +75,13 @@ At startup an attempt is made to connect to
   - [get] [opt]: returns a string containing the current
    package dependent command-line options.
 
+- \e /<name>/speech-dev/rpc: this port serves to talk to speech yarp device.
+
 \section tested_os_sec Tested OS
 Linux and Windows.
 
 \author Ugo Pattacini
-*/ 
+*/
 
 #include <cstdlib>
 #include <string>
@@ -98,7 +97,7 @@ using namespace yarp::os;
 class MouthHandler : public RateThread
 {
     string state;
-    RpcClient emotions;
+    RpcClient emotions;    
     Mutex mutex;
     double t0, duration;
 
@@ -173,7 +172,7 @@ public:
     void resume()
     {
         t0=Time::now();
-        RateThread::resume();        
+        RateThread::resume();
     }
 
     /************************************************************************/
@@ -200,9 +199,10 @@ class iSpeak : protected BufferedPort<Bottle>,
     string package_options;
     deque<Bottle> buffer;
     Mutex mutex;
-    
+
     bool speaking;
     MouthHandler mouth;
+    RpcClient speechdev;
 
     /************************************************************************/
     void onRead(Bottle &request)
@@ -231,17 +231,30 @@ class iSpeak : protected BufferedPort<Bottle>,
     /************************************************************************/
     void speak(const string &phrase)
     {
-        string command("echo \"");
-        command+=phrase;
-        command+="\" | ";
-        command+=package;
-        command+=" ";
+        if (speechdev.asPort().isOpen())
+        {
+            if (speechdev.getOutputCount()>0)
+            {
+                Bottle cmd,rep;
+                cmd.addString("say");
+                cmd.addString(phrase);
+                speechdev.write(cmd,rep);
+            }
+        }
+        else
+        {
+            string command("echo \"");
+            command+=phrase;
+            command+="\" | ";
+            command+=package;
+            command+=" ";
 
-        if (package=="festival")
-            command+="--tts ";
+            if (package=="festival")
+                command+="--tts ";
 
-        command+=package_options;
-        int ret=system(command.c_str());
+            command+=package_options;
+            int ret=system(command.c_str());
+        }
     }
 
     /************************************************************************/
@@ -329,10 +342,13 @@ public:
 
         mouth.configure(rf);
 
+        if (package=="speech-dev")
+            speechdev.open(("/"+name+"/speech-dev/rpc").c_str());
+
         yInfo("iSpeak wraps around \"%s\" speech synthesizer",package.c_str());
         yInfo("starting command-line options: \"%s\"",package_options.c_str());
     }
-    
+
     /************************************************************************/
     bool isSpeaking()
     {
@@ -382,9 +398,10 @@ public:
     /************************************************************************/
     bool close()
     {
-        rpc.interrupt();
-        rpc.close();
+        if (speechdev.asPort().isOpen())
+            speechdev.close();
 
+        rpc.close();
         speaker.stop();
 
         return true;
@@ -413,7 +430,7 @@ public:
                         speaker.set_package_options(cmd2);
                         reply.addString("ack");
                         return true;
-                    }                    
+                    }
                 }
                 else if (cmd0==Vocab::encode("get"))
                 {
@@ -461,5 +478,4 @@ int main(int argc, char *argv[])
     Launcher launcher;
     return launcher.runModule(rf);
 }
-
 
