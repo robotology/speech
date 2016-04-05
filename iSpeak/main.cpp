@@ -253,7 +253,7 @@ class iSpeak : protected BufferedPort<Bottle>,
                 if (Bottle *opt=options.get(i).asList())
                 {
                     Bottle cmd,rep;
-                    cmd.add(*opt);
+                    cmd=*opt;
                     speechdev.write(cmd,rep);
                 }
             }
