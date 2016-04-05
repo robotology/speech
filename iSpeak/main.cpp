@@ -51,7 +51,7 @@ detail.\n
   command-line options to be used with the chosen package. Refer
   to the package documentation for the available options. In case
   the \e speech-dev package is used, this option should contain
-  rpc commands in form of command-line arguments.
+  property-like rpc commands.
 
 \section portsc_sec Ports Created
 - \e /<name>: this port receives the string for speech
@@ -249,10 +249,7 @@ class iSpeak : protected BufferedPort<Bottle>,
         LockGuard lg(mutex);
         if (speechdev.getOutputCount()>0)
         {
-            Property prop;
-            prop.fromArguments(package_options.c_str());
-
-            Bottle options(prop.toString());
+            Bottle options(package_options);
             for (int i=0; i<options.size(); i++)
             {
                 if (Bottle *opt=options.get(i).asList())
