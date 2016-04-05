@@ -206,15 +206,13 @@ class iSpeak : protected BufferedPort<Bottle>,
     bool speaking;
     MouthHandler mouth;
     RpcClient speechdev;
+    int initSpeechDev;
 
     /************************************************************************/
     void report(const PortInfo &info)
     {
-        if (info.created && !info.incoming)
-        {
-            yInfo("Setting options at connection time");
-            execSpeechDevOptions();
-        }
+        if (info.created && !info.incoming)            
+            initSpeechDev++
     }
 
     /************************************************************************/
@@ -229,7 +227,7 @@ class iSpeak : protected BufferedPort<Bottle>,
     bool threadInit()
     {
         open(("/"+name).c_str());
-        useCallback();
+        useCallback();        
         return true;
     }
 
@@ -361,6 +359,13 @@ class iSpeak : protected BufferedPort<Bottle>,
             if (buffer.size()==0)
                 speaking=false;
         }
+
+        if (initSpeechDev>0)
+        {
+            yInfo("Setting options at connection time");
+            execSpeechDevOptions();
+            initSpeechDev=0;
+        }
     }
 
 public:
@@ -368,6 +373,7 @@ public:
     iSpeak() : RateThread(200)
     {
         speaking=false;
+        initSpeechDev=0;
     }
 
     /************************************************************************/
