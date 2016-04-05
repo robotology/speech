@@ -121,16 +121,16 @@ void Speech::run() {
 
 bool Speech::playWav(const std::string& filename) {
     std::string cmd;
-#if UNIX
+#if WIN32
+    cmd = "powershell -c (New-Object Media.SoundPlayer ";
+    cmd += filename;
+    cmd += ").PlaySync()";
+#else
     // aplay --device="plughw:1,0" speech.wav 
     cmd = "aplay ";
     if(pcmDevice.size()) 
         cmd += "--device=\""+pcmDevice+"\" ";
     cmd += filename;
-#else
-    cmd = "powershell -c (New-Object Media.SoundPlayer ";
-    cmd += filename;
-    cmd += ").PlaySync()";
 #endif
     yInfo()<<cmd;
     int ret = system(cmd.c_str());
@@ -198,18 +198,18 @@ const std::string Speech::renderSpeech(const std::string &text) {
     //<pitch level='70'><speed level='100'></speed></pitch>"
     char* cmdText = (char*) std::malloc(text.size()+256);
     std::string filename;
-#if UNIX
-    filename = "/tmp/speech.wav";
-    snprintf
-#else
+#if WIN32
     if (const char* env_tmp = std::getenv("TMP"))
     {
         filename = env_tmp;
-        filename += "\speech.wav";
+        filename += "\\speech.wav";
     }
     else
         filename = "speech.wav";
     _snprintf
+#else
+    filename = "/tmp/speech.wav";
+    snprintf
 #endif
     (cmdText,text.size()+255,
     "<pitch level='%d'><speed level='%d'> %s </speed></pitch>",
