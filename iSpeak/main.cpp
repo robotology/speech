@@ -212,7 +212,7 @@ class iSpeak : protected BufferedPort<Bottle>,
     void report(const PortInfo &info)
     {
         if (info.created && !info.incoming)            
-            initSpeechDev++
+            initSpeechDev++;
     }
 
     /************************************************************************/
