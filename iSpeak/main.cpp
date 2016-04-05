@@ -254,7 +254,9 @@ class iSpeak : protected BufferedPort<Bottle>,
                 {
                     Bottle cmd,rep;
                     cmd=*opt;
+                    yInfo("Setting option: %s",cmd.toString().c_str());
                     speechdev.write(cmd,rep);
+                    yInfo("Received reply: %s",rep.toString().c_str());
                 }
             }
         }
