@@ -44,12 +44,14 @@ detail.\n
 --package \e pck
 - The parameter \e pck specifies the package used for utterance;
   e.g. "festival", "espeak", ...\n
-  If \e speech-dev is specified then the yarp speech device is employed. 
+  If \e speech-dev is specified then the yarp speech device is employed.
 
 --package_options \e opt
 - The parameter \e opt is a string specifying further
   command-line options to be used with the chosen package. Refer
-  to the package documentation for the available options.
+  to the package documentation for the available options. In case
+  the \e speech-dev package is used, this option should contain
+  rpc commands in form of command-line arguments.
 
 \section portsc_sec Ports Created
 - \e /<name>: this port receives the string for speech
@@ -97,7 +99,7 @@ using namespace yarp::os;
 class MouthHandler : public RateThread
 {
     string state;
-    RpcClient emotions;    
+    RpcClient emotions;
     Mutex mutex;
     double t0, duration;
 
@@ -514,4 +516,3 @@ int main(int argc, char *argv[])
     Launcher launcher;
     return launcher.runModule(rf);
 }
-
