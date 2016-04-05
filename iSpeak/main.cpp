@@ -211,7 +211,10 @@ class iSpeak : protected BufferedPort<Bottle>,
     void report(const PortInfo &info)
     {
         if (info.created && !info.incoming)
+        {
+            yInfo("Setting options at connection time");
             execSpeechDevOptions();
+        }
     }
 
     /************************************************************************/
