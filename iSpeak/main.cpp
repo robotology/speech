@@ -192,7 +192,8 @@ public:
 
 /************************************************************************/
 class iSpeak : protected BufferedPort<Bottle>,
-               public    RateThread
+               public    RateThread,
+               public    PortReport
 {
     string name;
     string package;
@@ -203,6 +204,13 @@ class iSpeak : protected BufferedPort<Bottle>,
     bool speaking;
     MouthHandler mouth;
     RpcClient speechdev;
+
+    /************************************************************************/
+    void report(const PortInfo &info)
+    {
+        if (info.created && !info.incoming)
+            execSpeechDevOptions();
+    }
 
     /************************************************************************/
     void onRead(Bottle &request)
@@ -231,8 +239,31 @@ class iSpeak : protected BufferedPort<Bottle>,
     }
 
     /************************************************************************/
+    void execSpeechDevOptions()
+    {
+        LockGuard lg(mutex);
+        if (speechdev.getOutputCount()>0)
+        {
+            Property prop;
+            prop.fromArguments(package_options.c_str());
+
+            Bottle options(prop.toString());
+            for (int i=0; i<options.size(); i++)
+            {
+                if (Bottle *opt=options.get(i).asList())
+                {
+                    Bottle cmd,rep;
+                    cmd.add(*opt);
+                    speechdev.write(cmd,rep);
+                }
+            }
+        }
+    }
+
+    /************************************************************************/
     void speak(const string &phrase)
     {
+        LockGuard lg(mutex);
         if (speechdev.asPort().isOpen())
         {
             if (speechdev.getOutputCount()>0)
@@ -345,7 +376,10 @@ public:
         mouth.configure(rf);
 
         if (package=="speech-dev")
+        {
             speechdev.open(("/"+name+"/speech-dev/rpc").c_str());
+            speechdev.setReporter(*this);
+        }
 
         yInfo("iSpeak wraps around \"%s\" speech synthesizer",package.c_str());
         yInfo("starting command-line options: \"%s\"",package_options.c_str());
@@ -368,6 +402,8 @@ public:
     void set_package_options(const string &package_options)
     {
         this->package_options=package_options;
+        if (speechdev.asPort().isOpen())
+            execSpeechDevOptions();
     }
 };
 
