@@ -28,7 +28,7 @@ detail.\n
 
 \section lib_sec Libraries
 - YARP libraries.
-- Packages for speech synthesis (e.g. festival, espeak, ...).
+- Packages for speech synthesis (e.g. speech-dev, festival, espeak, ...).
 
 \section parameters_sec Parameters
 --name \e name
@@ -43,7 +43,7 @@ detail.\n
 
 --package \e pck
 - The parameter \e pck specifies the package used for utterance;
-  e.g. "festival", "espeak", ...\n
+  e.g. "speech-dev", "festival", "espeak", ...\n
   If \e speech-dev is specified then the yarp speech device is employed.
 
 --package_options \e opt
@@ -211,7 +211,7 @@ class iSpeak : protected BufferedPort<Bottle>,
     /************************************************************************/
     void report(const PortInfo &info)
     {
-        if (info.created && !info.incoming)            
+        if (info.created && !info.incoming)
             initSpeechDev++;
     }
 
@@ -227,7 +227,7 @@ class iSpeak : protected BufferedPort<Bottle>,
     bool threadInit()
     {
         open(("/"+name).c_str());
-        useCallback();        
+        useCallback();
         return true;
     }
 
@@ -515,7 +515,7 @@ int main(int argc, char *argv[])
     rf.setVerbose(true);
     rf.setDefault("name","iSpeak");
     rf.setDefault("robot","icub");
-    rf.setDefault("package","festival");
+    rf.setDefault("package","speech-dev");
     rf.setDefault("package_options","");
     rf.configure(argc,argv);
 
