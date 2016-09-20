@@ -72,7 +72,7 @@ Speech::~Speech() {
 
 
 bool Speech::open(yarp::os::Searchable &config)
-{    
+{
     Speech::config.fromString(config.toString());
 
     if(config.check("pcm-device"))
@@ -83,16 +83,19 @@ bool Speech::open(yarp::os::Searchable &config)
             return false;
         }
 
-    setPitch(config.check("pitch") ? config.find("pitch").asInt() : 90);
-    setSpeed(config.check("speed") ? config.find("speed").asInt() : 105);
-    
+    setPitch(config.check("pitch",Value(90)).asInt());
+    setSpeed(config.check("speed",Value(105)).asInt());
+
     lingwareRF.setQuiet();
     lingwareRF.setDefaultContext(config.check("lingware-context",Value("speech")).asString().c_str());
     lingwareRF.configure(0,NULL);
 
     this->yarp().attachAsServer(rpcPort);
-    if(!rpcPort.open("/icub/speech:rpc")) {
-        yError()<<"Cannot open port /icub/speech:rpc";
+
+    std::string robot=config.check("robot",Value("icub")).asString();
+    std::string portName=std::string(("/"+robot+"/speech:rpc").c_str());
+    if(!rpcPort.open(portName.c_str())) {
+        yError()<<"Cannot open port "<<portName;
         return false;
     }
 
@@ -126,9 +129,9 @@ bool Speech::playWav(const std::string& filename) {
     cmd += filename;
     cmd += ").PlaySync()";
 #else
-    // aplay --device="plughw:1,0" speech.wav 
+    // aplay --device="plughw:1,0" speech.wav
     cmd = "aplay ";
-    if(pcmDevice.size()) 
+    if(pcmDevice.size())
         cmd += "--device=\""+pcmDevice+"\" ";
     cmd += filename;
 #endif
@@ -257,7 +260,7 @@ const std::string Speech::renderSpeech(const std::string &text) {
 
     /* Load the text analysis Lingware resource file.   */
     picoTaFileName      = (pico_Char *) std::malloc( PICO_MAX_DATAPATH_NAME_SIZE + PICO_MAX_FILE_NAME_SIZE );
-    std::strcpy((char *) picoTaFileName,   lingwareRF.findFileByName(picoInternalTaLingware[langIndex]).c_str());    
+    std::strcpy((char *) picoTaFileName,   lingwareRF.findFileByName(picoInternalTaLingware[langIndex]).c_str());
     if((ret = pico_loadResource( picoSystem, picoTaFileName, &picoTaResource ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
         std::fprintf(stderr, "Cannot load text analysis resource file (%i): %s\n", ret, outMessage);
@@ -267,7 +270,7 @@ const std::string Speech::renderSpeech(const std::string &text) {
 
     /* Load the signal generation Lingware resource file.   */
     picoSgFileName      = (pico_Char *) std::malloc( PICO_MAX_DATAPATH_NAME_SIZE + PICO_MAX_FILE_NAME_SIZE );
-    std::strcpy((char *) picoSgFileName,   lingwareRF.findFileByName(picoInternalSgLingware[langIndex]).c_str());    
+    std::strcpy((char *) picoSgFileName,   lingwareRF.findFileByName(picoInternalSgLingware[langIndex]).c_str());
     if((ret = pico_loadResource( picoSystem, picoSgFileName, &picoSgResource ))) {
         pico_getSystemStatusMessage(picoSystem, ret, outMessage);
         std::fprintf(stderr, "Cannot load signal generation Lingware resource file (%i): %s\n", ret, outMessage);
