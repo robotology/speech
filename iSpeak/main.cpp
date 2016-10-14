@@ -43,7 +43,7 @@ detail.\n
 
 --package \e pck
 - The parameter \e pck specifies the package used for utterance;
-  e.g. "speech-dev", "festival", "espeak", ...\n
+  e.g. "speech-dev", "festival", "acapela-tts", "espeak", ...\n
   If \e speech-dev is specified then the yarp speech device is employed.
 
 --package_options \e opt
