@@ -35,9 +35,6 @@ detail.\n
 - The parameter \e name identifies the unique stem-name used to
   open all relevant ports.
 
---robot \e robot
-- The parameter \e robot specifies the robot to connect to.
-
 --period \e T
 - The period given in [ms] for controlling the mouth.
 
@@ -157,7 +154,6 @@ public:
     void configure(ResourceFinder &rf)
     {
         string name=rf.find("name").asString().c_str();
-        string robot=rf.find("robot").asString().c_str();
         emotions.open(("/"+name+"/emotions:o").c_str());
 
         state="sur";
@@ -514,7 +510,6 @@ int main(int argc, char *argv[])
     ResourceFinder rf;
     rf.setVerbose(true);
     rf.setDefault("name","iSpeak");
-    rf.setDefault("robot","icub");
     rf.setDefault("package","speech-dev");
     rf.setDefault("package_options","");
     rf.configure(argc,argv);
