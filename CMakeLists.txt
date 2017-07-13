@@ -17,6 +17,7 @@ include(ICUBcontribOptions)
 icubcontrib_set_default_prefix()
 
 add_subdirectory(iSpeak)
+add_subdirectory(speech-interpreter)
 
 if(WIN32)
     find_package(SpeechSDK)
