@@ -120,7 +120,7 @@ void STARTManager::close()
     startOutPort.close();
     faceInPort.close();
     portURL.close();
-    BufferedPort<yarp::os::Bottle >::close();
+    yarp::os::BufferedPort<yarp::os::Bottle >::close();
     yInfo("finished closing the read port...\n");
 }
 
@@ -129,7 +129,7 @@ void STARTManager::interrupt()
 {
     yInfo("cleaning up...\n");
     yInfo("attempting to interrupt ports\n");
-    BufferedPort<yarp::os::Bottle >::interrupt();
+    yarp::os::BufferedPort<yarp::os::Bottle >::interrupt();
     portURL.interrupt();
     faceInPort.interrupt();
     yInfo("finished interrupt ports\n");
@@ -148,7 +148,7 @@ void STARTManager::onRead(yarp::os::Bottle &bot)
         if (isalpha(question[0]))
             yInfo("avoiding erase\n");
         else
-            question.erase( remove_if(question.begin(), question.end(), aZCheck), question.end());
+            question.erase(std::remove_if(question.begin(), question.end(), aZCheck), question.end());
 
         yInfo("cmd is %s", question.c_str());
 

@@ -18,6 +18,8 @@
 #ifndef __ICUB_STARTASK_MOD_H__
 #define __ICUB_STARTASK_MOD_H__
 
+#include <algorithm>
+#include <cstring>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Network.h>
