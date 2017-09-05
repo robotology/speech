@@ -213,7 +213,7 @@ void STARTManager::onRead(yarp::os::Bottle &bot)
                         std::string param2 = bot.get(1).asList()->get(i).asList()->get(1).asString().c_str();
                         std::string param3 = bot.get(1).asList()->get(i).asList()->get(2).asString().c_str();
 
-                        if (strcmp(param1.c_str(), action[y].c_str()) == 0 && (strcmp(param2.c_str(), "to") == 0 || (strcmp(param2.c_str(), "on") == 0))){
+                        if (strcmp(param1.c_str(), action[y].c_str()) == 0 && (strcmp(param2.c_str(), "to") == 0 || (strcmp(param2.c_str(), "on") == 0) || (strcmp(param2.c_str(), "from") == 0))){
                             yInfo(" action %s param1 %s param2 %s param3 %s", action[y].c_str(), param1.c_str(), param2.c_str(), param3.c_str());
 
                             tmpAction = action[y].c_str();

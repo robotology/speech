@@ -313,6 +313,18 @@ void STARTManager::onRead(yarp::os::Bottle &bot)
                 html.replace(enDash,tags.length(),",");
             }
 
+            //cleaning "en dash".
+            std::string::size_type enDash2;
+            tags="&#8212;";
+            while ( (enDash2 = html.find(tags)) != html.npos)
+            {
+                yInfo() << "Cleaning up " << tags << " @ " << enDash2;
+                html.replace(enDash2,tags.length(),",");
+            }
+
+            //to REMOVE   &#1071; &#1090;&#1074;&#1086;&#1081; &#1089;&#1083;&#1091;&#1075;&#1072;
+            //and   &#1071; &#1090;&#1074;&#1086;&#1081; &#1088;&#1072;&#1073;&#1086;&#1090;&#1085;&#1080;&#1082;
+
             //cleaning "nonSpace".
             std::string::size_type nonSpace;
             tags="&nbsp;";
