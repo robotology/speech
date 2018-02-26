@@ -18,9 +18,11 @@ include(YarpInstallationHelpers)
 set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "${PROJECT_NAME} is always built with dynamic plugins")
 yarp_configure_external_installation(${PROJECT_NAME} WITH_PLUGINS)
 
-yarp_prepare_device(${PROJECT_NAME} 
+yarp_prepare_plugin(${PROJECT_NAME} 
                     TYPE yarp::dev::Speech 
-                    INCLUDE speech.h)
+                    INCLUDE speech.h
+                    CATEGORY device
+                    DEFAULT ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${YARP_INCLUDE_DIRS}
