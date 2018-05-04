@@ -64,8 +64,10 @@ detail.\n
   irrespective of the words actually spoken.
 
 - \e /<name>/emotions:o: this port serves to command the facial
-  expressions.
-
+  expressions of the iCub.
+  
+- \e /<name>/r1:rpc: this port serves to command the R1's mouth.
+   
 - \e /<name>/rpc: a remote procedure call port used for the
   following run-time querie: \n
   - [stat]: returns "speaking" or "quiet".
@@ -96,7 +98,7 @@ using namespace yarp::os;
 class MouthHandler : public RateThread
 {
     string state;
-    RpcClient emotions;
+    RpcClient emotions,r1;
     Mutex mutex;
     double t0, duration;
 
@@ -135,6 +137,13 @@ class MouthHandler : public RateThread
     /************************************************************************/
     bool threadInit()
     {
+        if (r1.getOutputCount()>0)
+        {
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("tstart"));
+            r1.write(cmd,rep);
+        }
+
         t0=Time::now();
         return true;
     }
@@ -143,7 +152,9 @@ class MouthHandler : public RateThread
     void threadRelease()
     {
         emotions.interrupt();
+        r1.interrupt();
         emotions.close();
+        r1.close();
     }
 
 public:
@@ -155,6 +166,7 @@ public:
     {
         string name=rf.find("name").asString().c_str();
         emotions.open(("/"+name+"/emotions:o").c_str());
+        r1.open(("/"+name+"/r1:rpc").c_str());
 
         state="sur";
         setRate(rf.check("period",Value(200)).asInt());
@@ -169,6 +181,13 @@ public:
     /************************************************************************/
     void resume()
     {
+        if (r1.getOutputCount()>0)
+        {
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("tstart"));
+            r1.write(cmd,rep);
+        }
+
         t0=Time::now();
         RateThread::resume();
     }
@@ -184,6 +203,13 @@ public:
         LockGuard lg(mutex);
         state="hap";
         send();
+
+        if (r1.getOutputCount()>0)
+        {
+            Bottle cmd,rep;
+            cmd.addVocab(Vocab::encode("tstop"));
+            r1.write(cmd,rep);
+        }
     }
 };
 
