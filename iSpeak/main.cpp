@@ -451,9 +451,6 @@ public:
     /************************************************************************/
     bool configure(ResourceFinder &rf)
     {
-        // request high resolution scheduling
-        Time::turboBoost();
-
         speaker.configure(rf);
         if (!speaker.start())
             return false;
