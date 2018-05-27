@@ -56,14 +56,14 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
     m_timeout = rf.check("timeout",Value(10000)).asInt();
     USE_LEGACY = !rf.check("noLegacy");
     m_forwardSound = rf.check("forwardSound");
-    m_tmpFileFolder = rf.getHomeContextPath().c_str();
+    m_tmpFileFolder = rf.getHomeContextPath();
     interruptRecognition = false;
 
     //Deal with speech recognition
-    string grammarFile = rf.check("grammarFile",Value("defaultGrammar.grxml")).asString().c_str();
-	grammarFile = rf.findFile(grammarFile).c_str();
+    string grammarFile = rf.check("grammarFile",Value("defaultGrammar.grxml")).asString();
+    grammarFile = rf.findFile(grammarFile);
 
-	std::wstring tmp = s2ws(grammarFile);
+    std::wstring tmp = s2ws(grammarFile);
     LPCWSTR cwgrammarfile = tmp.c_str();
 
     m_useTalkBack = rf.check("talkback");
@@ -112,39 +112,39 @@ bool SpeechRecognizerModule::configure(ResourceFinder &rf )
     if( everythingIsFine )
     {
         string pName = "/";
-        pName += getName().c_str();
+        pName += getName();
         pName += "/recog/continuous:o";
-        m_portContinuousRecognition.open( pName.c_str() );
+        m_portContinuousRecognition.open( pName );
 
         pName = "/";
-		pName += getName().c_str();
+        pName += getName();
         pName += "/recog/continuousGrammar:o";
-        m_portContinuousRecognitionGrammar.open( pName.c_str() );
+        m_portContinuousRecognitionGrammar.open( pName );
 
         pName = "/";
-		pName += getName().c_str();
+        pName += getName();
         pName += "/recog/sound:o";   
-        m_portSound.open(pName.c_str());
+        m_portSound.open( pName );
 
         //iSpeak
         pName = "/";
-		pName += getName().c_str();
+        pName += getName();
         pName += "/tts/iSpeak:o"; 
-        m_port2iSpeak.open( pName.c_str() );
+        m_port2iSpeak.open( pName );
                 
         pName = "/";
-		pName += getName().c_str();
+        pName += getName();
         pName += "/tts/iSpeak/rpc"; 
-        m_port2iSpeakRpc.open( pName.c_str() );
-        if (Network::connect(m_port2iSpeak.getName().c_str(),"/iSpeak")&&Network::connect(m_port2iSpeakRpc.getName().c_str(),"/iSpeak/rpc"))
+        m_port2iSpeakRpc.open( pName );
+        if (Network::connect(m_port2iSpeak.getName(),"/iSpeak")&&Network::connect(m_port2iSpeakRpc.getName(),"/iSpeak/rpc"))
             yInfo() <<"Connection to iSpeak succesfull" ;
         else
             yWarning() <<"Unable to connect to iSpeak. Connect manually." ;
 
         pName = "/";
-		pName += getName().c_str();
+        pName += getName();
         pName += "/rpc";
-        m_portRPC.open( pName.c_str() );
+        m_portRPC.open( pName );
         attach(m_portRPC);
 
         //Start recognition
@@ -226,7 +226,7 @@ bool SpeechRecognizerModule::updateModule()
             case SPEI_SOUND_START:
                 {
                     m_bInSound = TRUE;
-				    yInfo() << "Sound in...";
+                    yInfo() << "Sound in...";
                     break;
                 }
 
@@ -238,7 +238,7 @@ bool SpeechRecognizerModule::updateModule()
                     {
                         // The sound has started and ended, 
                         // but the engine has not succeeded in recognizing anything
-						yWarning() << "Chunk of sound detected: Recognition is null";
+                        yWarning() << "Chunk of sound detected: Recognition is null";
                     }
                     m_bGotReco = FALSE;
                 }
@@ -254,17 +254,17 @@ bool SpeechRecognizerModule::updateModule()
                     if (SUCCEEDED(event.RecoResult()->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, TRUE, 
                                                             &dstrText, NULL)))
                     {
-						SPPHRASE* pPhrase = NULL;
-						bool successGetPhrase = SUCCEEDED(event.RecoResult()->GetPhrase(&pPhrase));  
+                        SPPHRASE* pPhrase = NULL;
+                        bool successGetPhrase = SUCCEEDED(event.RecoResult()->GetPhrase(&pPhrase));  
                         int confidence=pPhrase->Rule.Confidence;
-						
-						string fullSentence = ws2s(dstrText);
-						yInfo() <<"Recognized "<<fullSentence<<" with confidence "<<confidence ;
+                        
+                        string fullSentence = ws2s(dstrText);
+                        yInfo() <<"Recognized "<<fullSentence<<" with confidence "<<confidence ;
                         
 
                         //Send over yarp
                         Bottle bOut;
-                        bOut.addString(fullSentence.c_str());
+                        bOut.addString(fullSentence);
                         bOut.addInt(confidence);
                         m_portContinuousRecognition.write(bOut);
 
@@ -294,9 +294,9 @@ bool SpeechRecognizerModule::updateModule()
                             }
                             //--------------------------------------------------- 2. 2nd subottle : Word/Role ---------------------------------------------------//
                             Bottle bOutGrammar;
-                            bOutGrammar.addString(rawPhrase.c_str());
+                            bOutGrammar.addString(rawPhrase);
                             bOutGrammar.addList()=toBottle(pPhrase,&pPhrase->Rule);
-							yInfo() << "Sending semantic bottle : " << bOutGrammar.toString().c_str() ;
+                            yInfo() << "Sending semantic bottle : " << bOutGrammar.toString();
                             m_portContinuousRecognitionGrammar.write(bOutGrammar);
                             ::CoTaskMemFree(pPhrase);
                         }
@@ -351,18 +351,18 @@ Bottle SpeechRecognizerModule::toBottle(SPPHRASE* pPhrase, const SPPHRASERULE* p
 /************************************************************************/
 bool SpeechRecognizerModule::respond(const Bottle& cmd, Bottle& reply) 
 {
-	reply.addString("ACK");
-    string firstVocab = cmd.get(0).asString().c_str();
+    reply.addString("ACK");
+    string firstVocab = cmd.get(0).asString();
 
     if (firstVocab == "tts")
     {
-        string sentence = cmd.get(1).asString().c_str();
+        string sentence = cmd.get(1).asString();
         say(sentence);
         reply.addString("OK");
     }
     else if (firstVocab == "RGM" || firstVocab == "rgm" )
     {    
-        string secondVocab = cmd.get(1).asString().c_str();
+        string secondVocab = cmd.get(1).asString();
         if (secondVocab=="vocabulory")
             handleRGMCmd(cmd.tail().tail(), reply);
     }
@@ -398,20 +398,20 @@ bool SpeechRecognizerModule::handleInterrupt(const Bottle& cmd, Bottle& reply)
 /************************************************************************/
 bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
 {
-    string firstVocab = cmd.get(0).asString().c_str();
+    string firstVocab = cmd.get(0).asString();
     if (firstVocab == "add")
     {
-        string vocabulory = cmd.get(1).asString().c_str();
+        string vocabulory = cmd.get(1).asString();
         if (vocabulory[0] != '#')
         {
             //reply.addString("Vocabulories have to start with a #. #Dictation and #WildCard are reserved. Aborting.");
             reply.addString("ERROR");
-			return true;
+            return true;
         }
-        string word = cmd.get(2).asString().c_str();
+        string word = cmd.get(2).asString()
         m_vocabulories[vocabulory].push_back(word);
         refreshFromVocabulories(m_cpGrammarFromFile);
-		reply.addString("OK");
+        reply.addString("OK");
         return true;
     }
 
@@ -441,16 +441,16 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
             bool gotAConfirmation = false;
             while(!gotAConfirmation)
             {
-				replyTmp.clear();
+                replyTmp.clear();
                 handleRecognitionCmd(cmdTmp,replyTmp);
                 //cout<<"DEBUG="<<replyTmp.toString()<<endl;
                 //cout<<"DEBUG FIRST ELEMENT =|"<<replyTmp.get(0).asString()<<"|"<<endl;
-				if (replyTmp.get(0).asString() == "Skip")
-				{
-					say("Fine, we give up.");
-					reply.addString("ERROR");
-					return true;
-				}
+                if (replyTmp.get(0).asString() == "Skip")
+                {
+                    say("Fine, we give up.");
+                    reply.addString("ERROR");
+                    return true;
+                }
                 gotAConfirmation = 
                     replyTmp.size()>0 &&
                     (replyTmp.get(0).asString() == "Yes" ||
@@ -482,16 +482,16 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
             bool gotAConfirmation = false;
             while(!gotAConfirmation)
             {
-				replyTmp.clear();
+                replyTmp.clear();
                 handleRecognitionCmd(cmdTmp,replyTmp);
                 //cout<<"DEBUG="<<replyTmp.toString()<<endl;
                 //cout<<"DEBUG FIRST ELEMENT =|"<<replyTmp.get(0).asString()<<"|"<<endl;
-				if (replyTmp.get(0).asString() == "Skip")
-				{
-					say("Fine, we give up.");
-					reply.addString("ERROR");
-					return true;
-				}
+                if (replyTmp.get(0).asString() == "Skip")
+                {
+                    say("Fine, we give up.");
+                    reply.addString("ERROR");
+                    return true;
+                }
 
                 gotAConfirmation = 
                     replyTmp.size()>0 &&
@@ -508,19 +508,19 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
         if (!isFine)
         {
             say("Sorry, I think we should give up with this word.");
-			reply.addString("ERROR");
+            reply.addString("ERROR");
         }
         else
         {
             say("Perfect! I know the word " + newWord);
             m_vocabulories[vocabuloryType].push_back(newWord);
             refreshFromVocabulories(m_cpGrammarFromFile);
-			reply.addString(newWord);
+            reply.addString(newWord);
         }
         
         return true;
     }
-	reply.addString("UNKNOWN");
+    reply.addString("UNKNOWN");
     return false;
 }
 
@@ -528,12 +528,12 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
 bool SpeechRecognizerModule::handleAsyncRecognitionCmd(const Bottle& cmd, Bottle& reply)
 {
     HRESULT hr;
-    string firstVocab = cmd.get(0).asString().c_str();
-	if (firstVocab == "getGrammar")
+    string firstVocab = cmd.get(0).asString();
+    if (firstVocab == "getGrammar")
     {
-		reply.addString("NOT_IMPLEMENTED");
-		return true;
-	}
+        reply.addString("NOT_IMPLEMENTED");
+        return true;
+    }
 
     if (firstVocab == "clear")
     {
@@ -552,7 +552,7 @@ bool SpeechRecognizerModule::handleAsyncRecognitionCmd(const Bottle& cmd, Bottle
 
     if (firstVocab == "addGrammar")
     {    
-        string grammar = cmd.get(1).asString().c_str();
+        string grammar = cmd.get(1).asString()
         bool everythingIsFine = setGrammarCustom(m_cpGrammarFromFile,grammar,true);
         reply.addString("Added");
         return true;
@@ -560,7 +560,7 @@ bool SpeechRecognizerModule::handleAsyncRecognitionCmd(const Bottle& cmd, Bottle
 
     if (firstVocab == "loadXML")
     { 
-        string xml = cmd.get(1).asString().c_str();
+        string xml = cmd.get(1).asString();
         ofstream fileTmp("grammarTmp.grxml");
         fileTmp<<xml;
         fileTmp.close();
@@ -643,7 +643,7 @@ string SpeechRecognizerModule::getFromDictaction(int timeout, LPCWSTR options )
         list< pair<string, double> > results = waitNextRecognitionLEGACY(m_timeout);
         for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
         {
-            botTmp.addString(it->first.c_str());
+            botTmp.addString(it->first);
             //botTmp.addDouble(it->second);
         }
     }
@@ -658,7 +658,7 @@ string SpeechRecognizerModule::getFromDictaction(int timeout, LPCWSTR options )
 /************************************************************************/
 bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& reply)
 {
-    string firstVocab = cmd.get(0).asString().c_str();
+    string firstVocab = cmd.get(0).asString();
 
     if (firstVocab == "timeout")
     {
@@ -681,13 +681,13 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
         {   
             list< pair<string, double> > results = waitNextRecognitionLEGACY(m_timeout);
             if (results.size()>0)
-				for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
-				{
-					reply.addString(it->first.c_str());
-					reply.addDouble(it->second);
-				}
-			else
-				reply.addString("-1");
+                for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
+                {
+                    reply.addString(it->first);
+                    reply.addDouble(it->second);
+                }
+            else
+                reply.addString("-1");
         }
         yInfo() <<"Dictation is off...";
 
@@ -700,7 +700,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
     // If we are not in dictation then we set and switch to the runtimeGrammar
     else if (firstVocab == "grammarXML")
     {
-        string xml = cmd.get(1).asString().c_str();
+        string xml = cmd.get(1).asString();
         ofstream fileTmp("grammarTmp.grxml");
         fileTmp<<xml;
         fileTmp.close();
@@ -724,7 +724,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
         string choices ="";
         for (int wI = 1; wI < cmd.size(); wI++)
         {
-            choices+=cmd.get(wI).asString().c_str();
+            choices+=cmd.get(wI).asString();
             if (wI<cmd.size()-1)
                 choices+="|";
         }
@@ -732,7 +732,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
     }
     else if (firstVocab == "grammarSimple")
     {
-        string RADStyle = cmd.get(1).asString().c_str();
+        string RADStyle = cmd.get(1).asString();
         yInfo() <<"Setting runtime grammar to : "<<RADStyle ;
         setGrammarCustom(m_cpGrammarRuntime,RADStyle,false);
     }
@@ -755,13 +755,13 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
     {   
         list< pair<string, double> > results = waitNextRecognitionLEGACY(m_timeout);
         if (results.size()>0)
-			for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
-			{
-				reply.addString(it->first.c_str());
-				reply.addDouble(it->second);
-			}
-		else
-			reply.addString("-1");
+            for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
+            {
+                reply.addString(it->first);
+                reply.addDouble(it->second);
+            }
+        else
+            reply.addString("-1");
     }
     //Disable the runtime grammar
     SUCCEEDED(m_cpGrammarRuntime->SetGrammarState(SPGS_DISABLED));   
@@ -810,12 +810,12 @@ Bottle SpeechRecognizerModule::waitNextRecognition(int timeout)
             yInfo() <<"Sending semantic bottle : "<<bOutGrammar.toString() ;
             m_cpRecoCtxt->GetEvents(1, &curEvent, &fetched);
 
-			if (m_forwardSound)
-			{
-				yarp::sig::Sound& rawSnd = m_portSound.prepare();
-				rawSnd = toSound(result);
-				m_portSound.write();
-			}
+            if (m_forwardSound)
+            {
+                yarp::sig::Sound& rawSnd = m_portSound.prepare();
+                rawSnd = toSound(result);
+                m_portSound.write();
+            }
 
         }
     }
@@ -877,7 +877,7 @@ void SpeechRecognizerModule::say(string s, bool wait)
 {
     yInfo() <<"TTS: "<<s ;
     Bottle b;
-    b.addString(s.c_str());
+    b.addString(s);
     m_port2iSpeak.write(b);
     if(wait)
     {
@@ -939,8 +939,8 @@ bool  SpeechRecognizerModule::setGrammarCustom(CComPtr<ISpRecoGrammar> grammarTo
         SPSTATEHANDLE afterWordHandle;
         for(vector<string>::iterator itWord = words.begin() ; itWord != words.end() ; itWord++)
         {           
-			if((*itWord)=="")
-				continue;
+            if((*itWord)=="")
+                continue;
 
             everythingIsFine &= SUCCEEDED(grammarToModify->CreateNewState(beforeWordHandle, &afterWordHandle));
 

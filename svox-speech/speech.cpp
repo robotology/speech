@@ -87,14 +87,14 @@ bool Speech::open(yarp::os::Searchable &config)
     setSpeed(config.check("speed",Value(105)).asInt());
 
     lingwareRF.setQuiet();
-    lingwareRF.setDefaultContext(config.check("lingware-context",Value("speech")).asString().c_str());
+    lingwareRF.setDefaultContext(config.check("lingware-context",Value("speech")).asString());
     lingwareRF.configure(0,NULL);
 
     this->yarp().attachAsServer(rpcPort);
 
     std::string robot=config.check("robot",Value("icub")).asString();
-    std::string portName=std::string(("/"+robot+"/speech:rpc").c_str());
-    if(!rpcPort.open(portName.c_str())) {
+    std::string portName=std::string("/"+robot+"/speech:rpc");
+    if(!rpcPort.open(portName)) {
         yError()<<"Cannot open port "<<portName;
         return false;
     }

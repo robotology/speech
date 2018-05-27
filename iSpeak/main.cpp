@@ -110,7 +110,7 @@ class MouthHandler : public RateThread
             Bottle cmd, reply;
             cmd.addVocab(Vocab::encode("set"));
             cmd.addVocab(Vocab::encode("mou"));
-            cmd.addVocab(Vocab::encode(state.c_str()));
+            cmd.addVocab(Vocab::encode(state));
             emotions.write(cmd,reply);
         }
     }
@@ -164,9 +164,9 @@ public:
     /************************************************************************/
     void configure(ResourceFinder &rf)
     {
-        string name=rf.find("name").asString().c_str();
-        emotions.open(("/"+name+"/emotions:o").c_str());
-        r1.open(("/"+name+"/r1:rpc").c_str());
+        string name=rf.find("name").asString();
+        emotions.open("/"+name+"/emotions:o");
+        r1.open("/"+name+"/r1:rpc");
 
         state="sur";
         setRate(rf.check("period",Value(200)).asInt());
@@ -248,7 +248,7 @@ class iSpeak : protected BufferedPort<Bottle>,
     /************************************************************************/
     bool threadInit()
     {
-        open(("/"+name).c_str());
+        open("/"+name);
         useCallback();
         return true;
     }
@@ -333,7 +333,7 @@ class iSpeak : protected BufferedPort<Bottle>,
             if (request.size()>0)
             {
                 if (request.get(0).isString())
-                    phrase=request.get(0).asString().c_str();
+                    phrase=request.get(0).asString();
                 else if (request.get(0).isDouble() || request.get(0).isInt())
                 {
                     time=request.get(0).asDouble();
@@ -401,15 +401,15 @@ public:
     /************************************************************************/
     void configure(ResourceFinder &rf)
     {
-        name=rf.find("name").asString().c_str();
-        package=rf.find("package").asString().c_str();
-        package_options=rf.find("package_options").asString().c_str();
+        name=rf.find("name").asString();
+        package=rf.find("package").asString();
+        package_options=rf.find("package_options").asString();
 
         mouth.configure(rf);
 
         if (package=="speech-dev")
         {
-            speechdev.open(("/"+name+"/speech-dev/rpc").c_str());
+            speechdev.open("/"+name+"/speech-dev/rpc");
             speechdev.setReporter(*this);
         }
 
@@ -455,8 +455,8 @@ public:
         if (!speaker.start())
             return false;
 
-        string name=rf.find("name").asString().c_str();
-        rpc.open(("/"+name+"/rpc").c_str());
+        string name=rf.find("name").asString();
+        rpc.open("/"+name+"/rpc");
         attach(rpc);
 
         return true;
@@ -489,7 +489,7 @@ public:
                 {
                     if (command.size()>2)
                     {
-                        string cmd2=command.get(2).asString().c_str();
+                        string cmd2=command.get(2).asString();
                         speaker.set_package_options(cmd2);
                         reply.addString("ack");
                         return true;
@@ -497,7 +497,7 @@ public:
                 }
                 else if (cmd0==Vocab::encode("get"))
                 {
-                    reply.addString(speaker.get_package_options().c_str());
+                    reply.addString(speaker.get_package_options());
                     return true;
                 }
             }
