@@ -99,7 +99,7 @@ bool Speech::open(yarp::os::Searchable &config)
         return false;
     }
 
-    //return RateThread::start();
+    //return PeriodicThread::start();
     return true;
 }
 

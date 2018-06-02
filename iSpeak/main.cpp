@@ -95,7 +95,7 @@ using namespace yarp::os;
 
 
 /************************************************************************/
-class MouthHandler : public RateThread
+class MouthHandler : public PeriodicThread
 {
     string state;
     RpcClient emotions,r1;
@@ -159,7 +159,7 @@ class MouthHandler : public RateThread
 
 public:
     /************************************************************************/
-    MouthHandler() : RateThread(1000), duration(-1.0) { }
+    MouthHandler() : PeriodicThread(1.0), duration(-1.0) { }
 
     /************************************************************************/
     void configure(ResourceFinder &rf)
@@ -169,7 +169,7 @@ public:
         r1.open("/"+name+"/r1:rpc");
 
         state="sur";
-        setRate(rf.check("period",Value(200)).asInt());
+        setPeriod((double)rf.check("period",Value(200)).asInt()/1000.0);
     }
 
     /************************************************************************/
@@ -189,7 +189,7 @@ public:
         }
 
         t0=Time::now();
-        RateThread::resume();
+        PeriodicThread::resume();
     }
 
     /************************************************************************/
@@ -198,7 +198,7 @@ public:
         if (isSuspended())
             return;
 
-        RateThread::suspend();
+        PeriodicThread::suspend();
 
         LockGuard lg(mutex);
         state="hap";
@@ -216,7 +216,7 @@ public:
 
 /************************************************************************/
 class iSpeak : protected BufferedPort<Bottle>,
-               public    RateThread,
+               public    PeriodicThread,
                public    PortReport
 {
     string name;
@@ -320,7 +320,7 @@ class iSpeak : protected BufferedPort<Bottle>,
         string phrase;
         double time;
         bool onlyMouth=false;
-        int rate=(int)mouth.getRate();
+        int rate=(int)(1000.0*mouth.getPeriod());
         bool resetRate=false;
         double duration=-1.0;
 
@@ -347,7 +347,7 @@ class iSpeak : protected BufferedPort<Bottle>,
                         int newRate=request.get(1).asInt();
                         if (newRate>0)
                         {
-                            mouth.setRate(newRate);
+                            mouth.setPeriod((double)newRate/1000.0);
                             resetRate=true;
                         }
                     }
@@ -375,7 +375,7 @@ class iSpeak : protected BufferedPort<Bottle>,
 
             mouth.suspend();
             if (resetRate)
-                mouth.setRate(rate);
+                mouth.setPeriod((double)rate/1000.0);
 
             LockGuard lg(mutex);
             if (buffer.size()==0)
@@ -392,7 +392,7 @@ class iSpeak : protected BufferedPort<Bottle>,
 
 public:
     /************************************************************************/
-    iSpeak() : RateThread(200)
+    iSpeak() : PeriodicThread(0.2)
     {
         speaking=false;
         initSpeechDev=0;
