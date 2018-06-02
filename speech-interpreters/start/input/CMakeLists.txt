@@ -30,7 +30,6 @@ source_group("Source Files" FILES ${source})
 source_group("Header Files" FILES ${header})
 
 include_directories(${PROJECT_SOURCE_DIR}/include
-                    ${YARP_INCLUDE_DIRS}
                     ${ICUB_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} ${source} ${header})

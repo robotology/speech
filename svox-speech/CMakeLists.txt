@@ -8,7 +8,6 @@ project(speech)
 find_package(YARP REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 
-include_directories(${YARP_INCLUDE_DIRS})
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
 include(YarpIDL)
@@ -25,7 +24,6 @@ yarp_prepare_plugin(${PROJECT_NAME}
                     DEFAULT ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-                    ${YARP_INCLUDE_DIRS}
                     ./svoxpico)
 
 file(GLOB svox_source svoxpico/*.c)
