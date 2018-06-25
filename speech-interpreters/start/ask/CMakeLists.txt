@@ -3,7 +3,7 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.5)
 project(speech-start-ask)
 
 find_package(YARP)
@@ -25,8 +25,7 @@ file(GLOB header include/*.h)
 source_group("Source Files" FILES ${source})
 source_group("Header Files" FILES ${header})
 
-include_directories(${PROJECT_SOURCE_DIR}/include
-                    ${ICUB_INCLUDE_DIRS})
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
 add_executable(${PROJECT_NAME} ${source} ${header})
 

@@ -2,9 +2,8 @@
 # Authors: Ugo Pattacini
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
-cmake_minimum_required(VERSION 2.8)
-set(PROJECTNAME windows-tts)
-project(${PROJECTNAME})
+cmake_minimum_required(VERSION 3.5)
+project(windows-tts)
 if(MSVC12)
 	message("Visual Studio 2013 detected. Forcing backcompatibility.")
 	add_definitions(-D_USING_V110_SDK71_)
@@ -14,6 +13,6 @@ file(GLOB folder_source *.h *.cpp)
 source_group("Source Files" FILES ${folder_source})
 
 include_directories(${SpeechSDK_INCLUDE_DIRS})
-add_executable(${PROJECTNAME} ${folder_source})
-target_link_libraries(${PROJECTNAME} ${YARP_LIBRARIES} ${SpeechSDK_LIBRARIES})
-install(TARGETS ${PROJECTNAME} DESTINATION bin)
+add_executable(${PROJECT_NAME} ${folder_source})
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${SpeechSDK_LIBRARIES})
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
