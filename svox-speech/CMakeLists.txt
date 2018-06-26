@@ -6,13 +6,8 @@ cmake_minimum_required(VERSION 3.5)
 project(speech)
 
 find_package(YARP REQUIRED)
-list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
-
-include(YarpIDL)
-include(YarpPlugin)
-include(YarpInstallationHelpers)
 
 set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "${PROJECT_NAME} is always built with dynamic plugins")
 yarp_configure_external_installation(${PROJECT_NAME} WITH_PLUGINS)
