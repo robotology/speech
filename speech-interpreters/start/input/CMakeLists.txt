@@ -17,10 +17,6 @@ include(ICUBcontribHelpers)
 include(ICUBcontribOptions)
 icubcontrib_set_default_prefix()
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-    add_definitions(-std=c++11)
-endif()
-
 file(GLOB source src/*.cpp)
 file(GLOB header include/*.h)
 
@@ -30,6 +26,10 @@ source_group("Header Files" FILES ${header})
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 add_executable(${PROJECT_NAME} ${source} ${header})
+
+if(CMAKE_COMPILER_IS_GNUCXX)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE -std=c++11)
+endif()
 
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
