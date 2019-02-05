@@ -13,6 +13,10 @@ find_package(ICUBcontrib)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
 list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 include(ICUBcontribHelpers)
 include(ICUBcontribOptions)
 icubcontrib_set_default_prefix()
@@ -26,10 +30,6 @@ source_group("Header Files" FILES ${header})
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 add_executable(${PROJECT_NAME} ${source} ${header})
-
-if(CMAKE_COMPILER_IS_GNUCXX)
-  target_compile_definitions(${PROJECT_NAME} PRIVATE -std=c++11)
-endif()
 
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
