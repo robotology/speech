@@ -24,7 +24,6 @@
 #include <yarp/os/Thread.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Time.h>
-#include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Image.h>

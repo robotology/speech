@@ -85,6 +85,7 @@ Linux and Windows.
 */
 
 #include <cstdlib>
+#include <mutex>
 #include <string>
 #include <deque>
 
@@ -99,7 +100,7 @@ class MouthHandler : public PeriodicThread
 {
     string state;
     RpcClient emotions,r1;
-    Mutex mutex;
+    mutex mtx;
     double t0, duration;
 
     /************************************************************************/
@@ -118,7 +119,7 @@ class MouthHandler : public PeriodicThread
     /************************************************************************/
     void run()
     {
-        mutex.lock();
+        mtx.lock();
 
         if (state=="sur")
             state="hap";
@@ -127,7 +128,7 @@ class MouthHandler : public PeriodicThread
 
         send();
 
-        mutex.unlock();
+        mtx.unlock();
 
         if (duration>=0.0)
             if (Time::now()-t0>=duration)
@@ -200,7 +201,7 @@ public:
 
         PeriodicThread::suspend();
 
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         state="hap";
         send();
 
@@ -223,7 +224,7 @@ class iSpeak : protected BufferedPort<Bottle>,
     string package;
     string package_options;
     deque<Bottle> buffer;
-    Mutex mutex;
+    mutex mtx;
 
     bool speaking;
     MouthHandler mouth;
@@ -240,7 +241,7 @@ class iSpeak : protected BufferedPort<Bottle>,
     /************************************************************************/
     void onRead(Bottle &request)
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         buffer.push_back(request);
         speaking=true;
     }
@@ -266,7 +267,7 @@ class iSpeak : protected BufferedPort<Bottle>,
     /************************************************************************/
     void execSpeechDevOptions()
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (speechdev.getOutputCount()>0)
         {
             Bottle options(package_options);
@@ -287,7 +288,7 @@ class iSpeak : protected BufferedPort<Bottle>,
     /************************************************************************/
     void speak(const string &phrase)
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         if (speechdev.asPort().isOpen())
         {
             if (speechdev.getOutputCount()>0)
@@ -324,7 +325,7 @@ class iSpeak : protected BufferedPort<Bottle>,
         bool resetRate=false;
         double duration=-1.0;
 
-        mutex.lock();
+        mtx.lock();
         if (buffer.size()>0)    // protect also the access to the size() method
         {
             Bottle request=buffer.front();
@@ -358,7 +359,7 @@ class iSpeak : protected BufferedPort<Bottle>,
                 }
             }
         }
-        mutex.unlock();
+        mtx.unlock();
 
         if (speaking)
         {
@@ -377,7 +378,7 @@ class iSpeak : protected BufferedPort<Bottle>,
             if (resetRate)
                 mouth.setPeriod((double)rate/1000.0);
 
-            LockGuard lg(mutex);
+            lock_guard<mutex> lg(mtx);
             if (buffer.size()==0)
                 speaking=false;
         }
@@ -420,7 +421,7 @@ public:
     /************************************************************************/
     bool isSpeaking()
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         return speaking;
     }
 

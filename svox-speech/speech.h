@@ -8,7 +8,6 @@
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/os/Thread.h>
 #include <yarp/os/Stamp.h>
-#include <yarp/os/Mutex.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/RpcServer.h>
 #include <yarp/os/ResourceFinder.h>
