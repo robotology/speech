@@ -187,7 +187,7 @@ yarp::sig::Sound SpeechRecognizerModule::toSound(CComPtr<ISpRecoResult> cpRecoRe
 
         // request 1000 bytes of data from the input stream
         hr = cpStreamFormat->Read(bBuffer, 1000, &cbRead);
-        // if data was returned…
+        // if data was returnedï¿½
         if (SUCCEEDED(hr) && cbRead > 0)
         {
             //then transfer/write the audio to the file-based stream
@@ -408,7 +408,7 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
             reply.addString("ERROR");
             return true;
         }
-        string word = cmd.get(2).asString()
+        string word = cmd.get(2).asString();
         m_vocabulories[vocabulory].push_back(word);
         refreshFromVocabulories(m_cpGrammarFromFile);
         reply.addString("OK");
@@ -417,7 +417,7 @@ bool SpeechRecognizerModule::handleRGMCmd(const Bottle& cmd, Bottle& reply)
 
     if (firstVocab == "addAuto")
     {
-        string vocabuloryType = cmd.get(1).asString();;
+        string vocabuloryType = cmd.get(1).asString();
         yInfo() <<"Trying to enrich the "<<vocabuloryType<<" vocabulary.";
 
         say("Let's improve my dictionary.");
@@ -552,7 +552,7 @@ bool SpeechRecognizerModule::handleAsyncRecognitionCmd(const Bottle& cmd, Bottle
 
     if (firstVocab == "addGrammar")
     {    
-        string grammar = cmd.get(1).asString()
+        string grammar = cmd.get(1).asString();
         bool everythingIsFine = setGrammarCustom(m_cpGrammarFromFile,grammar,true);
         reply.addString("Added");
         return true;
