@@ -30,7 +30,6 @@ int main(int argc, char * argv[])
 
     /* prepare and configure the resource finder */
     ResourceFinder rf;
-    rf.setVerbose( true );
     rf.setDefaultContext( "start-speech" );
     rf.setDefaultConfigFile( "start-speech" );
     rf.setDefault("name","start-speech");

@@ -103,7 +103,6 @@ int main(int argc, char* argv[])
             return 1;
 
         ResourceFinder rf;
-        rf.setVerbose(true);
         rf.setDefaultContext("speechRecognizer");
         rf.setDefaultConfigFile("config.ini");
         rf.configure(argc,argv);

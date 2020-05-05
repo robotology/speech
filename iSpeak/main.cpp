@@ -532,7 +532,6 @@ int main(int argc, char *argv[])
     }
 
     ResourceFinder rf;
-    rf.setVerbose(true);
     rf.setDefault("name","iSpeak");
     rf.setDefault("package","speech-dev");
     rf.setDefault("package_options","");
