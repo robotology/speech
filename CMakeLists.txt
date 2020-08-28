@@ -40,6 +40,6 @@ endif()
 option(BUILD_GOOGLE_SPEECH "enable the build of google-speech" OFF)
 if(BUILD_GOOGLE_SPEECH)
   add_subdirectory(speechInteraction)
-  endif()
+endif()
 
 icubcontrib_add_uninstall_target()
