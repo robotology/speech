@@ -37,4 +37,9 @@ if(BUILD_SVOX_SPEECH)
   add_subdirectory(svox-speech)
 endif()
 
+option(BUILD_GOOGLE_SPEECH "enable the build of google-speech" OFF)
+if(BUILD_GOOGLE_SPEECH)
+  add_subdirectory(speechInteraction)
+  endif()
+
 icubcontrib_add_uninstall_target()
