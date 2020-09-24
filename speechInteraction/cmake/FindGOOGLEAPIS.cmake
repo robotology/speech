@@ -26,13 +26,15 @@ file(GLOB google_speech ${googleapis_INCLUDE_DIR}/google/cloud/speech/v1/*.pb.cc
 file(GLOB google_longrunning ${googleapis_INCLUDE_DIR}/google/longrunning/*.pb.cc)
 file(GLOB google_protobuf ${googleapis_INCLUDE_DIR}/google/protobuf/*.pb.cc)
 file(GLOB google_language ${googleapis_INCLUDE_DIR}/google/cloud/language/v1/*.pb.cc)
+file(GLOB google_texttospeech ${googleapis_INCLUDE_DIR}/google/cloud/texttospeech/v1/*.pb.cc)
 
 set(googleAPIsrc    ${google_api}
 		    ${google_rpc}
 		    ${google_speech}
 		    ${google_longrunning}
 		    ${google_protobuf}
-		    ${google_language})
+		    ${google_language}
+            ${google_texttospeech})
 
 include(FindPackageHandleStandardArgs)
 
