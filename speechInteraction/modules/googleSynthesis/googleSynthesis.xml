@@ -2,48 +2,42 @@
 <?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
 
 <module>
-  <name>googleSpeechProcess</name>
-  <doxygen-group>googleSpeechProcess</doxygen-group>
-  <description>This module is responsible for analysing the speech transcript and send out the correct meaning of the phrase</description>
+  <name>googleSynthesis</name>
+  <doxygen-group>googleSynthesis</doxygen-group>
+  <description>This module is responsible for synthesising the speech transcript in various languages and voices</description>
   <copypolicy> Released under the terms of the BSD 3-Clause License.</copypolicy>
   <version>0.3.0</version>
 
   <description-long>
-   This module retrieves the transcript output from speech transcript and queries google cloud language services and provides the output on a port.
+   This module retrieves the transcript output from speech transcript and synthesises it using the google cloud test to speech service.
   </description-long>
 
   <arguments>
-        <param default="googleSpeechProcess" desc="Module's name; all the open ports will be tagged with the prefix /name.">name</param>
-        <param default="en-US" desc="Use English US">language_code</param>
-        <param default="16000" desc="Use 16000 hertz for the sample rate">sample_rate_hertz</param>
+        <param default="googleSynthesis" desc="Module's name; all the open ports will be tagged with the prefix /name.">name</param>
+        <param default="en-US" desc="Use English US">language</param>
+        <param default="en-US-Wavenet-D" desc="Which voice to use">voice</param>
   </arguments>
 
   <authors>
     <author email="vadim.tikhanoff@iit.it"> Vadim Tikhanoff </author>
+    <author email="laura.cavaliere@iit.it"> Laura Cavaliere </author> 
   </authors>
 
   <data>
       <input>
           <type>Bottle</type>
-          <port>/googleSpeechProcess/text:i</port>
+          <port>/googleSynthesis/text:i</port>
           <description>
-            Port to receive speech transcript to analyse
+            Port to receive speech transcript to synthesise
           </description>
       </input>
-      <output>
-          <type>Bottle</type>
-          <port>/googleSpeechProcess/result:o</port>
-          <description>
-            Sends the phrase analysis result of the output of google language query
-          </description>
-      </output>
   </data>
 
   <services>
     <server>
-      <type>googleSpeech_IDL</type>
+      <type>googleSynthesis_IDL</type>
       <idl>idl.thrift</idl>
-      <port>/googleSpeech/rpc</port>
+      <port>/googleSynthesis/rpc</port>
       <description>service port</description>
     </server>
   </services>
