@@ -1,2 +1,2 @@
-Google Cloud Natural Language API with YARP
+Google Cloud Text to Speech API with YARP
 ==========================
