@@ -231,7 +231,7 @@ public:
     bool configure(yarp::os::ResourceFinder &rf)
     {
         this->rf=&rf;
-        std::string moduleName = rf.check("name", yarp::os::Value("googleSythesis"), "module name (string)").asString();
+        std::string moduleName = rf.check("name", yarp::os::Value("googleSynthesis"), "module name (string)").asString();
         
         std::string language = rf.check("language", yarp::os::Value("en-US"), "language to use (string)").asString();
         std::string voice = rf.check("voice", yarp::os::Value("en-US-Wavenet-D"), "voice to use (string)").asString();
