@@ -180,7 +180,7 @@ public:
            
            mp3File.write( response.audio_content().data(), response.audio_content().size()+256);
            
-           std::string command = "afplay test.mp3";// + file;
+           std::string command = "mpg123 test.mp3";// + file;
            
            system(command.c_str());
 
