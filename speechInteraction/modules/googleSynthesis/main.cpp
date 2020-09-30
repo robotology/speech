@@ -1,5 +1,3 @@
-
-
 /*
  * Copyright (C) 2018 iCub Facility - Istituto Italiano di Tecnologia
  * Author: Vadim Tikhanoff Laura Cavaliere
@@ -53,16 +51,20 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
     std::string moduleName;
     std::string language;
     std::string voice;
+    double speed;
+    double pitch; 
     yarp::os::RpcServer handlerPort;
 
 public:
     /********************************************************/
 
-    Processing( const std::string &moduleName, const std::string &language, const std::string &voice )
+    Processing( const std::string &moduleName, const std::string &language, const std::string &voice, const double &speed, const double &pitch )
     {
         this->moduleName = moduleName;
         this->language = language;
         this->voice = voice;
+        this->speed = speed;
+        this->pitch = pitch;
     }
 
     /********************************************************/
@@ -92,16 +94,16 @@ public:
         queryGoogleSynthesis(bot);
         yDebug() << "done querying google";
     }
-    
+
 /********************************************************/
    void queryGoogleSynthesis(yarp::os::Bottle& text)
    {
        yDebug() << "in queryGoogleSynthesis";
 
        yDebug() << "Phrase is " << text.toString().c_str();
-       
+
        std::string tmp = text.toString();
-       
+
        std::map< std::string, std::string> dictionary;
        dictionary.insert ( std::pair<std::string,std::string>("á","a") );
        dictionary.insert ( std::pair<std::string,std::string>("à","a") );
@@ -111,7 +113,7 @@ public:
        dictionary.insert ( std::pair<std::string,std::string>("ó","o") );
        dictionary.insert ( std::pair<std::string,std::string>("ú","u") );
        dictionary.insert ( std::pair<std::string,std::string>("ñ","n") );
-       
+
        std::string tmp2 = tmp;
        std::string strAux;
        for (auto it= dictionary.begin(); it != dictionary.end(); it++)
@@ -129,16 +131,16 @@ public:
                found=tmp.find_first_of(tmp2,found+1);
            }
        }
-       
+
        yDebug() << "Phrase is now " << tmp.c_str();
        tmp.erase(std::remove(tmp.begin(),tmp.end(),'\"'),tmp.end());
-       
+
        yDebug() << tmp.size();
        yDebug() << std::isalnum(tmp[1]);
-       
+
        if (tmp.size() > 1 && std::isalnum(tmp[0])==0)
            tmp = tmp.substr(1, tmp.size() - 2);
-       
+
        yDebug() << "Phrase is now " << tmp.c_str();
 
        std::string content = tmp;
@@ -155,7 +157,7 @@ public:
 
        AudioConfig audio_config;
        VoiceSelectionParams params;
-       
+
        SynthesisInput input;
        input.set_text(content);
 
@@ -163,34 +165,36 @@ public:
        params.set_language_code(language);
        params.set_ssml_gender(NEUTRAL);
        params.set_name(voice);
-       
+       audio_config.set_speaking_rate(speed);
+       audio_config.set_pitch(pitch);
+
        request.set_allocated_input(&input);
        request.set_allocated_voice(&params);
        request.set_allocated_audio_config(&audio_config);
-       
+
        grpc::Status tts_status = tts->SynthesizeSpeech(&context, request, &response);
 
        if ( tts_status.ok() )
        {
            yInfo() << "Status returned OK";
            yInfo() << "\n------Response------\n";
-           
+
            std::string file = "test.mp3";
            std::ofstream mp3File(file, std::ios::out | std::ios::binary);
-           
+
            mp3File.write( response.audio_content().data(), response.audio_content().size()+256);
-           
+
            std::string command = "play test.mp3";// + file;
-           
+
            system(command.c_str());
 
        } else if ( !status.ok() )
            yError() << "Status Returned Canceled";
-       
+
        request.release_input();
        request.release_voice();
        request.release_audio_config();
-       
+
        yInfo() << "\n------dgb1------\n";
    }
 
@@ -205,7 +209,7 @@ public:
     {
         return true;
     }
-     
+
 };
 
 /********************************************************/
@@ -232,9 +236,12 @@ public:
     {
         this->rf=&rf;
         std::string moduleName = rf.check("name", yarp::os::Value("googleSynthesis"), "module name (string)").asString();
-        
+
         std::string language = rf.check("language", yarp::os::Value("en-US"), "language to use (string)").asString();
         std::string voice = rf.check("voice", yarp::os::Value("en-US-Wavenet-D"), "voice to use (string)").asString();
+
+        double speed = rf.check("speed", yarp::os::Value(1.0), "speed to use (double)").asDouble();
+        double pitch = rf.check("pitch", yarp::os::Value(0.0), "pitch to use (double)").asDouble();
 
         setName(moduleName.c_str());
 
@@ -242,7 +249,7 @@ public:
 
         closing = false;
 
-        processing = new Processing( moduleName, language, voice );
+        processing = new Processing( moduleName, language, voice, speed, pitch );
 
         /* now start the thread to do the work */
         processing->open();
