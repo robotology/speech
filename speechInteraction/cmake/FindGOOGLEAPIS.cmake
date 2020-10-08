@@ -27,6 +27,8 @@ file(GLOB google_longrunning ${googleapis_INCLUDE_DIR}/google/longrunning/*.pb.c
 file(GLOB google_protobuf ${googleapis_INCLUDE_DIR}/google/protobuf/*.pb.cc)
 file(GLOB google_language ${googleapis_INCLUDE_DIR}/google/cloud/language/v1/*.pb.cc)
 file(GLOB google_texttospeech ${googleapis_INCLUDE_DIR}/google/cloud/texttospeech/v1/*.pb.cc)
+file(GLOB google_dialogflow ${googleapis_INCLUDE_DIR}/google/cloud/dialogflow/cx/v3beta1/*.pb.cc)
+file(GLOB google_type ${googleapis_INCLUDE_DIR}/google/type/*.pb.cc)
 
 set(googleAPIsrc    ${google_api}
 		    ${google_rpc}
@@ -34,7 +36,9 @@ set(googleAPIsrc    ${google_api}
 		    ${google_longrunning}
 		    ${google_protobuf}
 		    ${google_language}
-            ${google_texttospeech})
+            ${google_dialogflow}
+		    ${google_texttospeech}
+		    ${google_type})
 
 include(FindPackageHandleStandardArgs)
 

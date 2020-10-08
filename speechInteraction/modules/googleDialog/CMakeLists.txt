@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # Authors: Vadim Tikhanoff <vadim.tikhanoff@iit.it>
 
-project(googleSpeech)
+project(googleDialog)
 
 yarp_add_idl(IDL_GEN_FILES ${PROJECT_NAME}.thrift)
 
@@ -16,13 +16,14 @@ source_group("DOC Files" FILES ${doc})
 
 add_executable(${PROJECT_NAME} main.cpp ${idl} ${IDL_GEN_FILES} ${doc} ${GRPC_SRCS} ${GRPC_HDRS} )
 
-message("gRPC_INCLUDE_DIRS = ${gRPC_INCLUDE_DIRS}")
-message("gRPC_LIBRARIES = ${gRPC_LIBRARIES}")
+message("GRPC_INCLUDE_DIRS = ${GRPC_INCLUDE_DIRS}")
+message("GRPC_LIBRARIES = ${GRPC_LIBRARIES}")
 message("googleAPIsrc = ${googleAPIsrc}")
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
+#target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${GRPC_LIBRARIES} googleAPI )
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} googleAPI libprotobuf.so libgrpc++.so libgrpc++_alts.so libgrpc++_error_details.so libgrpc++_reflection.so libgrpc_plugin_support.so libgrpcpp_channelz.so )
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-yarp_install(FILES DESTINATION ${ICUBCONTRIB_MODULES_INSTALL_DIR})
+yarp_install(FILES  DESTINATION ${ICUBCONTRIB_MODULES_INSTALL_DIR})
 
 add_subdirectory(app)
