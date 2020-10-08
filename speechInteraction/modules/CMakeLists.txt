@@ -5,3 +5,4 @@
 add_subdirectory(googleSpeech)
 add_subdirectory(googleSpeechProcess)
 add_subdirectory(googleSynthesis)
+add_subdirectory(googleDialog)
