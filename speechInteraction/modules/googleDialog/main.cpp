@@ -61,17 +61,20 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
     std::string moduleName;  
     std::string session_id;  
     std::string project_id;  
+    std::string language_code;  
     yarp::os::RpcServer handlerPort;
     yarp::os::BufferedPort<yarp::os::Bottle> targetPort;
 
 public:
     /********************************************************/
 
-    Processing( const std::string &moduleName, const std::string project_id)
+    Processing( const std::string &moduleName, const std::string project_id, const std::string language_code)
     {
         this->moduleName = moduleName;
         this->session_id = getRandSession();
         this->project_id = project_id;
+        this->language_code = language_code;
+
     }
 
     /********************************************************/
@@ -126,7 +129,7 @@ public:
        google::cloud::dialogflow::cx::v3beta1::TextInput text_input;
        google::cloud::dialogflow::cx::v3beta1::QueryInput query_input;
 
-       std::string language_code = "en-English";
+       //std::string language_code = "en-English";
        text_input.set_text(text.c_str());
        query_input.set_allocated_text(&text_input);
        query_input.set_language_code(language_code);
@@ -206,17 +209,19 @@ public:
         this->rf=&rf;
         std::string moduleName = rf.check("name", yarp::os::Value("googleDialog"), "module name (string)").asString();
         std::string project_id = rf.check("project", yarp::os::Value("1"), "id of the project").asString();
+        std::string language_code = rf.check("language", yarp::os::Value("en-US"), "language of the dialogflow").asString();
         
         yDebug() << "this is the project" << rf.check("project");
         yDebug() << "Module name" << moduleName;
         yDebug() << "project id" << project_id;
+        yDebug() << "language of the dialog" << language_code;
         setName(moduleName.c_str());
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
 
         closing = false;
 
-        processing = new Processing( moduleName, project_id );
+        processing = new Processing( moduleName, project_id, language_code);
 
         /* now start the thread to do the work */
         processing->open();
