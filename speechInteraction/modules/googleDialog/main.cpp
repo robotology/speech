@@ -60,7 +60,7 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
 {
     std::string moduleName;  
     std::string session_id;  
-    std::string project_id;  
+    std::string agent_name;  
     std::string language_code;  
     yarp::os::RpcServer handlerPort;
     yarp::os::BufferedPort<yarp::os::Bottle> targetPort;
@@ -68,11 +68,11 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
 public:
     /********************************************************/
 
-    Processing( const std::string &moduleName, const std::string project_id, const std::string language_code)
+    Processing( const std::string &moduleName, const std::string agent_name, const std::string language_code)
     {
         this->moduleName = moduleName;
         this->session_id = getRandSession();
-        this->project_id = project_id;
+        this->agent_name = agent_name;
         this->language_code = language_code;
 
     }
@@ -140,7 +140,7 @@ public:
        DetectIntentRequest request;
        DetectIntentResponse response;
        
-       request.set_session("projects/"+project_id+"/locations/global/agents/10b09025-da6c-41a5-a5d1-65ad9ae6ab68/environments/draft/sessions/"+session_id);
+       request.set_session(agent_name+"/environments/draft/sessions/"+session_id);
        request.set_allocated_query_input(&query_input);
        
        yDebug() << "End-user expression: " << request.query_input().text().text();
@@ -208,12 +208,12 @@ public:
     {
         this->rf=&rf;
         std::string moduleName = rf.check("name", yarp::os::Value("googleDialog"), "module name (string)").asString();
-        std::string project_id = rf.check("project", yarp::os::Value("1"), "id of the project").asString();
+        std::string agent_name = rf.check("agent", yarp::os::Value("1"), "name of the agent").asString();
         std::string language_code = rf.check("language", yarp::os::Value("en-US"), "language of the dialogflow").asString();
         
         yDebug() << "this is the project" << rf.check("project");
         yDebug() << "Module name" << moduleName;
-        yDebug() << "project id" << project_id;
+        yDebug() << "agent name" << agent_name;
         yDebug() << "language of the dialog" << language_code;
         setName(moduleName.c_str());
 
@@ -221,7 +221,7 @@ public:
 
         closing = false;
 
-        processing = new Processing( moduleName, project_id, language_code);
+        processing = new Processing( moduleName, agent_name, language_code);
 
         /* now start the thread to do the work */
         processing->open();
