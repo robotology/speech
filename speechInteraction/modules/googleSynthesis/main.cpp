@@ -54,6 +54,7 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
     double speed;
     double pitch; 
     yarp::os::RpcServer handlerPort;
+    yarp::os::Port syncPort;
 
 public:
     /********************************************************/
@@ -78,7 +79,7 @@ public:
     {
         this->useCallback();
         yarp::os::BufferedPort<yarp::os::Bottle >::open( "/" + moduleName + "/text:i" );
-
+        syncPort.open( "/" + moduleName + "/sync:o" );
         return true;
     }
 
@@ -92,6 +93,9 @@ public:
     void onRead( yarp::os::Bottle &bot )
     {
         queryGoogleSynthesis(bot);
+        yarp::os::Bottle syncBot;
+        syncBot.addString("done");
+        syncBot.write(syncBot);
         yDebug() << "done querying google";
     }
 
