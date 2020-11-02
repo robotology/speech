@@ -87,6 +87,7 @@ public:
     void close()
     {
         yarp::os::BufferedPort<yarp::os::Bottle >::close();
+        syncPort.close();
     }
 
     /********************************************************/
