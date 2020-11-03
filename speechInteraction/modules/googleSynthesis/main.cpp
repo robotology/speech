@@ -96,7 +96,7 @@ public:
         queryGoogleSynthesis(bot);
         yarp::os::Bottle syncBot;
         syncBot.addString("done");
-        syncBot.write(syncBot);
+        syncPort.write(syncBot);
         yDebug() << "done querying google";
     }
 
