@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Fondazione Istituto Italiano di Tecnologia (IIT)  
+# Copyright (C) 2019 Fondazione Istituto Italiano di Tecnologia (IIT)
 # All Rights Reserved.
 # Authors: Vadim Tikhanoff <vadim.tikhanoff@iit.it>
 
@@ -17,10 +17,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED 11)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(ICUBcontrib REQUIRED)
-find_package(GRPC REQUIRED)
+find_package(gRPC CONFIG REQUIRED)
+find_package(Protobuf REQUIRED)
 find_package(GOOGLEAPIS REQUIRED)
-
 find_package(YARP 3.2.1 REQUIRED COMPONENTS OS sig dev math)
+
+include_directories(${googleapis_INCLUDE_DIR})
+
+add_library(googleAPI STATIC ${googleAPIsrc})
 
 list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
 
@@ -35,10 +39,5 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 icubcontrib_set_default_prefix()
-
-include_directories(${GRPC_INCLUDE_DIRS})
-include_directories(${googleapis_INCLUDE_DIR})
-
-add_library(googleAPI STATIC ${googleAPIsrc})
 
 add_subdirectory(modules)
