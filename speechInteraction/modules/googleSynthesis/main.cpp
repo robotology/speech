@@ -52,7 +52,7 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
     std::string language;
     std::string voice;
     double speed;
-    double pitch; 
+    double pitch;
     yarp::os::RpcServer handlerPort;
     yarp::os::Port syncPort;
 
@@ -229,10 +229,6 @@ class Module : public yarp::os::RFModule, public googleSynthesis_IDL
     bool                        closing;
 
     /********************************************************/
-    bool attach(yarp::os::RpcServer &source)
-    {
-        return this->yarp().attachAsServer(source);
-    }
 
 public:
 
@@ -259,11 +255,33 @@ public:
         /* now start the thread to do the work */
         processing->open();
 
-        attach(rpcPort);
+        if(!attach(rpcPort)) {
+            yError()<<"Cannot attach to rpc port";
+            return false;
+        }
 
         return true;
     }
 
+    bool respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply) override
+    {
+        auto cmd0=command.get(0).asString();
+        if (cmd0!="say")
+        {
+            reply.addString("Command not recognized, please specify \"say <sentence>\"");
+            return false;
+        }
+
+        if (command.size()>1)
+        {
+           yarp::os::Bottle sentence_bot;
+           sentence_bot.addString(command.get(1).asString());
+           processing->queryGoogleSynthesis(sentence_bot);
+           reply.addString("ack");
+        }
+
+        return yarp::os::RFModule::respond(command,reply);
+    }
     /**********************************************************/
     bool close()
     {
