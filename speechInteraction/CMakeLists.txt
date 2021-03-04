@@ -17,8 +17,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED 11)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(ICUBcontrib REQUIRED)
-find_package(gRPC CONFIG REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(gRPC CONFIG REQUIRED)
 find_package(GOOGLEAPIS REQUIRED)
 find_package(YARP 3.2.1 REQUIRED COMPONENTS OS sig dev math)
 
