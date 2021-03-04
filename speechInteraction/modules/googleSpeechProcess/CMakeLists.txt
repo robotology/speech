@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Fondazione Istituto Italiano di Tecnologia (IIT)  
+# Copyright (C) 2019 Fondazione Istituto Italiano di Tecnologia (IIT)
 # All Rights Reserved.
 # Authors: Vadim Tikhanoff <vadim.tikhanoff@iit.it>
 
@@ -18,9 +18,8 @@ add_executable(${PROJECT_NAME} main.cpp ${idl} ${IDL_GEN_FILES} ${doc} ${GRPC_SR
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
 
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} 
-                                      #FIND THE RIGHT CMAKE TARGETS FOR SPEECH
-                                      googleapis-c++::bigtable_protos
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES}
+                                      googleAPI
                                       protobuf::libprotobuf
                                       gRPC::grpc++ )
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
