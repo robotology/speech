@@ -48,6 +48,9 @@
 #include "google/cloud/dialogflow/cx/v3beta1/session.grpc.pb.h"
 #include "google/cloud/dialogflow/cx/v3beta1/webhook.grpc.pb.h"
 
+#include <chrono>
+#include <ctime>
+#include <algorithm>
 
 #include "googleDialog_IDL.h"
 
@@ -61,20 +64,24 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
     std::string moduleName;  
     std::string session_id;  
     std::string agent_name;  
-    std::string language_code;  
+    std::string language_code; 
+    std::string &state; 
+    bool &input_is_empty; 
+    std::int64_t &processing_time; 
     yarp::os::RpcServer handlerPort;
     yarp::os::BufferedPort<yarp::os::Bottle> targetPort;
 
 public:
     /********************************************************/
 
-    Processing( const std::string &moduleName, const std::string agent_name, const std::string language_code)
+    Processing( const std::string &moduleName, const std::string agent_name, const std::string language_code, std::string &state, bool &input_is_empty, std::int64_t &processing_time)  : state(state), input_is_empty(input_is_empty), processing_time(processing_time)
     {
         this->moduleName = moduleName;
         this->session_id = getRandSession();
         this->agent_name = agent_name;
         this->language_code = language_code;
-
+        yInfo()<< "State: " << state;
+        yInfo()<< "input_is_empty: " << input_is_empty;
     }
 
     /********************************************************/
@@ -92,7 +99,7 @@ public:
     }
     /********************************************************/
     bool open()
-    {
+    {   
         this->useCallback();
         yarp::os::BufferedPort<yarp::os::Bottle >::open( "/" + moduleName + "/text:i" );
         targetPort.open("/"+ moduleName + "/result:o");
@@ -110,7 +117,7 @@ public:
     /********************************************************/
     void onRead( yarp::os::Bottle &bot)
     {   
-
+        state="Ready";
         yarp::os::Bottle &outTargets = targetPort.prepare();
 
         outTargets.clear();
@@ -118,6 +125,7 @@ public:
         yDebug() << "bottle" << outTargets.toString();
         targetPort.write();
 
+        yInfo() << "State: " << state;
         yDebug() << "done querying google";
     }
 
@@ -125,7 +133,7 @@ public:
     yarp::os::Bottle queryGoogleDialog(yarp::os::Bottle& bottle)
     {
        std::string text = bottle.toString();
-
+       yarp::os::Bottle result;
        google::cloud::dialogflow::cx::v3beta1::TextInput text_input;
        google::cloud::dialogflow::cx::v3beta1::QueryInput query_input;
 
@@ -142,32 +150,49 @@ public:
        
        request.set_session(agent_name+"/environments/draft/sessions/"+session_id);
        request.set_allocated_query_input(&query_input);
-       
-       yDebug() << "End-user expression: " << request.query_input().text().text();
+       std::string user_express = request.query_input().text().text();
+       yInfo() << "End-user expression:" << user_express;
+       if(request.query_input().text().text().size()>0){
+ 	       input_is_empty=false;
+	       auto creds = grpc::GoogleDefaultCredentials();
+	       auto channel = grpc::CreateChannel("dialogflow.googleapis.com", creds);
+	       std::unique_ptr<Sessions::Stub> dialog (Sessions::NewStub(channel));
+	       state="Busy";
+	       const std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
 
-       auto creds = grpc::GoogleDefaultCredentials();
-       auto channel = grpc::CreateChannel("dialogflow.googleapis.com", creds);
-       std::unique_ptr<Sessions::Stub> dialog (Sessions::NewStub(channel));
+	       grpc::Status dialog_status = dialog->DetectIntent(&context, request, &response);
 
-       grpc::Status dialog_status = dialog->DetectIntent(&context, request, &response);
+	       result.clear();
+	       if ( dialog_status.ok() ) {
+	           const auto end = std::chrono::steady_clock::now();
+               processing_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+		       yDebug() << "Request processing time: " << processing_time << "µs";  
 
-       yarp::os::Bottle result;
-       result.clear();
-       if ( dialog_status.ok() ) {
+		       yInfo() << "Status returned OK";
+		       yInfo() << "\n------Response------\n";
+               if (response.query_result().response_messages().size() > 0 && response.query_result().response_messages().Get(0).text().text().size() > 0) 
+		       {
+		            result.addString(response.query_result().response_messages().Get(0).text().text().Get(0).c_str());
+			        yDebug() << "result bottle" << result.toString();
+                    state="Done";
+		       }
+               else
+	           {
+			        yError() << "result empty";
+	           }
 
-           yInfo() << "Status returned OK";
-           yInfo() << "\n------Response------\n";
-
-           result.addString(response.query_result().response_messages().Get(0).text().text().Get(0).c_str());
-           yDebug() << "result bottle" << result.toString();
-
-      } else if ( !dialog_status.ok() ) {
-            yError() << "Status Returned Canceled";
-      }
-      request.release_query_input();
-      query_input.release_text();
-      
-      return result;
+	        } else if ( !dialog_status.ok() ) {
+		        state="Failure";
+		        yError() << "Status Returned Canceled";
+	        }	      
+        }
+        else if (request.query_input().text().text().size()==0){
+            input_is_empty=true;
+            yError() << "Input is empty";
+        }
+        request.release_query_input();
+        query_input.release_text();
+        return result;
    }
 
     /********************************************************/
@@ -189,6 +214,9 @@ class Module : public yarp::os::RFModule, public googleDialog_IDL
 {
     yarp::os::ResourceFinder    *rf;
     yarp::os::RpcServer         rpcPort;
+    std::string state;
+    std::int64_t processing_time;
+    bool input_is_empty;
 
     Processing                  *processing;
     friend class                processing;
@@ -207,6 +235,9 @@ public:
     bool configure(yarp::os::ResourceFinder &rf)
     {
         this->rf=&rf;
+        this->state="Ready";
+        this->input_is_empty=false;
+        this->processing_time=0.0;
         std::string moduleName = rf.check("name", yarp::os::Value("googleDialog"), "module name (string)").asString();
         std::string agent_name = rf.check("agent", yarp::os::Value("1"), "name of the agent").asString();
         std::string language_code = rf.check("language", yarp::os::Value("en-US"), "language of the dialogflow").asString();
@@ -221,7 +252,7 @@ public:
 
         closing = false;
 
-        processing = new Processing( moduleName, agent_name, language_code);
+        processing = new Processing( moduleName, agent_name, language_code, state, input_is_empty, processing_time);
 
         /* now start the thread to do the work */
         processing->open();
@@ -256,6 +287,18 @@ public:
     bool updateModule()
     {
         return !closing;
+    }
+    
+    /********************************************************/
+    std::string getState()
+    {  
+        return state;
+    }
+ 
+    /********************************************************/
+    std::int64_t getProcessingTime()
+    {  
+        return processing_time;
     }
 };
 

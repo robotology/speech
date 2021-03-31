@@ -24,4 +24,16 @@ service googleDialog_IDL
      */
     bool quit();
 
+     /**
+     * Get the state of the google service.
+     * @return a string containing the state
+     */
+    string getState();
+ 
+     /**
+     * Get the time needed for the google service to process the request.
+     * @return a double containing the processing time
+     */
+    i64 getProcessingTime();
+
 }
