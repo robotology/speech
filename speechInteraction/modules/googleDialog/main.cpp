@@ -237,7 +237,7 @@ public:
         this->rf=&rf;
         this->state="Ready";
         this->input_is_empty=false;
-        this->processing_time=0.0;
+        this->processing_time=0;
         std::string moduleName = rf.check("name", yarp::os::Value("googleDialog"), "module name (string)").asString();
         std::string agent_name = rf.check("agent", yarp::os::Value("1"), "name of the agent").asString();
         std::string language_code = rf.check("language", yarp::os::Value("en-US"), "language of the dialogflow").asString();
