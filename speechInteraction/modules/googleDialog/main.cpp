@@ -57,6 +57,7 @@
 using namespace google::cloud::language::v1;
 using namespace google::cloud::texttospeech::v1;
 using namespace google::cloud::dialogflow::cx::v3beta1;
+bool is_changed;
 
 /********************************************************/
 class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
@@ -117,7 +118,6 @@ public:
     /********************************************************/
     void onRead( yarp::os::Bottle &bot)
     {   
-        state="Ready";
         yarp::os::Bottle &outTargets = targetPort.prepare();
 
         outTargets.clear();
@@ -157,7 +157,7 @@ public:
 	       auto creds = grpc::GoogleDefaultCredentials();
 	       auto channel = grpc::CreateChannel("dialogflow.googleapis.com", creds);
 	       std::unique_ptr<Sessions::Stub> dialog (Sessions::NewStub(channel));
-	       state="Busy";
+           checkState("Busy");
 	       const std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
 
 	       grpc::Status dialog_status = dialog->DetectIntent(&context, request, &response);
@@ -174,7 +174,8 @@ public:
 		       {
 		            result.addString(response.query_result().response_messages().Get(0).text().text().Get(0).c_str());
 			        yDebug() << "result bottle" << result.toString();
-                    state="Done";
+                    checkState("Done");
+
 		       }
                else
 	           {
@@ -182,7 +183,7 @@ public:
 	           }
 
 	        } else if ( !dialog_status.ok() ) {
-		        state="Failure";
+                checkState("Failure");
 		        yError() << "Status Returned Canceled";
 	        }	      
         }
@@ -207,6 +208,18 @@ public:
         return true;
     }
 
+    /********************************************************/
+    bool checkState(std::string new_state)
+    {   
+        if(new_state!=state){
+            is_changed=true;
+            state=new_state;
+        }
+        else{
+            is_changed=false;
+        }
+        return is_changed;
+    }
 };
 
 /********************************************************/
@@ -217,6 +230,7 @@ class Module : public yarp::os::RFModule, public googleDialog_IDL
     std::string state;
     std::int64_t processing_time;
     bool input_is_empty;
+    yarp::os::BufferedPort<yarp::os::Bottle> statePort;
 
     Processing                  *processing;
     friend class                processing;
@@ -249,6 +263,7 @@ public:
         setName(moduleName.c_str());
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
+        statePort.open("/"+ moduleName + "/state:o");
 
         closing = false;
 
@@ -264,7 +279,8 @@ public:
 
     /**********************************************************/
     bool close()
-    {
+    {   
+        statePort.close();
         processing->close();
         delete processing;
         return true;
@@ -285,7 +301,15 @@ public:
 
     /********************************************************/
     bool updateModule()
-    {
+    {   
+        if(is_changed){
+            is_changed=false;
+            yarp::os::Bottle &outTargets = statePort.prepare();   
+            outTargets.clear();  
+            outTargets.addString(state);
+            yDebug() << "outTarget:" << outTargets.toString().c_str();
+            statePort.write();
+        }  
         return !closing;
     }
     

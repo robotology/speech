@@ -42,4 +42,10 @@ service googleSpeech_IDL
      * @return a double containing the processing time
      */
     i64 getProcessingTime();
+
+      /**
+     * Get a feedback from the google service to know if an error occured.
+     * @return a string containing the feedback
+     */
+    string getFeedback();
 }

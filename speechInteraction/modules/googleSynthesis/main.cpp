@@ -44,6 +44,7 @@
 
 using namespace google::cloud::language::v1;
 using namespace google::cloud::texttospeech::v1;
+bool is_changed;
 
 /********************************************************/
 class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
@@ -51,6 +52,7 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
     std::string moduleName;
     std::string language;
     std::string voice;
+    std::string &state;
     double speed;
     double pitch;
     yarp::os::RpcServer handlerPort;
@@ -59,7 +61,7 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
 public:
     /********************************************************/
 
-    Processing( const std::string &moduleName, const std::string &language, const std::string &voice, const double &speed, const double &pitch )
+    Processing( const std::string &moduleName, const std::string &language, const std::string &voice, const double &speed, const double &pitch, std::string &state ): state(state)
     {
         this->moduleName = moduleName;
         this->language = language;
@@ -177,7 +179,9 @@ public:
        request.set_allocated_voice(&params);
        request.set_allocated_audio_config(&audio_config);
 
+       checkState("Busy");
        grpc::Status tts_status = tts->SynthesizeSpeech(&context, request, &response);
+       checkState("Done");
 
        if ( tts_status.ok() )
        {
@@ -193,9 +197,10 @@ public:
 
            system(command.c_str());
 
-       } else if ( !status.ok() )
+       } else if ( !status.ok() ){
            yError() << "Status Returned Canceled";
-
+           checkState("Failure");
+       }
        request.release_input();
        request.release_voice();
        request.release_audio_config();
@@ -215,6 +220,18 @@ public:
         return true;
     }
 
+    /********************************************************/
+    bool checkState(std::string new_state)
+    {   
+        if(new_state!=state){
+            is_changed=true;
+            state=new_state;
+        }
+        else{
+            is_changed=false;
+        }
+        return is_changed;
+    }
 };
 
 /********************************************************/
@@ -222,7 +239,9 @@ class Module : public yarp::os::RFModule, public googleSynthesis_IDL
 {
     yarp::os::ResourceFinder    *rf;
     yarp::os::RpcServer         rpcPort;
-
+    yarp::os::BufferedPort<yarp::os::Bottle> statePort;
+    std::string state;
+     
     Processing                  *processing;
     friend class                processing;
 
@@ -236,6 +255,7 @@ public:
     bool configure(yarp::os::ResourceFinder &rf)
     {
         this->rf=&rf;
+        this->state="Ready";
         std::string moduleName = rf.check("name", yarp::os::Value("googleSynthesis"), "module name (string)").asString();
 
         std::string language = rf.check("language", yarp::os::Value("en-US"), "language to use (string)").asString();
@@ -247,10 +267,11 @@ public:
         setName(moduleName.c_str());
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
+        statePort.open("/"+ moduleName + "/state:o");
 
         closing = false;
 
-        processing = new Processing( moduleName, language, voice, speed, pitch );
+        processing = new Processing( moduleName, language, voice, speed, pitch, state );
 
         /* now start the thread to do the work */
         processing->open();
@@ -284,7 +305,8 @@ public:
     }
     /**********************************************************/
     bool close()
-    {
+    {  
+        statePort.close();
         processing->close();
         delete processing;
         return true;
@@ -305,7 +327,15 @@ public:
 
     /********************************************************/
     bool updateModule()
-    {
+    {   
+        if(is_changed){
+            is_changed=false;
+            yarp::os::Bottle &outTargets = statePort.prepare();   
+            outTargets.clear();  
+            outTargets.addString(state);
+            yDebug() << "outTarget:" << outTargets.toString().c_str();
+            statePort.write();
+        }  
         return !closing;
     }
 };
