@@ -60,7 +60,7 @@ class Processing : public yarp::os::TypedReaderCallback<yarp::sig::Sound>
     yarp::os::BufferedPort<yarp::sig::Sound> port;
     yarp::os::BufferedPort<yarp::os::Bottle> targetPort;
     yarp::os::RpcClient audioCommand;
-    std::string &state, &feedback; 
+    std::string &state; 
     std::int64_t &elapsed_seconds; 
 
     std::deque<yarp::sig::Sound> sounds;
@@ -78,7 +78,7 @@ class Processing : public yarp::os::TypedReaderCallback<yarp::sig::Sound>
 public:
     /********************************************************/
 
-    Processing( const std::string &moduleName, const std::string &language, const int sample_rate,  std::string &state, std::int64_t &elapsed_seconds, std::string &feedback ) : state(state), elapsed_seconds(elapsed_seconds), feedback(feedback)
+    Processing( const std::string &moduleName, const std::string &language, const int sample_rate,  std::string &state, std::int64_t &elapsed_seconds ) : state(state), elapsed_seconds(elapsed_seconds)
     {
         this->moduleName = moduleName;
         yInfo() << "language " << language;
@@ -184,7 +184,9 @@ public:
             sendForQuery = false;
             samples = 0;
             channels = 0;
-            targetPort.write();
+            if(outTargets.size()>0){
+                targetPort.write();
+            }
             yDebug() << "done querying google";
         }
         yarp::os::Time::yield();
@@ -239,7 +241,6 @@ public:
         start = std::chrono::system_clock::now();
         grpc::Status rpc_status = speech->Recognize(&context, request, &response);
         end = std::chrono::system_clock::now();
-        checkState("Done");
 
         elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds> (end-start).count();
         yInfo() << "Sending to google took " << elapsed_seconds << " ms";
@@ -253,6 +254,8 @@ public:
         
         yInfo() << "Size of response " << response.results_size();
         if(response.results_size()>0){
+            checkState("Done");
+
             // Dump the transcript of all the results.
             for (int r = 0; r < response.results_size(); ++r) 
             {
@@ -267,7 +270,7 @@ public:
             }
         }
         else{
-            feedback="Google reply empty!";
+            checkState("Empty");
         }
         return b;
     }
@@ -332,7 +335,7 @@ class Module : public yarp::os::RFModule, public googleSpeech_IDL
 {
     yarp::os::ResourceFinder    *rf;
     yarp::os::RpcServer         rpcPort;
-    std::string state, feedback;
+    std::string state;
     std::int64_t elapsed_seconds;
     yarp::os::BufferedPort<yarp::os::Bottle> statePort;
 
@@ -354,7 +357,6 @@ public:
     {
         this->rf=&rf;
         this->state="Ready";
-        this->feedback="No request sent";
         this->elapsed_seconds=0;
         std::string moduleName = rf.check("name", yarp::os::Value("yarp-google-speech"), "module name (string)").asString();
         std::string language = rf.check("language_code", yarp::os::Value("en-US"), "language (string)").asString();
@@ -367,7 +369,7 @@ public:
 
         closing = false;
 
-        processing = new Processing( moduleName, language, sample_rate,  state, elapsed_seconds, feedback );
+        processing = new Processing( moduleName, language, sample_rate,  state, elapsed_seconds);
 
         /* now start the thread to do the work */
         processing->open();
@@ -438,11 +440,6 @@ public:
         return elapsed_seconds;
     }
 
-    /********************************************************/
-    std::string getFeedback()
-    {  
-        return feedback;
-    }
 };
 
 /********************************************************/
