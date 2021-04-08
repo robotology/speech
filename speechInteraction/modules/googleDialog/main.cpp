@@ -67,7 +67,7 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
     std::string agent_name;  
     std::string language_code; 
     std::string &state; 
-    bool &input_is_empty; 
+    bool &input_is_empty, reset; 
     std::int64_t &processing_time; 
     yarp::os::RpcServer handlerPort;
     yarp::os::BufferedPort<yarp::os::Bottle> targetPort;
@@ -81,6 +81,7 @@ public:
         this->session_id = getRandSession();
         this->agent_name = agent_name;
         this->language_code = language_code;
+        reset = false;
         yInfo()<< "State: " << state;
         yInfo()<< "input_is_empty: " << input_is_empty;
     }
@@ -123,8 +124,9 @@ public:
         outTargets.clear();
         outTargets = queryGoogleDialog(bot);
         yDebug() << "bottle" << outTargets.toString();
-        targetPort.write();
-
+        if(outTargets.size()>0){
+           targetPort.write();
+        }
         yInfo() << "State: " << state;
         yDebug() << "done querying google";
     }
@@ -157,7 +159,7 @@ public:
 	       auto creds = grpc::GoogleDefaultCredentials();
 	       auto channel = grpc::CreateChannel("dialogflow.googleapis.com", creds);
 	       std::unique_ptr<Sessions::Stub> dialog (Sessions::NewStub(channel));
-           checkState("Busy");
+               checkState("Busy");
 	       const std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
 
 	       grpc::Status dialog_status = dialog->DetectIntent(&context, request, &response);
@@ -174,12 +176,18 @@ public:
 		       {
 		            result.addString(response.query_result().response_messages().Get(0).text().text().Get(0).c_str());
 			        yDebug() << "result bottle" << result.toString();
-                    checkState("Done");
+                     checkState("Done");
 
 		       }
+               else if (reset)
+	           {
+                       checkState("Reset");
+                       reset=false;
+	           }
+
                else
 	           {
-			        yError() << "result empty";
+                       checkState("Empty");
 	           }
 
 	        } else if ( !dialog_status.ok() ) {
@@ -219,6 +227,15 @@ public:
             is_changed=false;
         }
         return is_changed;
+    }
+    
+    /********************************************************/
+    void resetDialog(){
+         reset = true;
+         yarp::os::Bottle bot;
+         bot.clear();
+         bot.addString("Exit");
+	 queryGoogleDialog(bot);
     }
 };
 
@@ -323,6 +340,13 @@ public:
     std::int64_t getProcessingTime()
     {  
         return processing_time;
+    }
+
+    /********************************************************/
+    bool resetDialog()
+    { 
+	processing->resetDialog();
+        return true;
     }
 };
 

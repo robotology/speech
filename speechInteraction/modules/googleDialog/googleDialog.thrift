@@ -36,4 +36,9 @@ service googleDialog_IDL
      */
     i64 getProcessingTime();
 
+     /**
+     * Reset the conversation.
+     */
+    bool resetDialog();
+
 }
