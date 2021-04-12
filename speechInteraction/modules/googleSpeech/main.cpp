@@ -73,6 +73,8 @@ class Processing : public yarp::os::TypedReaderCallback<yarp::sig::Sound>
     std::string language;
     int sample_rate;
 
+    bool uniqueSound;
+    
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
 public:
@@ -93,6 +95,15 @@ public:
         padding = 0;
         getSounds = false;
         sendForQuery = false;
+        uniqueSound = false;
+    }
+
+    /********************************************************/
+    void setUsingUniqueSound()
+    {
+        uniqueSound = true;
+        getSounds = true;
+        sendForQuery = true;
     }
 
     /********************************************************/
@@ -109,9 +120,6 @@ public:
         port.open("/" + moduleName + "/sound:i");
         targetPort.open("/"+ moduleName + "/result:o");
         audioCommand.open("/"+ moduleName + "/commands:rpc");
-
-        //yarp::os::Network::connect("/microphone/audio:o", port.getName());
-        //yarp::os::Network::connect(audioCommand.getName(), "/microphone/rpc");
 
         return true;
     }
@@ -165,13 +173,7 @@ public:
                 sounds.pop_front();
             }
             yarp::os::Bottle &outTargets = targetPort.prepare();
-            
-            /*std::string name = "test.wav";
-            bool ok = yarp::sig::file::write(total,"test.wav");
-            if (ok) {
-                yDebug("Wrote audio to %s\n", name.c_str());
-            }*/
-            
+                    
             yarp::os::Bottle cmd, rep;
             cmd.addString("stop");
             if (audioCommand.write(cmd, rep))
@@ -180,8 +182,10 @@ public:
             }
             
             outTargets = queryGoogle(total);
+        
+            if (!uniqueSound)
+                sendForQuery = false;
 
-            sendForQuery = false;
             samples = 0;
             channels = 0;
             if(outTargets.size()>0){
@@ -200,7 +204,7 @@ public:
         channels = sound.getChannels();
         yDebug() <<  (long int) sounds.size() << "sound frames buffered in memory ( " << (long int) samples << " samples)";
     }
-
+    
     /********************************************************/
     yarp::os::Bottle queryGoogle(yarp::sig::Sound& sound)
     {
@@ -305,13 +309,10 @@ public:
     bool stop_acquisition()
     {   
         std::lock_guard<std::mutex> lg(mtx); 
-        /*yarp::os::Bottle cmd, rep;
-        cmd.addString("stop");
-        if (audoCommand.write(cmd, rep))
-        {
-            yDebug() << "cmd.addString(stop)" << rep.toString().c_str();
-        }*/
-        getSounds = false;
+        
+        if (!uniqueSound) 
+            getSounds = false;
+
         sendForQuery = true;
         checkState("Busy");
         return true;
@@ -343,6 +344,7 @@ class Module : public yarp::os::RFModule, public googleSpeech_IDL
     friend class                processing;
 
     bool                        closing;
+    bool                        uniqueSound;
 
     /********************************************************/
     bool attach(yarp::os::RpcServer &source)
@@ -358,10 +360,15 @@ public:
         this->rf=&rf;
         this->state="Ready";
         this->elapsed_seconds=0;
-        std::string moduleName = rf.check("name", yarp::os::Value("yarp-google-speech"), "module name (string)").asString();
+        uniqueSound = false;
+
+        std::string moduleName = rf.check("name", yarp::os::Value("googleSpeech"), "module name (string)").asString();
         std::string language = rf.check("language_code", yarp::os::Value("en-US"), "language (string)").asString();
         int sample_rate = rf.check("sample_rate_hertz", yarp::os::Value(16000), "sample rate (int)").asInt();
-
+        
+        if (rf.check("uniqueSound", "use a yarp::sig::Sound instead of a microphone"))
+            uniqueSound = true;
+        
         setName(moduleName.c_str());
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
@@ -374,6 +381,9 @@ public:
         /* now start the thread to do the work */
         processing->open();
 
+        if (uniqueSound)
+            processing->setUsingUniqueSound();
+        
         attach(rpcPort);
 
         return true;
