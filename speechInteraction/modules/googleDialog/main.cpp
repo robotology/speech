@@ -94,6 +94,7 @@ public:
     /********************************************************/
     std::string getRandSession() {
         std::string session;
+        srand(time(NULL));
         for(int i = 0; i<16; i++) {
             session += std::to_string(rand() % 10);
         }
