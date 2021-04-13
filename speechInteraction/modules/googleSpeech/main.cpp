@@ -243,6 +243,9 @@ public:
         RecognizeResponse response;
 
         start = std::chrono::system_clock::now();
+        if (uniqueSound){
+             checkState("Busy");
+        }
         grpc::Status rpc_status = speech->Recognize(&context, request, &response);
         end = std::chrono::system_clock::now();
 
