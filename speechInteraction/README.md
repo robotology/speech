@@ -12,3 +12,15 @@ In order to use them, the user have to register and download the private key fro
 2. Starting from the Dashboard page, under the Project info section, use the button **Go to Project Settings** which will lead you to the Settings
 3. Browse to **Service Accounts** using the left navigation bar
 4. In the table you will find all the service accounts active for your projects. Use the **Actions** button related to the _dialog flow service_ and select **Create key** choosing the JSON format.
+
+### Some useful information for the user:
+
+In order to inform the user about what is happening in the background while he is interacting with the module, the `/moduleName/state:o` port has been created, which shows different states of the module:
+
+State | Meaning
+---- | ----
+Listening (_specific for **googleSpeech**_) | Audio is captured by the microphone
+Done | The google request has been smoothly performed and the response is not empty
+Empty | The google request has been smoothly performed but the response is empty
+Failure | The google request has not been performed
+Reset (_specific for **googleDialog**_) | The session of the dialogflow has been cleaned
