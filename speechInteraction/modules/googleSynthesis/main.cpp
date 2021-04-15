@@ -191,7 +191,7 @@ public:
            std::string file = "test.mp3";
            std::ofstream mp3File(file, std::ios::out | std::ios::binary);
 
-           mp3File.write( response.audio_content().data(), response.audio_content().size()+256);
+           mp3File.write( response.audio_content().data(), response.audio_content().size());
 
            std::string command = "play test.mp3";// + file;
 
