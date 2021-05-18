@@ -111,42 +111,7 @@ public:
 
        std::string tmp = text.toString();
 
-       std::map< std::string, std::string> dictionary;
-       dictionary.insert ( std::pair<std::string,std::string>("á","a") );
-       dictionary.insert ( std::pair<std::string,std::string>("à","a") );
-       dictionary.insert ( std::pair<std::string,std::string>("é","e") );
-       dictionary.insert ( std::pair<std::string,std::string>("è","e") );
-       dictionary.insert ( std::pair<std::string,std::string>("í","i") );
-       dictionary.insert ( std::pair<std::string,std::string>("ó","o") );
-       dictionary.insert ( std::pair<std::string,std::string>("ú","u") );
-       dictionary.insert ( std::pair<std::string,std::string>("ñ","n") );
-
-       std::string tmp2 = tmp;
-       std::string strAux;
-       for (auto it= dictionary.begin(); it != dictionary.end(); it++)
-       {
-           tmp2=(it->first);
-           std::size_t found=tmp.find_first_of(tmp2);
-
-
-           while (found!=std::string::npos)
-           {
-               yError() << "in found" << found;
-               strAux=(it->second);
-               tmp.erase(found,tmp2.length());
-               tmp.insert(found,strAux);
-               found=tmp.find_first_of(tmp2,found+1);
-           }
-       }
-
-       yDebug() << "Phrase is now " << tmp.c_str();
        tmp.erase(std::remove(tmp.begin(),tmp.end(),'\"'),tmp.end());
-
-       yDebug() << tmp.size();
-       yDebug() << std::isalnum(tmp[1]);
-
-       if (tmp.size() > 1 && std::isalnum(tmp[0])==0)
-           tmp = tmp.substr(1, tmp.size() - 2);
 
        yDebug() << "Phrase is now " << tmp.c_str();
 
