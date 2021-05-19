@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2018 iCub Facility - Istituto Italiano di Tecnologia
- * Author: Vadim Tikhanoff Laura Cavaliere
- * email:  vadim.tikhanoff@iit.it laura.cavaliere@iit.it
+ * Author: Vadim Tikhanoff Laura Cavaliere Ilaria Carlini
+ * email:  vadim.tikhanoff@iit.it laura.cavaliere@iit.it ilaria.carlini@iit.it
  * Permission is granted to copy, distribute, and/or modify this program
  * under the terms of the GNU General Public License, version 2 or any
  * later version published by the Free Software Foundation.
@@ -82,6 +82,7 @@ public:
         this->useCallback();
         yarp::os::BufferedPort<yarp::os::Bottle >::open( "/" + moduleName + "/text:i" );
         syncPort.open( "/" + moduleName + "/sync:o" );
+
         return true;
     }
 
@@ -93,13 +94,18 @@ public:
     }
 
     /********************************************************/
-    void onRead( yarp::os::Bottle &bot )
+    void sendDone()
     {
-        queryGoogleSynthesis(bot);
         yarp::os::Bottle syncBot;
         syncBot.addString("done");
         syncPort.write(syncBot);
         yDebug() << "done querying google";
+    }
+    /********************************************************/
+    void onRead( yarp::os::Bottle &bot )
+    {
+        queryGoogleSynthesis(bot);
+        sendDone();
     }
 
 /********************************************************/
@@ -170,7 +176,7 @@ public:
        request.release_voice();
        request.release_audio_config();
 
-       yInfo() << "\n------dgb1------\n";
+       yInfo() << "\n------finished google query------\n";
    }
 
     /********************************************************/
@@ -185,9 +191,61 @@ public:
         return true;
     }
 
+
+    /********************************************************/
+    bool setLanguageCode(const std::string &languageCode)
+    {
+        language = languageCode;
+        return true;
+    }
+
+    /********************************************************/
+    bool setVoiceCode(const std::string &voiceCode)
+    {
+        voice = voiceCode;
+        return true;
+    }
+
+    /********************************************************/
+    bool setPitch(const double pitchVal)
+    {
+        pitch = pitchVal;
+        return true;
+    }
+
+    /********************************************************/
+    bool setSpeed(const double speedVal)
+    {
+        speed = speedVal;
+        return true;
+    }
+    /********************************************************/
+    std::string getLanguageCode()
+    {
+        return language;
+    }
+
+    /********************************************************/
+    std::string getVoiceCode()
+    {
+        return voice;
+    }
+
+    /********************************************************/
+    double getPitch()
+    {
+        return pitch;
+    }
+
+    /********************************************************/
+    double getSpeed()
+    {
+        return speed;
+    }
+
     /********************************************************/
     bool checkState(std::string new_state)
-    {   
+    {
         if(new_state!=state){
             is_changed=true;
             state=new_state;
@@ -212,6 +270,9 @@ class Module : public yarp::os::RFModule, public googleSynthesis_IDL
 
     bool                        closing;
 
+    std::vector<std::string>    allLanguageCodes;
+    std::vector<std::string>    allVoiceCodes;
+
     /********************************************************/
 
 public:
@@ -228,6 +289,24 @@ public:
 
         double speed = rf.check("speed", yarp::os::Value(1.0), "speed to use (double)").asDouble();
         double pitch = rf.check("pitch", yarp::os::Value(0.0), "pitch to use (double)").asDouble();
+
+        if (rf.check("languageCodes", "Getting language codes"))
+        {
+            yarp::os::Bottle &grp=rf.findGroup("languageCodes");
+            int sz=grp.size()-1;
+
+            for (int i=0; i<sz; i++)
+                allLanguageCodes.push_back(grp.get(1+i).asString());
+        }
+
+        if (rf.check("voiceCodes", "Getting voice codes"))
+        {
+            yarp::os::Bottle &grp=rf.findGroup("voiceCodes");
+            int sz=grp.size()-1;
+
+            for (int i=0; i<sz; i++)
+                allVoiceCodes.push_back(grp.get(1+i).asString());
+        }
 
         setName(moduleName.c_str());
 
@@ -249,28 +328,15 @@ public:
         return true;
     }
 
-    bool respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply) override
+    /************************************************************************/
+    bool attach(yarp::os::RpcServer &source)
     {
-        auto cmd0=command.get(0).asString();
-        if (cmd0!="say")
-        {
-            reply.addString("Command not recognized, please specify \"say <sentence>\"");
-            return false;
-        }
-
-        if (command.size()>1)
-        {
-           yarp::os::Bottle sentence_bot;
-           sentence_bot.addString(command.get(1).asString());
-           processing->queryGoogleSynthesis(sentence_bot);
-           reply.addString("ack");
-        }
-
-        return yarp::os::RFModule::respond(command,reply);
+        return this->yarp().attachAsServer(source);
     }
+
     /**********************************************************/
     bool close()
-    {  
+    {
         statePort.close();
         processing->close();
         delete processing;
@@ -284,6 +350,87 @@ public:
     }
 
     /********************************************************/
+    bool say(const std::string& phrase)
+    {
+        yarp::os::Bottle bot;
+        bot.addString(phrase);
+        processing->queryGoogleSynthesis(bot);
+        processing->sendDone();
+        return true;
+    }
+
+    /********************************************************/
+    std::string setLanguage(const std::string& languageCode, const std::string& voiceCode)
+    {
+        std::string returnVal = "Error, wrong language or voice code (eg: en-US en-US-Wavenet-A)";
+        
+        std::string language, voice;
+        
+        for (int i = 0; i < allLanguageCodes.size(); i++)
+        {
+            if (languageCode == allLanguageCodes[i])
+            {
+                for (int v = 0; v < allVoiceCodes.size(); v++)
+                {
+                    if (voiceCode == allVoiceCodes[v])
+                    {
+                        language = languageCode;
+                        voice = voiceCode;
+                        returnVal = "[ok]";
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+
+        if(returnVal =="[ok]")
+        {
+            processing->setLanguageCode(languageCode);
+            processing->setVoiceCode(voiceCode);
+        }
+        return returnVal;
+    }
+
+    /********************************************************/
+    bool setPitch(const double pitchVal)
+    {
+        processing->setPitch(pitchVal);
+        return true;
+    }
+
+    /********************************************************/
+    bool setSpeed(const double speedVal)
+    {
+        processing->setSpeed(speedVal);
+        return true;
+    }
+
+    /********************************************************/
+    std::string getLanguageCode()
+    {
+        return processing->getLanguageCode();
+    }
+
+    /********************************************************/
+    std::string getVoiceCode()
+    {
+        return processing->getVoiceCode();
+    }
+
+    /********************************************************/
+    double getPitch()
+    {
+        return processing->getPitch();
+    }
+
+    /********************************************************/
+    double getSpeed()
+    {
+        return processing->getSpeed();
+    }
+
+    /********************************************************/
     bool quit()
     {
         closing=true;
@@ -292,15 +439,15 @@ public:
 
     /********************************************************/
     bool updateModule()
-    {   
+    {
         if(is_changed){
             is_changed=false;
-            yarp::os::Bottle &outTargets = statePort.prepare();   
-            outTargets.clear();  
+            yarp::os::Bottle &outTargets = statePort.prepare();
+            outTargets.clear();
             outTargets.addString(state);
             yDebug() << "outTarget:" << outTargets.toString().c_str();
             statePort.write();
-        }  
+        }
         return !closing;
     }
 };
