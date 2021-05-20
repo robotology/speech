@@ -283,6 +283,19 @@ public:
     }
 
     /********************************************************/
+    bool setLanguageCode(const std::string &languageCode)
+    {
+        language = languageCode;
+        return true;
+    }
+
+    /********************************************************/
+    std::string getLanguageCode()
+    {
+        return language;
+    }
+
+    /********************************************************/
     void setArguments(RecognitionConfig* config)
     {
         config->set_language_code(language.c_str());
@@ -348,6 +361,7 @@ class Module : public yarp::os::RFModule, public googleSpeech_IDL
 
     bool                        closing;
     bool                        uniqueSound;
+    std::vector<std::string>    allLanguageCodes;
 
     /********************************************************/
     bool attach(yarp::os::RpcServer &source)
@@ -372,6 +386,15 @@ public:
         if (rf.check("uniqueSound", "use a yarp::sig::Sound instead of a microphone"))
             uniqueSound = true;
         
+        if (rf.check("languageCodes", "Getting language codes"))
+        {
+            yarp::os::Bottle &grp=rf.findGroup("languageCodes");
+            int sz=grp.size()-1;
+
+            for (int i=0; i<sz; i++)
+                allLanguageCodes.push_back(grp.get(1+i).asString());
+        }
+
         setName(moduleName.c_str());
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
@@ -391,6 +414,34 @@ public:
 
         return true;
     }
+
+    /********************************************************/
+    bool setLanguage(const std::string& languageCode)
+    {
+        bool returnVal = false;
+        
+        std::string language;
+        
+        for (int i = 0; i < allLanguageCodes.size(); i++)
+        {
+            if (languageCode == allLanguageCodes[i])
+            {
+                language = languageCode;
+                processing->setLanguageCode(languageCode);
+                returnVal = true;
+                break;
+            }
+        }
+
+        return returnVal;
+    }
+
+    /********************************************************/
+    std::string getLanguageCode()
+    {
+        return processing->getLanguageCode();
+    }
+
 
     /**********************************************************/
     bool close()
