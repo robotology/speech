@@ -49,8 +49,6 @@ using google::cloud::speech::v1::RecognitionConfig;
 using google::cloud::speech::v1::Speech;
 using google::cloud::speech::v1::RecognizeRequest;
 using google::cloud::speech::v1::RecognizeResponse;
-std::mutex mtx;
-bool is_changed;
 
 /********************************************************/
 class Processing : public yarp::os::TypedReaderCallback<yarp::sig::Sound>
@@ -60,8 +58,7 @@ class Processing : public yarp::os::TypedReaderCallback<yarp::sig::Sound>
     yarp::os::BufferedPort<yarp::sig::Sound> port;
     yarp::os::BufferedPort<yarp::os::Bottle> targetPort;
     yarp::os::RpcClient audioCommand;
-    std::string &state; 
-    std::int64_t &elapsed_seconds; 
+    std::mutex mutex;
 
     std::deque<yarp::sig::Sound> sounds;
 
@@ -73,18 +70,17 @@ class Processing : public yarp::os::TypedReaderCallback<yarp::sig::Sound>
     std::string language;
     int sample_rate;
 
-    bool uniqueSound;
-    
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
 public:
     /********************************************************/
 
-    Processing( const std::string &moduleName, const std::string &language, const int sample_rate,  std::string &state, std::int64_t &elapsed_seconds ) : state(state), elapsed_seconds(elapsed_seconds)
+    Processing( const std::string &moduleName, const std::string &language, const int sample_rate )
     {
         this->moduleName = moduleName;
         yInfo() << "language " << language;
         yInfo() << "sample_rate " << sample_rate;
+
         this->language = language;
         this->sample_rate = sample_rate;
 
@@ -95,15 +91,6 @@ public:
         padding = 0;
         getSounds = false;
         sendForQuery = false;
-        uniqueSound = false;
-    }
-
-    /********************************************************/
-    void setUsingUniqueSound()
-    {
-        uniqueSound = true;
-        getSounds = true;
-        sendForQuery = true;
     }
 
     /********************************************************/
@@ -121,6 +108,9 @@ public:
         targetPort.open("/"+ moduleName + "/result:o");
         audioCommand.open("/"+ moduleName + "/commands:rpc");
 
+        //yarp::os::Network::connect("/microphone/audio:o", port.getName());
+        //yarp::os::Network::connect(audioCommand.getName(), "/microphone/rpc");
+
         return true;
     }
 
@@ -135,11 +125,9 @@ public:
     /********************************************************/
     using yarp::os::TypedReaderCallback<yarp::sig::Sound>::onRead;
     void onRead( yarp::sig::Sound& sound ) override
-    {    
-        std::lock_guard<std::mutex> lg(mtx); 
-
+    {
         if(getSounds)
-        {   
+        {
             int ct = port.getPendingReads();
             while (ct>padding) 
             {
@@ -151,7 +139,7 @@ public:
         }
 
         if(sendForQuery)
-        {  
+        {
             //unpack sound
             yarp::sig::Sound total;
             total.resize(samples,channels);
@@ -173,7 +161,13 @@ public:
                 sounds.pop_front();
             }
             yarp::os::Bottle &outTargets = targetPort.prepare();
-                    
+            
+            /*std::string name = "test.wav";
+            bool ok = yarp::sig::file::write(total,"test.wav");
+            if (ok) {
+                yDebug("Wrote audio to %s\n", name.c_str());
+            }*/
+            
             yarp::os::Bottle cmd, rep;
             cmd.addString("stop");
             if (audioCommand.write(cmd, rep))
@@ -182,17 +176,14 @@ public:
             }
             
             outTargets = queryGoogle(total);
-        
-            if (!uniqueSound)
-                sendForQuery = false;
 
+            sendForQuery = false;
             samples = 0;
             channels = 0;
-            if(outTargets.size()>0){
-                targetPort.write();
-            }
+            targetPort.write();
             yDebug() << "done querying google";
         }
+
         yarp::os::Time::yield();
     }
 
@@ -204,7 +195,7 @@ public:
         channels = sound.getChannels();
         yDebug() <<  (long int) sounds.size() << "sound frames buffered in memory ( " << (long int) samples << " samples)";
     }
-    
+
     /********************************************************/
     yarp::os::Bottle queryGoogle(yarp::sig::Sound& sound)
     {
@@ -235,51 +226,54 @@ public:
         
         end = std::chrono::system_clock::now();
 
-        double start_elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds> (end-start).count();
+        double elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds> (end-start).count();
 
-        yInfo() << "From start to mutable audio " << start_elapsed_seconds / 1000 << " seconds passed";
+        yInfo() << "From start to mutable audio " << elapsed_seconds / 1000 << " seconds passed";
 
         grpc::ClientContext context;
         RecognizeResponse response;
 
         start = std::chrono::system_clock::now();
-        if (uniqueSound){
-             checkState("Busy");
-        }
         grpc::Status rpc_status = speech->Recognize(&context, request, &response);
         end = std::chrono::system_clock::now();
 
         elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds> (end-start).count();
-        yInfo() << "Sending to google took " << elapsed_seconds << " ms";
+        yInfo() << "Sending to google took " << elapsed_seconds / 1000 << " seconds";
 
         if (!rpc_status.ok()) {
             // Report the RPC failure.
             yInfo() << rpc_status.error_message();
             b.clear();
-            checkState("Failure");
         }
         
         yInfo() << "Size of response " << response.results_size();
-        if(response.results_size()>0){
-            checkState("Done");
-
-            // Dump the transcript of all the results.
-            for (int r = 0; r < response.results_size(); ++r) 
+        
+        // Dump the transcript of all the results.
+        for (int r = 0; r < response.results_size(); ++r) 
+        {
+            auto result = response.results(r);
+            for (int a = 0; a < result.alternatives_size(); ++a) 
             {
-                auto result = response.results(r);
-                for (int a = 0; a < result.alternatives_size(); ++a) 
-                {
-                    auto alternative = result.alternatives(a);
-                    yInfo() << alternative.confidence();
-                    yInfo() << alternative.transcript();
-                    b.addString(alternative.transcript());
-                }
+                auto alternative = result.alternatives(a);
+                yInfo() << alternative.confidence();
+                yInfo() << alternative.transcript();
+                b.addString(alternative.transcript());
             }
         }
-        else{
-            checkState("Empty");
-        }
         return b;
+    }
+
+    /********************************************************/
+    bool setLanguageCode(const std::string &languageCode)
+    {
+        language = languageCode;
+        return true;
+    }
+
+    /********************************************************/
+    std::string getLanguageCode()
+    {
+        return language;
     }
 
     /********************************************************/
@@ -292,8 +286,7 @@ public:
 
     /********************************************************/
     bool start_acquisition()
-    {           
-        std::lock_guard<std::mutex> lg(mtx); 
+    {
         yarp::os::Bottle cmd, rep;
         //cmd.addVocab(yarp::os::Vocab::encode("start"));
         cmd.addString("start");
@@ -304,34 +297,22 @@ public:
         
         start = std::chrono::system_clock::now();
         getSounds = true;
-        checkState("Listening");
         return true;
     }
 
     /********************************************************/
     bool stop_acquisition()
-    {   
-        std::lock_guard<std::mutex> lg(mtx); 
-        
-        if (!uniqueSound) 
-            getSounds = false;
-
+    {
+        /*yarp::os::Bottle cmd, rep;
+        cmd.addString("stop");
+        if (audoCommand.write(cmd, rep))
+        {
+            yDebug() << "cmd.addString(stop)" << rep.toString().c_str();
+        }*/
+        getSounds = false;
         sendForQuery = true;
-        checkState("Busy");
         return true;
     } 
-    /********************************************************/
-    bool checkState(std::string new_state)
-    {   
-        if(new_state!=state){
-            is_changed=true;
-            state=new_state;
-        }
-        else{
-            is_changed=false;
-        }
-        return is_changed;
-    }
 };
 
 /********************************************************/
@@ -339,15 +320,13 @@ class Module : public yarp::os::RFModule, public googleSpeech_IDL
 {
     yarp::os::ResourceFinder    *rf;
     yarp::os::RpcServer         rpcPort;
-    std::string state;
-    std::int64_t elapsed_seconds;
-    yarp::os::BufferedPort<yarp::os::Bottle> statePort;
 
     Processing                  *processing;
     friend class                processing;
 
     bool                        closing;
-    bool                        uniqueSound;
+
+    std::vector<std::string>    allLanguageCodes;
 
     /********************************************************/
     bool attach(yarp::os::RpcServer &source)
@@ -361,41 +340,65 @@ public:
     bool configure(yarp::os::ResourceFinder &rf)
     {
         this->rf=&rf;
-        this->state="Ready";
-        this->elapsed_seconds=0;
-        uniqueSound = false;
-
-        std::string moduleName = rf.check("name", yarp::os::Value("googleSpeech"), "module name (string)").asString();
+        std::string moduleName = rf.check("name", yarp::os::Value("yarp-google-speech"), "module name (string)").asString();
         std::string language = rf.check("language_code", yarp::os::Value("en-US"), "language (string)").asString();
         int sample_rate = rf.check("sample_rate_hertz", yarp::os::Value(16000), "sample rate (int)").asInt();
-        
-        if (rf.check("uniqueSound", "use a yarp::sig::Sound instead of a microphone"))
-            uniqueSound = true;
-        
+
+        if (rf.check("languageCodes", "Getting language codes"))
+        {
+            yarp::os::Bottle &grp=rf.findGroup("languageCodes");
+            int sz=grp.size()-1;
+
+            for (int i=0; i<sz; i++)
+                allLanguageCodes.push_back(grp.get(1+i).asString());
+        }
+
         setName(moduleName.c_str());
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
-        statePort.open("/"+ moduleName + "/state:o");
 
         closing = false;
 
-        processing = new Processing( moduleName, language, sample_rate,  state, elapsed_seconds);
+        processing = new Processing( moduleName, language, sample_rate );
 
         /* now start the thread to do the work */
         processing->open();
 
-        if (uniqueSound)
-            processing->setUsingUniqueSound();
-        
         attach(rpcPort);
 
         return true;
     }
 
+    /********************************************************/
+    bool setLanguage(const std::string& languageCode)
+    {
+        bool returnVal = false;
+        
+        std::string language;
+        
+        for (int i = 0; i < allLanguageCodes.size(); i++)
+        {
+            if (languageCode == allLanguageCodes[i])
+            {
+                language = languageCode;
+                processing->setLanguageCode(languageCode);
+                returnVal = true;
+                break;
+            }
+        }
+
+        return returnVal;
+    }
+
+    /********************************************************/
+    std::string getLanguageCode()
+    {
+        return processing->getLanguageCode();
+    }
+
     /**********************************************************/
     bool close()
-    {   
-        statePort.close();
+    {
         processing->close();
         delete processing;
         return true;
@@ -430,29 +433,9 @@ public:
 
     /********************************************************/
     bool updateModule()
-    {   
-        if(is_changed){
-            is_changed=false;
-            yarp::os::Bottle &outTargets = statePort.prepare();   
-            outTargets.clear();  
-            outTargets.addString(state);
-            yDebug() << "outTarget:" << outTargets.toString().c_str();
-            statePort.write();
-        }    
+    {
         return !closing;
     }
-       /********************************************************/
-    std::string getState()
-    {  
-        return state;
-    }
- 
-    /********************************************************/
-    std::int64_t getProcessingTime()
-    {  
-        return elapsed_seconds;
-    }
-
 };
 
 /********************************************************/
