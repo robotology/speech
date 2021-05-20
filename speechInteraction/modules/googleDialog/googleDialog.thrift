@@ -40,5 +40,19 @@ service googleDialog_IDL
      * Reset the conversation.
      */
     bool resetDialog();
+    
+    /**
+     * Set the language of the synthesiser. 
+     * example: setLanguage en-US
+     * @param string containing the languageCode
+     * @return true/false on success/failure
+     */
+    bool setLanguage(1:string languageCode);
+
+    /**
+     * Get the language code of the synthesiser
+     * @return string containing the language code
+     */
+    string getLanguageCode();
 
 }
