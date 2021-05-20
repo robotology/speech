@@ -205,6 +205,19 @@ public:
         return result;
    }
 
+   /********************************************************/
+    bool setLanguageCode(const std::string &languageCode)
+    {
+        language_code = languageCode;
+        return true;
+    }
+
+    /********************************************************/
+    std::string getLanguageCode()
+    {
+        return language_code;
+    }
+
     /********************************************************/
     bool start_acquisition()
     {
@@ -254,6 +267,7 @@ class Module : public yarp::os::RFModule, public googleDialog_IDL
     friend class                processing;
 
     bool                        closing;
+    std::vector<std::string>    allLanguageCodes;
 
     /********************************************************/
     bool attach(yarp::os::RpcServer &source)
@@ -274,6 +288,15 @@ public:
         std::string agent_name = rf.check("agent", yarp::os::Value("1"), "name of the agent").asString();
         std::string language_code = rf.check("language", yarp::os::Value("en-US"), "language of the dialogflow").asString();
         
+        if (rf.check("languageCodes", "Getting language codes"))
+        {
+            yarp::os::Bottle &grp=rf.findGroup("languageCodes");
+            int sz=grp.size()-1;
+
+            for (int i=0; i<sz; i++)
+                allLanguageCodes.push_back(grp.get(1+i).asString());
+        }
+
         yDebug() << "this is the project" << rf.check("project");
         yDebug() << "Module name" << moduleName;
         yDebug() << "agent name" << agent_name;
@@ -293,6 +316,33 @@ public:
         attach(rpcPort);
 
         return true;
+    }
+
+    /********************************************************/
+    bool setLanguage(const std::string& languageCode)
+    {
+        bool returnVal = false;
+        
+        std::string language;
+        
+        for (int i = 0; i < allLanguageCodes.size(); i++)
+        {
+            if (languageCode == allLanguageCodes[i])
+            {
+                language = languageCode;
+                processing->setLanguageCode(languageCode);
+                returnVal = true;
+                break;
+            }
+        }
+
+        return returnVal;
+    }
+
+    /********************************************************/
+    std::string getLanguageCode()
+    {
+        return processing->getLanguageCode();
     }
 
     /**********************************************************/
