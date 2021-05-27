@@ -145,32 +145,33 @@ public:
 
        std::string content = tmp;
 
-       SynthesizeSpeechRequest request;
-       SynthesizeSpeechResponse response;
+       if (content.size()>0){
+            SynthesizeSpeechRequest request;
+            SynthesizeSpeechResponse response;
 
-       grpc::Status status;
-       grpc::ClientContext context;
+            grpc::Status status;
+            grpc::ClientContext context;
 
-       auto creds = grpc::GoogleDefaultCredentials();
-       auto channel = grpc::CreateChannel("texttospeech.googleapis.com", creds);
-       std::unique_ptr<TextToSpeech::Stub> tts(TextToSpeech::NewStub(channel));
+            auto creds = grpc::GoogleDefaultCredentials();
+            auto channel = grpc::CreateChannel("texttospeech.googleapis.com", creds);
+            std::unique_ptr<TextToSpeech::Stub> tts(TextToSpeech::NewStub(channel));
 
-       AudioConfig audio_config;
-       VoiceSelectionParams params;
+            AudioConfig audio_config;
+            VoiceSelectionParams params;
 
-       SynthesisInput input;
-       input.set_text(content);
+            SynthesisInput input;
+            input.set_text(content);
 
-       audio_config.set_audio_encoding(MP3);
-       params.set_language_code(language);
-       params.set_ssml_gender(NEUTRAL);
-       params.set_name(voice);
-       audio_config.set_speaking_rate(speed);
-       audio_config.set_pitch(pitch);
+            audio_config.set_audio_encoding(MP3);
+            params.set_language_code(language);
+            params.set_ssml_gender(NEUTRAL);
+            params.set_name(voice);
+            audio_config.set_speaking_rate(speed);
+            audio_config.set_pitch(pitch);
 
-       request.set_allocated_input(&input);
-       request.set_allocated_voice(&params);
-       request.set_allocated_audio_config(&audio_config);
+            request.set_allocated_input(&input);
+            request.set_allocated_voice(&params);
+            request.set_allocated_audio_config(&audio_config);
 
        checkState("Busy");
        yarp::os::Time::delay(0.2);
@@ -183,14 +184,14 @@ public:
            yInfo() << "Status returned OK";
            yInfo() << "\n------Response------\n";
 
-           std::string file = "test.mp3";
-           std::ofstream mp3File(file, std::ios::out | std::ios::binary);
+                std::string file = "test.mp3";
+                std::ofstream mp3File(file, std::ios::out | std::ios::binary);
 
-           mp3File.write( response.audio_content().data(), response.audio_content().size());
+                mp3File.write( response.audio_content().data(), response.audio_content().size());
 
-           std::string command = "play test.mp3";// + file;
+                std::string command = "play test.mp3";// + file;
 
-           system(command.c_str());
+                system(command.c_str());
 
        } else {
            yError() << "Status Returned Cancelled";
@@ -201,7 +202,11 @@ public:
        request.release_voice();
        request.release_audio_config();
 
-       yInfo() << "\n------finished google query------\n";
+            yInfo() << "\n------finished google query------\n";
+       }
+       else if (content.size()==0) {
+            checkState("Empty_input");
+       }
    }
 
     /********************************************************/
