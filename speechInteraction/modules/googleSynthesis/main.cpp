@@ -24,6 +24,7 @@
 #include <fstream>
 #include <iterator>
 #include <string>
+#include <map>
 
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
@@ -46,6 +47,27 @@ using namespace google::cloud::language::v1;
 using namespace google::cloud::texttospeech::v1;
 bool is_changed;
 
+
+static const std::map<grpc::StatusCode, std::string> status_code_to_string {
+{grpc::OK, "ok"},
+{grpc::CANCELLED, "cancelled"},
+{grpc::UNKNOWN, "unknown"},
+{grpc::INVALID_ARGUMENT, "invalid_argument"},
+{grpc::DEADLINE_EXCEEDED, "deadline_exceeded"},
+{grpc::NOT_FOUND, "not_found"},
+{grpc::ALREADY_EXISTS, "already_exists"},
+{grpc::PERMISSION_DENIED, "permission_denied"},
+{grpc::UNAUTHENTICATED, "unauthenticated"},
+{grpc::RESOURCE_EXHAUSTED , "resource_exhausted"},
+{grpc::FAILED_PRECONDITION, "failed_precondition"},
+{grpc::ABORTED, "aborted"},
+{grpc::OUT_OF_RANGE, "out_of_range"},
+{grpc::UNIMPLEMENTED, "unimplemented"},
+{grpc::INTERNAL, "internal"},
+{grpc::UNAVAILABLE, "unavailable"},
+{grpc::DATA_LOSS, "data_loss"},
+{grpc::DO_NOT_USE, "do_not_use"}
+};
 /********************************************************/
 class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
 {
@@ -151,9 +173,11 @@ public:
        request.set_allocated_audio_config(&audio_config);
 
        checkState("Busy");
+       yarp::os::Time::delay(0.2);
        grpc::Status tts_status = tts->SynthesizeSpeech(&context, request, &response);
+       std::string status_string = status_code_to_string.at(tts_status.error_code());
+       yInfo() << "Status string:" << status_string;
        checkState("Done");
-
        if ( tts_status.ok() )
        {
            yInfo() << "Status returned OK";
@@ -168,9 +192,10 @@ public:
 
            system(command.c_str());
 
-       } else if ( !status.ok() ){
-           yError() << "Status Returned Canceled";
-           checkState("Failure");
+       } else {
+           yError() << "Status Returned Cancelled";
+           checkState("Failure_" + status_string); 
+           yInfo() << tts_status.error_message();
        }
        request.release_input();
        request.release_voice();
