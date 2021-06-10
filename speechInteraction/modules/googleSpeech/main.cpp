@@ -26,6 +26,7 @@
 #include <fstream>
 #include <iterator>
 #include <string>
+#include <map>
 
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
@@ -52,6 +53,26 @@ using google::cloud::speech::v1::RecognizeResponse;
 std::mutex mtx;
 bool is_changed;
 
+static const std::map<grpc::StatusCode, std::string> status_code_to_string {
+    {grpc::OK, "ok"},
+    {grpc::CANCELLED, "cancelled"},
+    {grpc::UNKNOWN, "unknown"},
+    {grpc::INVALID_ARGUMENT, "invalid_argument"},
+    {grpc::DEADLINE_EXCEEDED, "deadline_exceeded"},
+    {grpc::NOT_FOUND, "not_found"},
+    {grpc::ALREADY_EXISTS, "already_exists"},
+    {grpc::PERMISSION_DENIED, "permission_denied"},
+    {grpc::UNAUTHENTICATED, "unauthenticated"},
+    {grpc::RESOURCE_EXHAUSTED , "resource_exhausted"},
+    {grpc::FAILED_PRECONDITION, "failed_precondition"},
+    {grpc::ABORTED, "aborted"},
+    {grpc::OUT_OF_RANGE, "out_of_range"},
+    {grpc::UNIMPLEMENTED, "unimplemented"},
+    {grpc::INTERNAL, "internal"},
+    {grpc::UNAVAILABLE, "unavailable"},
+    {grpc::DATA_LOSS, "data_loss"},
+    {grpc::DO_NOT_USE, "do_not_use"}
+};
 /********************************************************/
 class Processing : public yarp::os::TypedReaderCallback<yarp::sig::Sound>
 {
@@ -246,7 +267,9 @@ public:
         if (uniqueSound){
              checkState("Busy");
         }
+        yarp::os::Time::delay(0.2);
         grpc::Status rpc_status = speech->Recognize(&context, request, &response);
+        std::string status_string = status_code_to_string.at(rpc_status.error_code());
         end = std::chrono::system_clock::now();
 
         elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds> (end-start).count();
@@ -256,28 +279,29 @@ public:
             // Report the RPC failure.
             yInfo() << rpc_status.error_message();
             b.clear();
-            checkState("Failure");
-        }
-        
-        yInfo() << "Size of response " << response.results_size();
-        if(response.results_size()>0){
-            checkState("Done");
-
-            // Dump the transcript of all the results.
-            for (int r = 0; r < response.results_size(); ++r) 
-            {
-                auto result = response.results(r);
-                for (int a = 0; a < result.alternatives_size(); ++a) 
-                {
-                    auto alternative = result.alternatives(a);
-                    yInfo() << alternative.confidence();
-                    yInfo() << alternative.transcript();
-                    b.addString(alternative.transcript());
-                }
-            }
+            checkState("Failure_" + status_string); 
         }
         else{
-            checkState("Empty");
+            yInfo() << "Size of response " << response.results_size();
+            if(response.results_size()>0){
+                checkState("Done");
+
+                // Dump the transcript of all the results.
+                for (int r = 0; r < response.results_size(); ++r) 
+                {
+                    auto result = response.results(r);
+                    for (int a = 0; a < result.alternatives_size(); ++a) 
+                    {
+                        auto alternative = result.alternatives(a);
+                        yInfo() << alternative.confidence();
+                        yInfo() << alternative.transcript();
+                        b.addString(alternative.transcript());
+                    }
+                }
+            }
+            else{
+                checkState("Empty");
+            }
         }
         return b;
     }
