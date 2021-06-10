@@ -49,24 +49,24 @@ bool is_changed;
 
 
 static const std::map<grpc::StatusCode, std::string> status_code_to_string {
-{grpc::OK, "ok"},
-{grpc::CANCELLED, "cancelled"},
-{grpc::UNKNOWN, "unknown"},
-{grpc::INVALID_ARGUMENT, "invalid_argument"},
-{grpc::DEADLINE_EXCEEDED, "deadline_exceeded"},
-{grpc::NOT_FOUND, "not_found"},
-{grpc::ALREADY_EXISTS, "already_exists"},
-{grpc::PERMISSION_DENIED, "permission_denied"},
-{grpc::UNAUTHENTICATED, "unauthenticated"},
-{grpc::RESOURCE_EXHAUSTED , "resource_exhausted"},
-{grpc::FAILED_PRECONDITION, "failed_precondition"},
-{grpc::ABORTED, "aborted"},
-{grpc::OUT_OF_RANGE, "out_of_range"},
-{grpc::UNIMPLEMENTED, "unimplemented"},
-{grpc::INTERNAL, "internal"},
-{grpc::UNAVAILABLE, "unavailable"},
-{grpc::DATA_LOSS, "data_loss"},
-{grpc::DO_NOT_USE, "do_not_use"}
+    {grpc::OK, "ok"},
+    {grpc::CANCELLED, "cancelled"},
+    {grpc::UNKNOWN, "unknown"},
+    {grpc::INVALID_ARGUMENT, "invalid_argument"},
+    {grpc::DEADLINE_EXCEEDED, "deadline_exceeded"},
+    {grpc::NOT_FOUND, "not_found"},
+    {grpc::ALREADY_EXISTS, "already_exists"},
+    {grpc::PERMISSION_DENIED, "permission_denied"},
+    {grpc::UNAUTHENTICATED, "unauthenticated"},
+    {grpc::RESOURCE_EXHAUSTED , "resource_exhausted"},
+    {grpc::FAILED_PRECONDITION, "failed_precondition"},
+    {grpc::ABORTED, "aborted"},
+    {grpc::OUT_OF_RANGE, "out_of_range"},
+    {grpc::UNIMPLEMENTED, "unimplemented"},
+    {grpc::INTERNAL, "internal"},
+    {grpc::UNAVAILABLE, "unavailable"},
+    {grpc::DATA_LOSS, "data_loss"},
+    {grpc::DO_NOT_USE, "do_not_use"}
 };
 /********************************************************/
 class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
@@ -130,22 +130,22 @@ public:
         sendDone();
     }
 
-/********************************************************/
-   void queryGoogleSynthesis(yarp::os::Bottle& text)
-   {
-       yDebug() << "in queryGoogleSynthesis";
+    /********************************************************/
+    void queryGoogleSynthesis(yarp::os::Bottle& text)
+    {
+        yDebug() << "in queryGoogleSynthesis";
 
-       yDebug() << "Phrase is " << text.toString().c_str();
+        yDebug() << "Phrase is " << text.toString().c_str();
 
-       std::string tmp = text.toString();
+        std::string tmp = text.toString();
 
-       tmp.erase(std::remove(tmp.begin(),tmp.end(),'\"'),tmp.end());
+        tmp.erase(std::remove(tmp.begin(),tmp.end(),'\"'),tmp.end());
 
-       yDebug() << "Phrase is now " << tmp.c_str();
+        yDebug() << "Phrase is now " << tmp.c_str();
 
-       std::string content = tmp;
+        std::string content = tmp;
 
-       if (content.size()>0){
+        if (content.size()>0){
             SynthesizeSpeechRequest request;
             SynthesizeSpeechResponse response;
 
@@ -173,16 +173,15 @@ public:
             request.set_allocated_voice(&params);
             request.set_allocated_audio_config(&audio_config);
 
-       checkState("Busy");
-       yarp::os::Time::delay(0.2);
-       grpc::Status tts_status = tts->SynthesizeSpeech(&context, request, &response);
-       std::string status_string = status_code_to_string.at(tts_status.error_code());
-       yInfo() << "Status string:" << status_string;
-       checkState("Done");
-       if ( tts_status.ok() )
-       {
-           yInfo() << "Status returned OK";
-           yInfo() << "\n------Response------\n";
+            checkState("Busy");
+            yarp::os::Time::delay(0.2);
+            grpc::Status tts_status = tts->SynthesizeSpeech(&context, request, &response);
+            std::string status_string = status_code_to_string.at(tts_status.error_code());
+            yInfo() << "Status string:" << status_string;
+            checkState("Done");
+            if ( tts_status.ok() ) {
+                yInfo() << "Status returned OK";
+                yInfo() << "\n------Response------\n";
 
                 std::string file = "test.mp3";
                 std::ofstream mp3File(file, std::ios::out | std::ios::binary);
@@ -191,24 +190,24 @@ public:
 
                 std::string command = "play test.mp3";// + file;
 
-                system(command.c_str());
+                system(command.c_str());    
 
-       } else {
-           yError() << "Status Returned Cancelled";
-           checkState("Failure_" + status_string); 
-           yInfo() << tts_status.error_message();
-       }
-       request.release_input();
-       request.release_voice();
-       request.release_audio_config();
+            } 
+            else {
+                yError() << "Status Returned Cancelled";
+                checkState("Failure_" + status_string); 
+                yInfo() << tts_status.error_message();
+            }
+            request.release_input();
+            request.release_voice();
+            request.release_audio_config();
 
             yInfo() << "\n------finished google query------\n";
-       }
-       else if (content.size()==0) {
+        }
+        else if (content.size()==0) {
             checkState("Empty_input");
-       }
-   }
-
+        }
+    }
     /********************************************************/
     bool start_acquisition()
     {

@@ -26,6 +26,7 @@
 #include <fstream>
 #include <iterator>
 #include <string>
+#include <map>
 
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
@@ -44,11 +45,33 @@
 #include "googleSpeechProcess_IDL.h"
 
 using namespace google::cloud::language::v1;
+bool is_changed;
 
+static const std::map<grpc::StatusCode, std::string> status_code_to_string {
+    {grpc::OK, "ok"},
+    {grpc::CANCELLED, "cancelled"},
+    {grpc::UNKNOWN, "unknown"},
+    {grpc::INVALID_ARGUMENT, "invalid_argument"},
+    {grpc::DEADLINE_EXCEEDED, "deadline_exceeded"},
+    {grpc::NOT_FOUND, "not_found"},
+    {grpc::ALREADY_EXISTS, "already_exists"},
+    {grpc::PERMISSION_DENIED, "permission_denied"},
+    {grpc::UNAUTHENTICATED, "unauthenticated"},
+    {grpc::RESOURCE_EXHAUSTED , "resource_exhausted"},
+    {grpc::FAILED_PRECONDITION, "failed_precondition"},
+    {grpc::ABORTED, "aborted"},
+    {grpc::OUT_OF_RANGE, "out_of_range"},
+    {grpc::UNIMPLEMENTED, "unimplemented"},
+    {grpc::INTERNAL, "internal"},
+    {grpc::UNAVAILABLE, "unavailable"},
+    {grpc::DATA_LOSS, "data_loss"},
+    {grpc::DO_NOT_USE, "do_not_use"}
+};
 /********************************************************/
 class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
 {
     std::string moduleName;
+    std::string &state;
     yarp::os::RpcServer handlerPort;
     yarp::os::BufferedPort<yarp::os::Bottle> targetPort;
     
@@ -57,7 +80,7 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
 public:
     /********************************************************/
 
-    Processing( const std::string &moduleName )
+    Processing( const std::string &moduleName, std::string &state ): state(state)
     {
         this->moduleName = moduleName;
     }
@@ -103,7 +126,9 @@ public:
 
     /********************************************************/
     yarp::os::Bottle queryGoogleSyntax(yarp::os::Bottle& text)
-    {
+    {   
+        yarp::os::Bottle b;
+
         yDebug() << "in queryGoogleSyntax";
 
         yDebug() << "Phrase is " << text.toString().c_str();
@@ -150,46 +175,56 @@ public:
 
         std::string content = tmp;
 
-        AnalyzeSyntaxRequest request;
-        AnalyzeSyntaxResponse response;
-        grpc::Status status;
-        grpc::ClientContext context;
+        if (content.size()>0){
+            AnalyzeSyntaxRequest request;
+            AnalyzeSyntaxResponse response;
+            grpc::Status status;
+            grpc::ClientContext context;
 
-        AnalyzeSentimentRequest sentiment_request;
-        AnalyzeSentimentResponse sentiment_response;
-        grpc::Status sentiment_status;
-        grpc::ClientContext sentiment_context;
+            AnalyzeSentimentRequest sentiment_request;
+            AnalyzeSentimentResponse sentiment_response;
+            grpc::Status sentiment_status;
+            grpc::ClientContext sentiment_context;
 
-        setArguments( request.mutable_document(), content );
-        setArguments( sentiment_request.mutable_document(), content );
+            setArguments( request.mutable_document(), content );
+            setArguments( sentiment_request.mutable_document(), content );
 
-        // EncodingType //
-        request.set_encoding_type( EncodingType::UTF8 );
+            // EncodingType //
+            request.set_encoding_type( EncodingType::UTF8 );
 
-        yarp::os::Bottle b;
-        b.clear();
-        auto creds = grpc::GoogleDefaultCredentials();
-        auto channel = grpc::CreateChannel("language.googleapis.com", creds);
-        std::unique_ptr< LanguageService::Stub> stub( LanguageService::NewStub( channel ) );
-        
-        status = stub->AnalyzeSyntax( &context, request, &response );
-        sentiment_status = stub->AnalyzeSentiment( &sentiment_context, sentiment_request, &sentiment_response );
+            b.clear();
+            auto creds = grpc::GoogleDefaultCredentials();
+            auto channel = grpc::CreateChannel("language.googleapis.com", creds);
+            std::unique_ptr< LanguageService::Stub> stub( LanguageService::NewStub( channel ) );
 
+            checkState("Busy");
+            yarp::os::Time::delay(0.2);
+            status = stub->AnalyzeSyntax( &context, request, &response );
+            sentiment_status = stub->AnalyzeSentiment( &sentiment_context, sentiment_request, &sentiment_response );
+            std::string status_string = status_code_to_string.at(status.error_code());
+            yInfo() << "Status string:" << status_string;
+            checkState("Done");
 
-        if ( status.ok() && sentiment_status.ok() )
-        {
-            yInfo() << "Status returned OK";
-            yInfo() << "\n------Response------\n";
+            if ( status.ok() && sentiment_status.ok() ){
+                yInfo() << "Status returned OK";
+                yInfo() << "\n------Response------\n";
 
-            read_language( &response.language() );
-            read_sentences( &response.sentences() );
-            read_sentiment( &sentiment_response.sentences() );
-            read_tokens( &response.tokens() );
-            b = read_analysis( &response.sentences(), &response.tokens(), &sentiment_response.sentences() );
+                read_language( &response.language() );
+                read_sentences( &response.sentences() );
+                read_sentiment( &sentiment_response.sentences() );
+                read_tokens( &response.tokens() );
+                b = read_analysis( &response.sentences(), &response.tokens(), &sentiment_response.sentences() );
 
-        } else if ( !status.ok() )
-            yError() << "Status Returned Canceled";
-
+            } 
+            else {
+                yError() << "Status Returned Cancelled";
+                checkState("Failure_" + status_string); 
+                yInfo() << status.error_message();
+            }
+        }  
+        else if (content.size()==0) {
+            checkState("Empty_input");
+        } 
         return b;
     }
 
@@ -203,10 +238,8 @@ public:
     /********************************************************/
     void read_language( const std::string* lang )
     {
-
         std::cout << "\n----Language----" << std::endl;
         std::cout << "Language: " << *lang << std::endl;
-
     }
 
     /********************************************************/
@@ -222,7 +255,6 @@ public:
             }
         }
     }
-
 
     /********************************************************/
     std::pair<float,float> read_sentiment( const google::protobuf::RepeatedPtrField< Sentence >* sentences ) {
@@ -254,9 +286,7 @@ public:
         return result;
     }
 
-    
-        /********************************************************/
-
+    /********************************************************/
     yarp::os::Bottle read_analysis( const google::protobuf::RepeatedPtrField< Sentence >* sentences , const google::protobuf::RepeatedPtrField< Token >* tokens, const google::protobuf::RepeatedPtrField< Sentence >* sentiment_sentences ) {
         
 
@@ -364,7 +394,6 @@ public:
     }
 
     /********************************************************/
-    
     void read_tokens( const google::protobuf::RepeatedPtrField< Token >* tokens ) {
 
         for ( int i = 0; i < tokens->size(); i++ ) {
@@ -461,7 +490,6 @@ public:
                 << std::endl;
         }
     }
-
 
     /********************************************************/
     bool start_acquisition()
@@ -607,13 +635,29 @@ public:
 
         return sentiment_result;
     }
+
+    /********************************************************/
+    bool checkState(std::string new_state)
+    {
+        if(new_state!=state){
+            is_changed=true;
+            state=new_state;
+        }
+        else{
+            is_changed=false;
+        }
+        return is_changed;
+    }
 };
 
 /********************************************************/
 class Module : public yarp::os::RFModule, public googleSpeechProcess_IDL
 {
-    yarp::os::ResourceFinder    *rf;
-    yarp::os::RpcServer         rpcPort;
+    yarp::os::ResourceFinder *rf;
+    yarp::os::RpcServer rpcPort;
+    std::string state;
+    yarp::os::BufferedPort<yarp::os::Bottle> statePort;
+
 
     Processing                  *processing;
     friend class                processing;
@@ -632,15 +676,17 @@ public:
     bool configure(yarp::os::ResourceFinder &rf)
     {
         this->rf=&rf;
+        this->state="Ready";
         std::string moduleName = rf.check("name", yarp::os::Value("yarp-google-speech-process"), "module name (string)").asString();
 
         setName(moduleName.c_str());
 
         rpcPort.open(("/"+getName("/rpc")).c_str());
+        statePort.open("/"+ moduleName + "/state:o");
 
         closing = false;
 
-        processing = new Processing( moduleName );
+        processing = new Processing( moduleName, state );
 
         /* now start the thread to do the work */
         processing->open();
@@ -652,7 +698,8 @@ public:
 
     /**********************************************************/
     bool close()
-    {
+    {   
+        statePort.close();
         processing->close();
         delete processing;
         return true;
@@ -687,7 +734,15 @@ public:
 
     /********************************************************/
     bool updateModule()
-    {
+    { 
+        if(is_changed){
+            is_changed=false;
+            yarp::os::Bottle &outTargets = statePort.prepare();
+            outTargets.clear();
+            outTargets.addString(state);
+            yDebug() << "outTarget:" << outTargets.toString().c_str();
+            statePort.write();
+        }
         return !closing;
     }
 
