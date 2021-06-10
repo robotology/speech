@@ -22,5 +22,5 @@ State | Meaning
 Listening (_specific for **googleSpeech**_) | Audio is captured by the microphone
 Done | The google request has been smoothly performed and the response is not empty
 Empty | The google request has been smoothly performed but the response is empty
-Failure | The google request has not been performed
+Failure_\<StatusCode\> |  The google request has not been performed; \<StatusCode\> depends on the type of failure 
 Reset (_specific for **googleDialog**_) | The session of the dialogflow has been cleaned
