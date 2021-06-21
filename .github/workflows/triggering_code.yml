@@ -1,10 +1,9 @@
 name: triggering_code
 
 on: 
-    workflow_dispatch:
-#   push:  
-#        paths:
-#            - 'speech/speechInteraction/modules/**'
+   push:  
+        paths:
+            - 'speech/speechInteraction/modules/**'
 
 
 jobs:
