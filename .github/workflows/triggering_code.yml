@@ -3,7 +3,7 @@ name: triggering_code
 on: 
    push:  
         paths:
-            - 'speechInteraction/modules/**'
+            - 'speechInteraction/**'
 
 
 jobs:
