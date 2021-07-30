@@ -7,4 +7,4 @@ Apps for speech recognition and speech synthesis.
 
 ![gh-pages](https://github.com/robotology/speech/workflows/GitHub%20Pages/badge.svg)
 
-Documentation available here: [http://robotology.github.com/speech](http://robotology.github.com/speech).
+Documentation available here: https://robotology.github.io/speech.
