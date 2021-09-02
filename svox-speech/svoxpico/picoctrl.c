@@ -90,8 +90,8 @@ typedef struct ctrl_subobj {
  * @callgraph
  * @callergraph
  */
-static pico_status_t ctrlInitialize(register picodata_ProcessingUnit this, picoos_int32 resetMode) {
-    register ctrl_subobj_t * ctrl;
+static pico_status_t ctrlInitialize(picodata_ProcessingUnit this, picoos_int32 resetMode) {
+    ctrl_subobj_t * ctrl;
     pico_status_t status= PICO_OK;
     picoos_int8 i;
 
@@ -130,14 +130,14 @@ static pico_status_t ctrlInitialize(register picodata_ProcessingUnit this, picoo
  * @callgraph
  * @callergraph
  */
-static picodata_step_result_t ctrlStep(register picodata_ProcessingUnit this,
+static picodata_step_result_t ctrlStep(picodata_ProcessingUnit this,
         picoos_int16 mode, picoos_uint16 * bytesOutput) {
     /* rules/invariants:
      * - all pu's above current have status idle except possibly pu+1, which may  be busy.
      *   (The latter is set if any pu->step produced output)
      * - a pu returns idle iff its cbIn is empty and it has no more data ready for output */
 
-    register ctrl_subobj_t * ctrl = (ctrl_subobj_t *) this->subObj;
+    ctrl_subobj_t * ctrl = (ctrl_subobj_t *) this->subObj;
     picodata_step_result_t status;
     picoos_uint16 puBytesOutput;
 #if defined(PICO_DEVEL_MODE)
@@ -233,10 +233,10 @@ static picodata_step_result_t ctrlStep(register picodata_ProcessingUnit this,
  * @callgraph
  * @callergraph
  */
-static pico_status_t ctrlTerminate(register picodata_ProcessingUnit this) {
+static pico_status_t ctrlTerminate(picodata_ProcessingUnit this) {
     pico_status_t status = PICO_OK;
     picoos_int16 i;
-    register ctrl_subobj_t * ctrl;
+    ctrl_subobj_t * ctrl;
     if (NULL == this || NULL == this->subObj) {
         return PICO_ERR_OTHER;
     }
@@ -259,9 +259,9 @@ static pico_status_t ctrlTerminate(register picodata_ProcessingUnit this) {
  * @callgraph
  * @callergraph
  */
-static pico_status_t ctrlSubObjDeallocate(register picodata_ProcessingUnit this,
+static pico_status_t ctrlSubObjDeallocate(picodata_ProcessingUnit this,
         picoos_MemoryManager mm) {
-    register ctrl_subobj_t * ctrl;
+    ctrl_subobj_t * ctrl;
     picoos_int16 i;
 
     if (NULL == this || NULL == this->subObj) {
@@ -292,13 +292,13 @@ static pico_status_t ctrlSubObjDeallocate(register picodata_ProcessingUnit this,
  * @callgraph
  * @callergraph
  */
-static pico_status_t ctrlAddPU(register picodata_ProcessingUnit this,
+static pico_status_t ctrlAddPU(picodata_ProcessingUnit this,
         picodata_putype_t puType,
         picoos_bool levelAwareCbOut,
         picoos_bool last)
 {
     picoos_uint16 bufSize;
-    register ctrl_subobj_t * ctrl;
+    ctrl_subobj_t * ctrl;
     picodata_CharBuffer cbIn;
     picoos_uint8 newPU;
     if (this == NULL) {
@@ -421,7 +421,7 @@ picodata_ProcessingUnit picoctrl_newControl(picoos_MemoryManager mm,
         picoos_Common common, picodata_CharBuffer cbIn,
         picodata_CharBuffer cbOut, picorsrc_Voice voice) {
     picoos_int16 i;
-    register ctrl_subobj_t * ctrl;
+    ctrl_subobj_t * ctrl;
     picodata_ProcessingUnit this = picodata_newProcessingUnit(mm, common, cbIn,
             cbOut,voice);
     if (this == NULL) {

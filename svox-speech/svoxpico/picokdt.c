@@ -296,7 +296,7 @@ typedef struct {
 } kdtpam_subobj_t;
 
 
-static pico_status_t kdtDtInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kdtDtInitialize(picoknow_KnowledgeBase this,
                                      picoos_Common common,
                                      kdt_subobj_t *dtp) {
     picoos_uint16 inppos;
@@ -395,7 +395,7 @@ static pico_status_t kdtDtInitialize(register picoknow_KnowledgeBase this,
 }
 
 
-static pico_status_t kdtDtCheck(register picoknow_KnowledgeBase this,
+static pico_status_t kdtDtCheck(picoknow_KnowledgeBase this,
                                 picoos_Common common,
                                 kdt_subobj_t *dtp,
                                 kdt_nratt_t nratt,
@@ -427,7 +427,7 @@ static pico_status_t kdtDtCheck(register picoknow_KnowledgeBase this,
 
 
 
-static pico_status_t kdtPosPInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kdtPosPInitialize(picoknow_KnowledgeBase this,
                                        picoos_Common common) {
     pico_status_t status;
     kdtposp_subobj_t *dtposp;
@@ -460,7 +460,7 @@ static pico_status_t kdtPosPInitialize(register picoknow_KnowledgeBase this,
 }
 
 
-static pico_status_t kdtPosDInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kdtPosDInitialize(picoknow_KnowledgeBase this,
                                        picoos_Common common) {
     pico_status_t status;
     kdtposd_subobj_t *dtposd;
@@ -493,7 +493,7 @@ static pico_status_t kdtPosDInitialize(register picoknow_KnowledgeBase this,
 }
 
 
-static pico_status_t kdtG2PInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kdtG2PInitialize(picoknow_KnowledgeBase this,
                                       picoos_Common common) {
     pico_status_t status;
     kdtg2p_subobj_t *dtg2p;
@@ -527,7 +527,7 @@ static pico_status_t kdtG2PInitialize(register picoknow_KnowledgeBase this,
 }
 
 
-static pico_status_t kdtPhrInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kdtPhrInitialize(picoknow_KnowledgeBase this,
                                       picoos_Common common) {
     pico_status_t status;
     kdtphr_subobj_t *dtphr;
@@ -561,7 +561,7 @@ static pico_status_t kdtPhrInitialize(register picoknow_KnowledgeBase this,
 }
 
 
-static pico_status_t kdtAccInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kdtAccInitialize(picoknow_KnowledgeBase this,
                                       picoos_Common common) {
     pico_status_t status;
     kdtacc_subobj_t *dtacc;
@@ -595,7 +595,7 @@ static pico_status_t kdtAccInitialize(register picoknow_KnowledgeBase this,
 }
 
 
-static pico_status_t kdtPamInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kdtPamInitialize(picoknow_KnowledgeBase this,
                                       picoos_Common common) {
     pico_status_t status;
     kdtpam_subobj_t *dtpam;
@@ -629,7 +629,7 @@ static pico_status_t kdtPamInitialize(register picoknow_KnowledgeBase this,
 }
 
 
-static pico_status_t kdtSubObjDeallocate(register picoknow_KnowledgeBase this,
+static pico_status_t kdtSubObjDeallocate(picoknow_KnowledgeBase this,
                                          picoos_MemoryManager mm) {
     if (NULL != this) {
         picoos_deallocate(mm, (void *) &this->subObj);
@@ -812,7 +812,7 @@ static void kdt_jump(const picoos_uint32 iJump,
    Returns :   0/1 depending on the bit pointed to
 */
 /*
-static picoos_uint8 kdtIsVal(register kdt_subobj_t *this,
+static picoos_uint8 kdtIsVal(kdt_subobj_t *this,
                              picoos_uint32 iByteNo,
                              picoos_int8 iBitNo) {
     return ((this->treebody[iByteNo] & ((1)<<iBitNo)) > 0);
@@ -831,7 +831,7 @@ static picoos_uint8 kdtIsVal(register kdt_subobj_t *this,
    Notes   :   check that attind < this->nrattributes needed before calling
                this function!
 */
-static picoos_uint8 kdtGetQFieldsVal(register kdt_subobj_t *this,
+static picoos_uint8 kdtGetQFieldsVal(kdt_subobj_t *this,
                                      const picoos_uint8 attind,
                                      const kdt_qfields_ind_t qind) {
     /* check of qind done in initialize and (for some compilers) with typing */
@@ -851,7 +851,7 @@ static picoos_uint8 kdtGetQFieldsVal(register kdt_subobj_t *this,
    Returns :   the value requested (if size==0 --> 0 is returned)
 */
 /*
-static picoos_uint32 orig_kdtGetShiftVal(register kdt_subobj_t *this,
+static picoos_uint32 orig_kdtGetShiftVal(kdt_subobj_t *this,
                                     const picoos_int16 iSize,
                                     picoos_uint32 *iByteNo,
                                     picoos_int8 *iBitNo) {
@@ -873,7 +873,7 @@ static picoos_uint32 orig_kdtGetShiftVal(register kdt_subobj_t *this,
 }
 */
 /* refactor */
-static picoos_uint32 kdtGetShiftVal(register kdt_subobj_t *this,
+static picoos_uint32 kdtGetShiftVal(kdt_subobj_t *this,
         const picoos_int16 iSize, picoos_uint32 *iByteNo, picoos_int8 *iBitNo)
 {
     picoos_uint32 v, b, iVal;
@@ -994,7 +994,7 @@ static picoos_uint32 kdtGetShiftVal(register kdt_subobj_t *this,
                <0    error, no solution found
    Notes   :
 */
-static picoos_int8 kdtAskTree(register kdt_subobj_t *this,
+static picoos_int8 kdtAskTree(kdt_subobj_t *this,
                               picoos_uint16 *invec,
                               const kdt_nratt_t invecmax,
                               picoos_uint32 *iByteNo,

@@ -48,16 +48,16 @@ extern "C" {
 /*
  * method signatures
  */
-typedef pico_status_t (* picodata_cbPutItemMethod) (register picodata_CharBuffer this,
+typedef pico_status_t (* picodata_cbPutItemMethod) (picodata_CharBuffer this,
         const picoos_uint8 *buf, const picoos_uint16 blenmax,
         picoos_uint16 *blen);
 
-typedef pico_status_t (* picodata_cbGetItemMethod) (register picodata_CharBuffer this,
+typedef pico_status_t (* picodata_cbGetItemMethod) (picodata_CharBuffer this,
         picoos_uint8 *buf, const picoos_uint16 blenmax,
         picoos_uint16 *blen, const picoos_uint8 issd);
 
-typedef pico_status_t (* picodata_cbSubResetMethod) (register picodata_CharBuffer this);
-typedef pico_status_t (* picodata_cbSubDeallocateMethod) (register picodata_CharBuffer this, picoos_MemoryManager mm);
+typedef pico_status_t (* picodata_cbSubResetMethod) (picodata_CharBuffer this);
+typedef pico_status_t (* picodata_cbSubDeallocateMethod) (picodata_CharBuffer this, picoos_MemoryManager mm);
 
 typedef struct picodata_char_buffer
 {
@@ -78,15 +78,15 @@ typedef struct picodata_char_buffer
 } char_buffer_t;
 
 
-static pico_status_t data_cbPutItem(register picodata_CharBuffer this,
+static pico_status_t data_cbPutItem(picodata_CharBuffer this,
         const picoos_uint8 *buf, const picoos_uint16 blenmax,
         picoos_uint16 *blen);
 
-static pico_status_t data_cbGetItem(register picodata_CharBuffer this,
+static pico_status_t data_cbGetItem(picodata_CharBuffer this,
         picoos_uint8 *buf, const picoos_uint16 blenmax,
         picoos_uint16 *blen, const picoos_uint8 issd);
 
-pico_status_t picodata_cbReset(register picodata_CharBuffer this)
+pico_status_t picodata_cbReset(picodata_CharBuffer this)
 {
     this->rear = 0;
     this->front = 0;
@@ -142,7 +142,7 @@ void picodata_disposeCharBuffer(picoos_MemoryManager mm,
     }
 }
 
-pico_status_t picodata_cbPutCh(register picodata_CharBuffer this,
+pico_status_t picodata_cbPutCh(picodata_CharBuffer this,
                                picoos_char ch)
 {
     if (this->len < this->size) {
@@ -156,7 +156,7 @@ pico_status_t picodata_cbPutCh(register picodata_CharBuffer this,
 }
 
 
-picoos_int16 picodata_cbGetCh(register picodata_CharBuffer this)
+picoos_int16 picodata_cbGetCh(picodata_CharBuffer this)
 {
     picoos_char ch;
     if (this->len > 0) {
@@ -173,7 +173,7 @@ picoos_int16 picodata_cbGetCh(register picodata_CharBuffer this)
  *                   items: CharBuffer functions                 *
  *****************************************************************/
 
-static pico_status_t data_cbGetItem(register picodata_CharBuffer this,
+static pico_status_t data_cbGetItem(picodata_CharBuffer this,
         picoos_uint8 *buf, const picoos_uint16 blenmax,
         picoos_uint16 *blen, const picoos_uint8 issd)
 {
@@ -258,7 +258,7 @@ static pico_status_t data_cbGetItem(register picodata_CharBuffer this,
     return PICO_OK;
 }
 
-static pico_status_t data_cbPutItem(register picodata_CharBuffer this,
+static pico_status_t data_cbPutItem(picodata_CharBuffer this,
         const picoos_uint8 *buf, const picoos_uint16 blenmax,
         picoos_uint16 *blen)
 {
@@ -318,14 +318,14 @@ static pico_status_t data_cbPutItem(register picodata_CharBuffer this,
  *            PICO_BUF_OVERFLOW : 'buf[blenmax]' too small to hold item
  *            on return, '*blen' contains the number of bytes written to 'buf'
  * ---------------------------------------------------------*/
-pico_status_t picodata_cbGetItem(register picodata_CharBuffer this,
+pico_status_t picodata_cbGetItem(picodata_CharBuffer this,
         picoos_uint8 *buf, const picoos_uint16 blenmax,
         picoos_uint16 *blen)
 {
     return this->getItem(this, buf, blenmax, blen, FALSE);
 }
 
-pico_status_t picodata_cbGetSpeechData(register picodata_CharBuffer this,
+pico_status_t picodata_cbGetSpeechData(picodata_CharBuffer this,
         picoos_uint8 *buf, const picoos_uint16 blenmax,
         picoos_uint16 *blen)
 {
@@ -334,7 +334,7 @@ pico_status_t picodata_cbGetSpeechData(register picodata_CharBuffer this,
 }
 
 
-pico_status_t picodata_cbPutItem(register picodata_CharBuffer this,
+pico_status_t picodata_cbPutItem(picodata_CharBuffer this,
         const picoos_uint8 *buf, const picoos_uint16 blenmax,
         picoos_uint16 *blen)
 {
@@ -343,7 +343,7 @@ pico_status_t picodata_cbPutItem(register picodata_CharBuffer this,
 }
 
 /* unsafe, just for measuring purposes */
-picoos_uint8 picodata_cbGetFrontItemType(register picodata_CharBuffer this)
+picoos_uint8 picodata_cbGetFrontItemType(picodata_CharBuffer this)
 {
     return  this->buf[this->front];
 }
@@ -574,15 +574,15 @@ typedef struct simple_pu_data
     picorsrc_Voice voice;
 } simple_pu_data_t;
 
-static pico_status_t puSimpleInitialize (register picodata_ProcessingUnit this, picoos_int32 resetMode) {
+static pico_status_t puSimpleInitialize (picodata_ProcessingUnit this, picoos_int32 resetMode) {
     return PICO_OK;
 }
 
-static pico_status_t puSimpleTerminate (register picodata_ProcessingUnit this) {
+static pico_status_t puSimpleTerminate (picodata_ProcessingUnit this) {
     return PICO_OK;
 }
 
-static picodata_step_result_t puSimpleStep (register picodata_ProcessingUnit this,
+static picodata_step_result_t puSimpleStep (picodata_ProcessingUnit this,
                                             picoos_int16 mode,
                                             picoos_uint16 * numBytesOutput) {
     picoos_int16 ch;

@@ -242,7 +242,7 @@ typedef struct sa_subobj {
 } sa_subobj_t;
 
 
-static pico_status_t saInitialize(register picodata_ProcessingUnit this, picoos_int32 resetMode) {
+static pico_status_t saInitialize(picodata_ProcessingUnit this, picoos_int32 resetMode) {
     sa_subobj_t * sa;
     picoos_uint16 i;
     picokfst_FST fst;
@@ -420,15 +420,15 @@ static pico_status_t saInitialize(register picodata_ProcessingUnit this, picoos_
     return PICO_OK;
 }
 
-static picodata_step_result_t saStep(register picodata_ProcessingUnit this,
+static picodata_step_result_t saStep(picodata_ProcessingUnit this,
                                      picoos_int16 mode,
                                      picoos_uint16 *numBytesOutput);
 
-static pico_status_t saTerminate(register picodata_ProcessingUnit this) {
+static pico_status_t saTerminate(picodata_ProcessingUnit this) {
     return PICO_OK;
 }
 
-static pico_status_t saSubObjDeallocate(register picodata_ProcessingUnit this,
+static pico_status_t saSubObjDeallocate(picodata_ProcessingUnit this,
                                         picoos_MemoryManager mm) {
     sa_subobj_t * sa;
     if (NULL != this) {
@@ -486,8 +486,8 @@ picodata_ProcessingUnit picosa_newSentAnaUnit(picoos_MemoryManager mm,
 /* ***********************************************************************/
 
 /* find next POS to the right of 'ind' and return its POS and index */
-static picoos_uint8 saPosDItemSeqGetPosRight(register picodata_ProcessingUnit this,
-                                            register sa_subobj_t *sa,
+static picoos_uint8 saPosDItemSeqGetPosRight(picodata_ProcessingUnit this,
+                                            sa_subobj_t *sa,
                                             const picoos_uint16 ind,
                                             const picoos_uint16 top,
                                             picoos_uint16 *rightind) {
@@ -508,8 +508,8 @@ static picoos_uint8 saPosDItemSeqGetPosRight(register picodata_ProcessingUnit th
 
 
 /* left-to-right, for each WORDGRAPH/WORDINDEX/WORDPHON do posd */
-static pico_status_t saDisambPos(register picodata_ProcessingUnit this,
-                                 register sa_subobj_t *sa) {
+static pico_status_t saDisambPos(picodata_ProcessingUnit this,
+                                 sa_subobj_t *sa) {
     picokdt_classify_result_t dtres;
     picoos_uint8 half_nratt_posd = PICOKDT_NRATT_POSD >> 1;
     picoos_uint16 valbuf[PICOKDT_NRATT_POSD]; /* only [0..half_nratt_posd] can be >2^8 */
@@ -695,8 +695,8 @@ static pico_status_t saDisambPos(register picodata_ProcessingUnit this,
 
 /* ************** copy ***************/
 
-static pico_status_t saCopyItemContent1to2(register picodata_ProcessingUnit this,
-                                           register sa_subobj_t *sa,
+static pico_status_t saCopyItemContent1to2(picodata_ProcessingUnit this,
+                                           sa_subobj_t *sa,
                                            picoos_uint16 ind) {
     picoos_uint16 i;
     picoos_uint16 cind1;
@@ -730,8 +730,8 @@ static pico_status_t saCopyItemContent1to2(register picodata_ProcessingUnit this
 
 /* ************** lexindex ***************/
 
-static pico_status_t saLexIndLookup(register picodata_ProcessingUnit this,
-                                    register sa_subobj_t *sa,
+static pico_status_t saLexIndLookup(picodata_ProcessingUnit this,
+                                    sa_subobj_t *sa,
                                     picoklex_Lex lex,
                                     picoos_uint16 ind) {
     picoos_uint8 pos;
@@ -788,8 +788,8 @@ static pico_status_t saLexIndLookup(register picodata_ProcessingUnit this,
                nVord           vowel order in the word
    Returns :   TRUE: processing successful;  FALSE: errors
 */
-static picoos_uint8 saGetNrVowel(register picodata_ProcessingUnit this,
-                                 register sa_subobj_t *sa,
+static picoos_uint8 saGetNrVowel(picodata_ProcessingUnit this,
+                                 sa_subobj_t *sa,
                                  const picoos_uint8 *sInChar,
                                  const picoos_uint16 inLen,
                                  const picoos_uint8 inPos,
@@ -826,8 +826,8 @@ static picoos_uint8 saGetNrVowel(register picodata_ProcessingUnit this,
 
 
 /* do g2p for a full word, right-to-left */
-static picoos_uint8 saDoG2P(register picodata_ProcessingUnit this,
-                            register sa_subobj_t *sa,
+static picoos_uint8 saDoG2P(picodata_ProcessingUnit this,
+                            sa_subobj_t *sa,
                             const picoos_uint8 *graph,
                             const picoos_uint8 graphlen,
                             const picoos_uint8 pos,
@@ -1002,8 +1002,8 @@ static picoos_uint8 saDoG2P(register picodata_ProcessingUnit this,
 
 /* item in headx[ind]/cbuf1, out: modified headx and cbuf2 */
 
-static pico_status_t saGraphemeToPhoneme(register picodata_ProcessingUnit this,
-                                         register sa_subobj_t *sa,
+static pico_status_t saGraphemeToPhoneme(picodata_ProcessingUnit this,
+                                         sa_subobj_t *sa,
                                          picoos_uint16 ind) {
     picoos_uint16 plen;
 
@@ -1041,7 +1041,7 @@ static pico_status_t saGraphemeToPhoneme(register picodata_ProcessingUnit this,
 /*                          extract phonemes of an item into a phonBuf   */
 /* ***********************************************************************/
 
-static pico_status_t saAddPhoneme(register sa_subobj_t *sa, picoos_uint16 pos, picoos_uint16 sym) {
+static pico_status_t saAddPhoneme(sa_subobj_t *sa, picoos_uint16 pos, picoos_uint16 sym) {
     /* picoos_uint8 plane, unshifted; */
 
     /* just for debuging */
@@ -1062,21 +1062,21 @@ static pico_status_t saAddPhoneme(register sa_subobj_t *sa, picoos_uint16 pos, p
 }
 
 /*
-static pico_status_t saAddStartPhoneme(register sa_subobj_t *sa) {
+static pico_status_t saAddStartPhoneme(sa_subobj_t *sa) {
     return saAddPhoneme(sa, PICOTRNS_POS_IGNORE,
             (PICOKFST_PLANE_INTERN << 8) + sa->fixedIds->phonStartId);
 }
 
 
-static pico_status_t saAddTermPhoneme(register sa_subobj_t *sa) {
+static pico_status_t saAddTermPhoneme(sa_subobj_t *sa) {
     return saAddPhoneme(sa, PICOTRNS_POS_IGNORE,
             (PICOKFST_PLANE_INTERN << 8) + sa->fixedIds->phonTermId);
 }
 
 */
 
-static pico_status_t saExtractPhonemes(register picodata_ProcessingUnit this,
-        register sa_subobj_t *sa, picoos_uint16 pos,
+static pico_status_t saExtractPhonemes(picodata_ProcessingUnit this,
+        sa_subobj_t *sa, picoos_uint16 pos,
         picodata_itemhead_t* head, const picoos_uint8* content)
 {
     pico_status_t rv= PICO_OK;
@@ -1185,10 +1185,10 @@ FEED | putItems  0  0 0 -m-n  +m  1   | BUSY -> INIT    (put items)
 FEED | putItems  0  0 0 -d-d  +d      | OUT_FULL        (put some items)
 */
 
-static picodata_step_result_t saStep(register picodata_ProcessingUnit this,
+static picodata_step_result_t saStep(picodata_ProcessingUnit this,
                                      picoos_int16 mode,
                                      picoos_uint16 *numBytesOutput) {
-    register sa_subobj_t *sa;
+    sa_subobj_t *sa;
     pico_status_t rv = PICO_OK;
     pico_status_t rvP = PICO_OK;
     picoos_uint16 blen = 0;

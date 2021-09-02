@@ -83,13 +83,13 @@ void picodata_disposeCharBuffer(picoos_MemoryManager mm,
                                 picodata_CharBuffer * that);
 
 /* should not be used for PUs but only for feeding the initial cb */
-pico_status_t picodata_cbPutCh(register picodata_CharBuffer that, picoos_char ch);
+pico_status_t picodata_cbPutCh(picodata_CharBuffer that, picoos_char ch);
 
 /* should not be used for PUs other than first PU in the chain (picotok) */
-picoos_int16 picodata_cbGetCh(register picodata_CharBuffer that);
+picoos_int16 picodata_cbGetCh(picodata_CharBuffer that);
 
 /* reset cb (as if after newCharBuffer) */
-pico_status_t picodata_cbReset (register picodata_CharBuffer that);
+pico_status_t picodata_cbReset (picodata_CharBuffer that);
 
 /* ** CharBuffer item functions, cf. below in items section ****/
 
@@ -298,7 +298,7 @@ typedef struct picodata_itemhead
      PICO_EXC_BUF_UNDERFLOW  <- cb not empty, but no valid item
      PICO_EXC_BUF_OVERFLOW   <- buf not large enough
 */
-pico_status_t picodata_cbGetItem(register picodata_CharBuffer that,
+pico_status_t picodata_cbGetItem(picodata_CharBuffer that,
         picoos_uint8 *buf, const picoos_uint16 blenmax,
         picoos_uint16 *blen);
 
@@ -310,7 +310,7 @@ pico_status_t picodata_cbGetItem(register picodata_CharBuffer that,
      PICO_EXC_BUF_UNDERFLOW  <- cb not empty, but no valid item
      PICO_EXC_BUF_OVERFLOW   <- buf not large enough
 */
-pico_status_t picodata_cbGetSpeechData(register picodata_CharBuffer that,
+pico_status_t picodata_cbGetSpeechData(picodata_CharBuffer that,
         picoos_uint8 *buf, const picoos_uint16 blenmax,
         picoos_uint16 *blen);
 
@@ -321,12 +321,12 @@ pico_status_t picodata_cbGetSpeechData(register picodata_CharBuffer that,
      PICO_EXC_BUF_UNDERFLOW  <- no valid item in buf
      PICO_EXC_BUF_OVERFLOW   <- cb not large enough
 */
-pico_status_t picodata_cbPutItem(register picodata_CharBuffer that,
+pico_status_t picodata_cbPutItem(picodata_CharBuffer that,
         const picoos_uint8 *buf, const picoos_uint16 blenmax,
         picoos_uint16 *blen);
 
 /* unsafe, just for measuring purposes */
-picoos_uint8 picodata_cbGetFrontItemType(register picodata_CharBuffer that);
+picoos_uint8 picodata_cbGetFrontItemType(picodata_CharBuffer that);
 
 /* ***************************************************************
  *                   items: support function                     *
@@ -498,10 +498,10 @@ pico_status_t picodata_setCbIn(picodata_ProcessingUnit that, picodata_CharBuffer
 pico_status_t picodata_setCbOut(picodata_ProcessingUnit that, picodata_CharBuffer cbOut);
 
 /* protected */
-typedef pico_status_t (* picodata_puInitializeMethod) (register picodata_ProcessingUnit that, picoos_int32 mode);
-typedef pico_status_t (* picodata_puTerminateMethod) (register picodata_ProcessingUnit that);
-typedef picodata_step_result_t (* picodata_puStepMethod) (register picodata_ProcessingUnit that, picoos_int16 mode, picoos_uint16 * numBytesOutput);
-typedef pico_status_t (* picodata_puSubDeallocateMethod) (register picodata_ProcessingUnit that, picoos_MemoryManager mm);
+typedef pico_status_t (* picodata_puInitializeMethod) (picodata_ProcessingUnit that, picoos_int32 mode);
+typedef pico_status_t (* picodata_puTerminateMethod) (picodata_ProcessingUnit that);
+typedef picodata_step_result_t (* picodata_puStepMethod) (picodata_ProcessingUnit that, picoos_int16 mode, picoos_uint16 * numBytesOutput);
+typedef pico_status_t (* picodata_puSubDeallocateMethod) (picodata_ProcessingUnit that, picoos_MemoryManager mm);
 
 typedef struct picodata_processing_unit
 {

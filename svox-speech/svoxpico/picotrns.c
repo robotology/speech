@@ -384,7 +384,7 @@ static void NoteSolution (picoos_uint32 * nrSol, picotrns_printSolutionFct print
                           picotrns_altDesc_t altDesc[], picoos_uint16 pathLen,
                           picotrns_possym_t outSeq[], picoos_uint16 * outSeqLen, picoos_uint16 maxOutSeqLen)
 {
-    register picotrns_AltDesc ap;
+    picotrns_AltDesc ap;
     picoos_uint32 i;
 
     (*nrSol)++;
@@ -460,7 +460,7 @@ static void TransductionStep (picokfst_FST fst, struct picotrns_transductionStat
                               picotrns_possym_t outSeq[], picoos_uint16 * outSeqLen, picoos_uint16 maxOutSeqLen,
                               picoos_bool * finished)
 {
-    register picotrns_AltDesc ap;
+    picotrns_AltDesc ap;
     picoos_int32 i;
     picokfst_state_t endFSTState;
     picoos_int32 nextInPos;

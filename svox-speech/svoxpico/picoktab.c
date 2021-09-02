@@ -62,7 +62,7 @@ extern "C" {
 /* ************************************************************/
 
 
-static pico_status_t ktabIdsInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t ktabIdsInitialize(picoknow_KnowledgeBase this,
                                        picoos_Common common)
 {
     picoktab_FixedIds ids;
@@ -81,7 +81,7 @@ static pico_status_t ktabIdsInitialize(register picoknow_KnowledgeBase this,
 }
 
 
-static pico_status_t ktabIdsSubObjDeallocate(register picoknow_KnowledgeBase this,
+static pico_status_t ktabIdsSubObjDeallocate(picoknow_KnowledgeBase this,
                                              picoos_MemoryManager mm)
 {
     if (NULL != this) {
@@ -201,7 +201,7 @@ typedef struct ktabgraphs_subobj {
 
 
 
-static pico_status_t ktabGraphsInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t ktabGraphsInitialize(picoknow_KnowledgeBase this,
                                           picoos_Common common) {
     ktabgraphs_subobj_t * ktabgraphs;
 
@@ -219,7 +219,7 @@ static pico_status_t ktabGraphsInitialize(register picoknow_KnowledgeBase this,
     return PICO_OK;
 }
 
-static pico_status_t ktabGraphsSubObjDeallocate(register picoknow_KnowledgeBase this,
+static pico_status_t ktabGraphsSubObjDeallocate(picoknow_KnowledgeBase this,
                                                 picoos_MemoryManager mm) {
     if (NULL != this) {
         picoos_deallocate(mm, (void *) &this->subObj);
@@ -692,7 +692,7 @@ typedef struct ktabphones_subobj {
 #define KTAB_PPROP_SYLLCONS     '\x10'
 
 
-static pico_status_t ktabPhonesInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t ktabPhonesInitialize(picoknow_KnowledgeBase this,
                                           picoos_Common common) {
     ktabphones_subobj_t * ktabphones;
 
@@ -708,7 +708,7 @@ static pico_status_t ktabPhonesInitialize(register picoknow_KnowledgeBase this,
     return PICO_OK;
 }
 
-static pico_status_t ktabPhonesSubObjDeallocate(register picoknow_KnowledgeBase this,
+static pico_status_t ktabPhonesSubObjDeallocate(picoknow_KnowledgeBase this,
                                                 picoos_MemoryManager mm) {
     if (NULL != this) {
         picoos_deallocate(mm, (void *) &this->subObj);
@@ -884,7 +884,7 @@ typedef struct ktabpos_subobj {
 } ktabpos_subobj_t;
 
 
-static pico_status_t ktabPosInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t ktabPosInitialize(picoknow_KnowledgeBase this,
                                        picoos_Common common) {
     ktabpos_subobj_t *ktabpos;
     picoos_uint16 osprev;
@@ -928,7 +928,7 @@ static pico_status_t ktabPosInitialize(register picoknow_KnowledgeBase this,
     return PICO_OK;
 }
 
-static pico_status_t ktabPosSubObjDeallocate(register picoknow_KnowledgeBase this,
+static pico_status_t ktabPosSubObjDeallocate(picoknow_KnowledgeBase this,
                                              picoos_MemoryManager mm) {
     if (NULL != this) {
         picoos_deallocate(mm, (void *) &this->subObj);

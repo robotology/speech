@@ -54,7 +54,7 @@ extern "C" {
  // Internal function declarations
  //---------------------------------------------------------*/
 
-static picodata_step_result_t sigStep(register picodata_ProcessingUnit this,
+static picodata_step_result_t sigStep(picodata_ProcessingUnit this,
         picoos_int16 mode, picoos_uint16 * numBytesOutput);
 
 /*----------------------------------------------------------
@@ -114,7 +114,7 @@ typedef struct sig_subobj
  * @callgraph
  * @callergraph
  */
-static pico_status_t sigInitialize(register picodata_ProcessingUnit this, picoos_int32 resetMode)
+static pico_status_t sigInitialize(picodata_ProcessingUnit this, picoos_int32 resetMode)
 {
     sig_subobj_t *sig_subObj;
     if (NULL == this || NULL == this->subObj) {
@@ -193,7 +193,7 @@ static pico_status_t sigInitialize(register picodata_ProcessingUnit this, picoos
  * @callgraph
  * @callergraph
  */
-static pico_status_t sigTerminate(register picodata_ProcessingUnit this)
+static pico_status_t sigTerminate(picodata_ProcessingUnit this)
 {
 
     sig_subobj_t *sig_subObj;
@@ -214,7 +214,7 @@ static pico_status_t sigTerminate(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static pico_status_t sigSubObjDeallocate(register picodata_ProcessingUnit this,
+static pico_status_t sigSubObjDeallocate(picodata_ProcessingUnit this,
         picoos_MemoryManager mm)
 {
     sig_subobj_t *sig_subObj;
@@ -314,7 +314,7 @@ picodata_ProcessingUnit picosig_newSigUnit(picoos_MemoryManager mm,
  * @callgraph
  * @callergraph
  */
-static pico_status_t getPhsFromPdf(register picodata_ProcessingUnit this,
+static pico_status_t getPhsFromPdf(picodata_ProcessingUnit this,
         picoos_uint16 phsIndex, picoos_int32 *phsVect,
         picoos_int16 *numComponents)
 {
@@ -371,12 +371,12 @@ static pico_status_t getPhsFromPdf(register picodata_ProcessingUnit this,
  * @callgraph
  * @callergraph
  */
-static pico_status_t sigProcess(register picodata_ProcessingUnit this,
+static pico_status_t sigProcess(picodata_ProcessingUnit this,
         picoos_uint16 inReadPos, picoos_uint16 numinb,
         picoos_uint16 outWritePos, picoos_uint16 *numoutb)
 {
 
-    register sig_subobj_t * sig_subObj;
+    sig_subobj_t * sig_subObj;
     picoos_int16 n_i;
     picoos_int16 n_frames, n_count;
     picoos_int16 *s_data, offset;
@@ -721,10 +721,10 @@ static pico_status_t sig_is_command(const picoos_uint8 *item)
  * @callgraph
  * @callergraph
  */
-static picodata_step_result_t sigStep(register picodata_ProcessingUnit this,
+static picodata_step_result_t sigStep(picodata_ProcessingUnit this,
         picoos_int16 mode, picoos_uint16 * numBytesOutput)
 {
-    register sig_subobj_t * sig_subObj;
+    sig_subobj_t * sig_subObj;
     pico_status_t s_result;
     picoos_bool b_res;
     pico_status_t s_deal_with;

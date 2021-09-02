@@ -166,7 +166,7 @@ static picoos_uint32 kpr_getUInt32(picoos_uint8 * p)
 }
 
 
-static pico_status_t kprInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kprInitialize(picoknow_KnowledgeBase this,
                                    picoos_Common common)
 {
     picoos_uint32 offset = 0;
@@ -223,7 +223,7 @@ static pico_status_t kprInitialize(register picoknow_KnowledgeBase this,
 }
 
 
-static pico_status_t kprSubObjDeallocate(register picoknow_KnowledgeBase this,
+static pico_status_t kprSubObjDeallocate(picoknow_KnowledgeBase this,
                                          picoos_MemoryManager mm)
 {
     if (NULL != this) {

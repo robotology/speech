@@ -89,7 +89,7 @@ extern "C" {
 /* pdf loading */
 /* ************************************************************/
 
-static pico_status_t kpdfDURInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kpdfDURInitialize(picoknow_KnowledgeBase this,
                                        picoos_Common common) {
     picokpdf_pdfdur_t *pdfdur;
     picoos_uint16 pos;
@@ -141,7 +141,7 @@ static picoos_uint8 convScaleFactorToBig(picoos_uint8 pow, picoos_uint8 bigpow)
     return pow;
 }
 
-static pico_status_t kpdfMULInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kpdfMULInitialize(picoknow_KnowledgeBase this,
                                        picoos_Common common) {
     picokpdf_pdfmul_t *pdfmul;
     picoos_uint16 pos;
@@ -246,7 +246,7 @@ static pico_status_t kpdfMULInitialize(register picoknow_KnowledgeBase this,
     return PICO_OK;
 }
 
-static pico_status_t kpdfPHSInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kpdfPHSInitialize(picoknow_KnowledgeBase this,
                                        picoos_Common common) {
     picokpdf_pdfphs_t *pdfphs;
     picoos_uint16 pos;
@@ -270,7 +270,7 @@ static pico_status_t kpdfPHSInitialize(register picoknow_KnowledgeBase this,
 
 
 
-static pico_status_t kpdfMULSubObjDeallocate(register picoknow_KnowledgeBase this,
+static pico_status_t kpdfMULSubObjDeallocate(picoknow_KnowledgeBase this,
                                           picoos_MemoryManager mm) {
 
 
@@ -285,7 +285,7 @@ static pico_status_t kpdfMULSubObjDeallocate(register picoknow_KnowledgeBase thi
     return PICO_OK;
 }
 
-static pico_status_t kpdfDURSubObjDeallocate(register picoknow_KnowledgeBase this,
+static pico_status_t kpdfDURSubObjDeallocate(picoknow_KnowledgeBase this,
                                           picoos_MemoryManager mm) {
     if (NULL != this) {
         picoos_deallocate(mm, (void *) &this->subObj);
@@ -293,7 +293,7 @@ static pico_status_t kpdfDURSubObjDeallocate(register picoknow_KnowledgeBase thi
     return PICO_OK;
 }
 
-static pico_status_t kpdfPHSSubObjDeallocate(register picoknow_KnowledgeBase this,
+static pico_status_t kpdfPHSSubObjDeallocate(picoknow_KnowledgeBase this,
                                           picoos_MemoryManager mm) {
     if (NULL != this) {
         picoos_deallocate(mm, (void *) &this->subObj);

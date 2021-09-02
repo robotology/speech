@@ -70,7 +70,7 @@ typedef struct kdbg_subobj {
 } kdbg_subobj_t;
 
 
-static pico_status_t kdbgInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kdbgInitialize(picoknow_KnowledgeBase this,
                                     picoos_Common common) {
     kdbg_subobj_t *kdbg;
 
@@ -86,7 +86,7 @@ static pico_status_t kdbgInitialize(register picoknow_KnowledgeBase this,
 }
 
 
-static pico_status_t kdbgSubObjDeallocate(register picoknow_KnowledgeBase this,
+static pico_status_t kdbgSubObjDeallocate(picoknow_KnowledgeBase this,
                                           picoos_MemoryManager mm) {
     if (NULL != this) {
         picoos_deallocate(mm, (void *) &this->subObj);

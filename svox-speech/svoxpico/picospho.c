@@ -241,7 +241,7 @@ typedef struct spho_subobj {
 } spho_subobj_t;
 
 
-static pico_status_t sphoReset(register picodata_ProcessingUnit this)
+static pico_status_t sphoReset(picodata_ProcessingUnit this)
 {
 
     spho_subobj_t * spho;
@@ -286,7 +286,7 @@ static pico_status_t sphoReset(register picodata_ProcessingUnit this)
 }
 
 
-static pico_status_t sphoInitialize(register picodata_ProcessingUnit this, picoos_int32 resetMode)
+static pico_status_t sphoInitialize(picodata_ProcessingUnit this, picoos_int32 resetMode)
 {
     picoos_uint8 i;
     spho_subobj_t * spho;
@@ -327,19 +327,19 @@ static pico_status_t sphoInitialize(register picodata_ProcessingUnit this, picoo
 
 }
 
-static picodata_step_result_t sphoStep(register picodata_ProcessingUnit this,
+static picodata_step_result_t sphoStep(picodata_ProcessingUnit this,
         picoos_int16 mode, picoos_uint16 *numBytesOutput);
 
 
 
 
-static pico_status_t sphoTerminate(register picodata_ProcessingUnit this)
+static pico_status_t sphoTerminate(picodata_ProcessingUnit this)
 {
     return PICO_OK;
 }
 
 
-static pico_status_t sphoSubObjDeallocate(register picodata_ProcessingUnit this,
+static pico_status_t sphoSubObjDeallocate(picodata_ProcessingUnit this,
         picoos_MemoryManager mm)
 {
     spho_subobj_t * spho;
@@ -458,7 +458,7 @@ static picoos_int16 shift_range_left_1(spho_subobj_t *spho, picoos_int16 * from,
     return diff;
 }
 
-static pico_status_t sphoAddPhoneme(register spho_subobj_t *spho, picoos_int16 pos, picoos_int16 sym) {
+static pico_status_t sphoAddPhoneme(spho_subobj_t *spho, picoos_int16 pos, picoos_int16 sym) {
     picoos_uint8 plane, unshifted;
     /* just for debuging */
     unshifted = picotrns_unplane(sym,&plane);
@@ -475,12 +475,12 @@ static pico_status_t sphoAddPhoneme(register spho_subobj_t *spho, picoos_int16 p
     }
 }
 
-static pico_status_t sphoAddStartPhoneme(register spho_subobj_t *spho) {
+static pico_status_t sphoAddStartPhoneme(spho_subobj_t *spho) {
     return sphoAddPhoneme(spho, PICOTRNS_POS_IGNORE,
             (PICOKFST_PLANE_INTERN << 8) + spho->fixedIds->phonStartId);
 }
 
-static pico_status_t sphoAddTermPhonemes(register spho_subobj_t *spho, picoos_uint16 pos) {
+static pico_status_t sphoAddTermPhonemes(spho_subobj_t *spho, picoos_uint16 pos) {
     return sphoAddPhoneme(spho, pos,
             (PICOKFST_PLANE_PB_STRENGTHS << 8) + PICODATA_ITEMINFO1_BOUND_SEND)
             && sphoAddPhoneme(spho, PICOTRNS_POS_IGNORE,
@@ -488,7 +488,7 @@ static pico_status_t sphoAddTermPhonemes(register spho_subobj_t *spho, picoos_ui
 }
 
 /* return "syllable accent" (or prominence) symbol, given "word accent" symbol 'wacc' and stress value (no=0, primary=1, secondary=2) */
-static picoos_uint16 sphoGetSylAccent(register spho_subobj_t *spho,
+static picoos_uint16 sphoGetSylAccent(spho_subobj_t *spho,
         picoos_uint8 wacc, picoos_uint8 sylStress)
 {
     PICODBG_ASSERT(sylStress <= 2);
@@ -520,8 +520,8 @@ static picoos_uint16 sphoGetSylAccent(register spho_subobj_t *spho,
 /* ***********************************************************************/
 /*                          extract phonemes of an item into a phonBuf   */
 /* ***********************************************************************/
-static pico_status_t sphoExtractPhonemes(register picodata_ProcessingUnit this,
-        register spho_subobj_t *spho, picoos_uint16 pos,
+static pico_status_t sphoExtractPhonemes(picodata_ProcessingUnit this,
+        spho_subobj_t *spho, picoos_uint16 pos,
         picoos_uint8 convertAccents, picoos_uint8 * suppressWB)
 {
     pico_status_t rv = PICO_OK;
@@ -919,11 +919,11 @@ static void setSideBound(spho_subobj_t * spho, picoos_uint8 orig_strength, picoo
 /* ***********************************************************************/
 
 
-static picodata_step_result_t sphoStep(register picodata_ProcessingUnit this,
+static picodata_step_result_t sphoStep(picodata_ProcessingUnit this,
         picoos_int16 mode, picoos_uint16 * numBytesOutput)
 {
 
-    register spho_subobj_t *spho;
+    spho_subobj_t *spho;
     pico_status_t rv= PICO_OK;
     picoos_uint16 blen;
     picodata_itemhead_t ihead, ohead;
