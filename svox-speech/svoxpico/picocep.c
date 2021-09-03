@@ -229,7 +229,7 @@ typedef struct cep_subobj
  * @brief        find the highest non-zero bit in input x
  * @remarks        this may be implemented by comparing x to powers of 2
  *                or instead of calling this function perform multiplication
- *                and consult overflow register if available on target
+ *                and consult overflow if available on target
  * @note        implemented as a series of macros
  */
 
@@ -269,7 +269,7 @@ static void treat_phone(cep_subobj_t * cep, picodata_itemhead_t * ihead);
 
 static picoos_uint8 forwardingItem(picodata_itemhead_t * ihead);
 
-static picodata_step_result_t cepStep(register picodata_ProcessingUnit this,
+static picodata_step_result_t cepStep(picodata_ProcessingUnit this,
         picoos_int16 mode, picoos_uint16 * numBytesOutput);
 
 /* --------------------------------------------
@@ -285,7 +285,7 @@ static picodata_step_result_t cepStep(register picodata_ProcessingUnit this,
  * @callgraph
  * @callergraph
  */
-static pico_status_t cepInitialize(register picodata_ProcessingUnit this, picoos_int32 resetMode)
+static pico_status_t cepInitialize(picodata_ProcessingUnit this, picoos_int32 resetMode)
 {
     /*pico_status_t nRes;*/
     cep_subobj_t * cep;
@@ -371,7 +371,7 @@ static pico_status_t cepInitialize(register picodata_ProcessingUnit this, picoos
  * @callgraph
  * @callergraph
  */
-static pico_status_t cepTerminate(register picodata_ProcessingUnit this)
+static pico_status_t cepTerminate(picodata_ProcessingUnit this)
 {
     return PICO_OK;
 }
@@ -385,7 +385,7 @@ static pico_status_t cepTerminate(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static pico_status_t cepSubObjDeallocate(register picodata_ProcessingUnit this,
+static pico_status_t cepSubObjDeallocate(picodata_ProcessingUnit this,
         picoos_MemoryManager mm)
 {
 
@@ -613,7 +613,7 @@ static picoos_int32 picocep_fixptmult(picoos_int32 x, picoos_int32 y,
     }
 
     if (multsz <= 30) { /* x*y < 1<<30 is safe including rounding in picocep_fixptdivpow, x*y < 1<<31 is safe but not with rounding */
-        /* alternatively perform multiplication and consult overflow register */
+        /* alternatively perform multiplication and consult overflow */
         z = picocep_fixptdivpow(x * y, pow);
 #if defined(PICO_DEBUG)
         numshortmult++; /*  keep track of number of short multiplications */
@@ -1472,10 +1472,10 @@ static picoos_uint8 forwardingItem(picodata_itemhead_t * ihead)
  * @callgraph
  * @callergraph
  */
-static picodata_step_result_t cepStep(register picodata_ProcessingUnit this,
+static picodata_step_result_t cepStep(picodata_ProcessingUnit this,
         picoos_int16 mode, picoos_uint16 * numBytesOutput)
 {
-    register cep_subobj_t * cep;
+    cep_subobj_t * cep;
     picodata_itemhead_t ihead /* , ohead */;
     picoos_uint8 * icontents;
     pico_status_t sResult = PICO_OK;

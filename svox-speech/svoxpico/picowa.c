@@ -78,7 +78,7 @@ typedef struct wa_subobj {
 } wa_subobj_t;
 
 
-static pico_status_t waInitialize(register picodata_ProcessingUnit this, picoos_int32 resetMode) {
+static pico_status_t waInitialize(picodata_ProcessingUnit this, picoos_int32 resetMode) {
     picoos_uint8 i;
     picoklex_Lex ulex;
     wa_subobj_t * wa;
@@ -139,15 +139,15 @@ static pico_status_t waInitialize(register picodata_ProcessingUnit this, picoos_
     return PICO_OK;
 }
 
-static picodata_step_result_t waStep(register picodata_ProcessingUnit this,
+static picodata_step_result_t waStep(picodata_ProcessingUnit this,
                                      picoos_int16 mode,
                                      picoos_uint16 *numBytesOutput);
 
-static pico_status_t waTerminate(register picodata_ProcessingUnit this) {
+static pico_status_t waTerminate(picodata_ProcessingUnit this) {
     return PICO_OK;
 }
 
-static pico_status_t waSubObjDeallocate(register picodata_ProcessingUnit this,
+static pico_status_t waSubObjDeallocate(picodata_ProcessingUnit this,
                                         picoos_MemoryManager mm) {
     if (NULL != this) {
         picoos_deallocate(this->common->mm, (void *) &this->subObj);
@@ -189,8 +189,8 @@ picodata_ProcessingUnit picowa_newWordAnaUnit(picoos_MemoryManager mm,
 /*                       WORDGRAPH proc functions                        */
 /* ***********************************************************************/
 
-static picoos_uint8 waClassifyPos(register picodata_ProcessingUnit this,
-                                  register wa_subobj_t *wa,
+static picoos_uint8 waClassifyPos(picodata_ProcessingUnit this,
+                                  wa_subobj_t *wa,
                                   const picoos_uint8 *graph,
                                   const picoos_uint16 graphlen) {
     picokdt_classify_result_t dtres;
@@ -250,8 +250,8 @@ static picoos_uint8 waClassifyPos(register picodata_ProcessingUnit this,
 }
 
 
-static pico_status_t waProcessWordgraph(register picodata_ProcessingUnit this,
-                                        register wa_subobj_t *wa /*inout*/,
+static pico_status_t waProcessWordgraph(picodata_ProcessingUnit this,
+                                        wa_subobj_t *wa /*inout*/,
                                         picodata_itemhead_t *head /*inout*/,
                                         const picoos_uint8 *content) {
     pico_status_t status;
@@ -374,10 +374,10 @@ static pico_status_t waProcessWordgraph(register picodata_ProcessingUnit this,
    FEED    | putOneItem  -> 0  0  1  0   | OUT_FULL            (put no item)
 */
 
-static picodata_step_result_t waStep(register picodata_ProcessingUnit this,
+static picodata_step_result_t waStep(picodata_ProcessingUnit this,
                                      picoos_int16 mode,
                                      picoos_uint16 * numBytesOutput) {
-    register wa_subobj_t *wa;
+    wa_subobj_t *wa;
     pico_status_t rv = PICO_OK;
 
     if (NULL == this || NULL == this->subObj) {

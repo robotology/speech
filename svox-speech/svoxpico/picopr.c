@@ -844,7 +844,7 @@ static void pr_initPathEle (struct pr_PathEle * ele)
 
 /* *****************************************************************************/
 
-static void pr_disposeProdList (register picodata_ProcessingUnit this,  pr_ProdList * prodList)
+static void pr_disposeProdList (picodata_ProcessingUnit this,  pr_ProdList * prodList)
 {
     pr_ProdList p;
 
@@ -856,7 +856,7 @@ static void pr_disposeProdList (register picodata_ProcessingUnit this,  pr_ProdL
 }
 
 
-static pico_Status pr_addContext (register picodata_ProcessingUnit this,  pr_subobj_t * pr, pr_ContextList * ctxList, picokpr_VarStrPtr contextNamePtr, picokpr_VarStrPtr netNamePtr, picokpr_VarStrPtr prodNamePtr)
+static pico_Status pr_addContext (picodata_ProcessingUnit this,  pr_subobj_t * pr, pr_ContextList * ctxList, picokpr_VarStrPtr contextNamePtr, picokpr_VarStrPtr netNamePtr, picokpr_VarStrPtr prodNamePtr)
 {
     picokpr_Preproc net;
     pr_ContextList ctx;
@@ -910,7 +910,7 @@ static pico_Status pr_addContext (register picodata_ProcessingUnit this,  pr_sub
 }
 
 
-static pico_Status pr_createContextList (register picodata_ProcessingUnit this)
+static pico_Status pr_createContextList (picodata_ProcessingUnit this)
 {
     pr_subobj_t * pr = (pr_subobj_t *) this->subObj;
     picokpr_VarStrPtr ctxNamePtr;
@@ -938,7 +938,7 @@ static pico_Status pr_createContextList (register picodata_ProcessingUnit this)
 }
 
 
-static void pr_disposeContextList (register picodata_ProcessingUnit this)
+static void pr_disposeContextList (picodata_ProcessingUnit this)
 {
     pr_subobj_t * pr = (pr_subobj_t *) this->subObj;
     pr_ContextList c;
@@ -964,7 +964,7 @@ static pr_ContextList pr_findContext (pr_ContextList contextList, picoos_uchar c
 }
 
 
-static void pr_setContext (register picodata_ProcessingUnit this,  pr_subobj_t * pr, picoos_uchar context[])
+static void pr_setContext (picodata_ProcessingUnit this,  pr_subobj_t * pr, picoos_uchar context[])
 {
 
     pr_ContextList ctx;
@@ -1989,7 +1989,7 @@ static void pr_getOutput (picodata_ProcessingUnit this, pr_subobj_t * pr,
                           picoos_int32 * i, picoos_int32 d, pr_ioItemPtr * o, pr_ioItemPtr * ol)
 {
 
-    register struct pr_PathEle * with__0;
+    struct pr_PathEle * with__0;
     pr_OutItemVarPtr lvars;
     pr_OutItemVarPtr lvar;
     pr_ioItemPtr lit;
@@ -2130,7 +2130,7 @@ static void pr_getOutput (picodata_ProcessingUnit this, pr_subobj_t * pr,
 
 static void pr_outputPath (picodata_ProcessingUnit this, pr_subobj_t * pr)
 {
-    register struct pr_PathEle * with__0;
+    struct pr_PathEle * with__0;
     picoos_int32 li;
     pr_ioItemPtr lf;
     pr_ioItemPtr ll;
@@ -2261,7 +2261,7 @@ static picoos_bool pr_hasToken (picokpr_TokSetWP * tswp, picokpr_TokSetNP * tsnp
 
 static picoos_bool pr_getNextToken (picodata_ProcessingUnit this, pr_subobj_t * pr)
 {
-    register struct pr_PathEle * with__0;
+    struct pr_PathEle * with__0;
     picoos_int32 len;
     picokpr_TokSetNP npset;
 
@@ -2286,7 +2286,7 @@ static picoos_bool pr_getNextToken (picodata_ProcessingUnit this, pr_subobj_t * 
 
 static picoos_bool pr_getAltToken (picodata_ProcessingUnit this, pr_subobj_t * pr)
 {
-    register struct pr_PathEle * with__0;
+    struct pr_PathEle * with__0;
     picokpr_TokArrOffset lTok;
     picokpr_TokSetNP npset;
 
@@ -2362,7 +2362,7 @@ static picoos_bool pr_findProduction (picodata_ProcessingUnit this, pr_subobj_t 
 
 static picoos_bool pr_getProdToken (picodata_ProcessingUnit this, pr_subobj_t * pr)
 {
-    register struct pr_PathEle * with__0;
+    struct pr_PathEle * with__0;
     picokpr_VarStrPtr lstrp;
     picokpr_TokSetWP wpset;
 
@@ -2523,7 +2523,7 @@ static pr_MatchState pr_matchMultiToken (picodata_ProcessingUnit this, pr_subobj
 static pr_MatchState pr_matchTokensSpace (picodata_ProcessingUnit this, pr_subobj_t * pr, picoos_int32 cmpres,
                                           picokpr_TokSetNP npset, picokpr_TokSetWP wpset)
 {
-    register struct pr_PathEle * with__0;
+    struct pr_PathEle * with__0;
     picoos_int32 llen;
     picoos_int32 lulen;
     picoos_int32 li;
@@ -2570,7 +2570,7 @@ static pr_MatchState pr_matchTokensSpace (picodata_ProcessingUnit this, pr_subob
 static pr_MatchState pr_matchTokensDigit (picodata_ProcessingUnit this, pr_subobj_t * pr, picoos_int32 cmpres,
                                           picokpr_TokSetNP npset, picokpr_TokSetWP wpset)
 {
-    register struct pr_PathEle * with__0;
+    struct pr_PathEle * with__0;
     picoos_int32 lulen;
     picoos_int32 lval;
     picokpr_VarStrPtr lstrp;
@@ -2620,7 +2620,7 @@ static pr_MatchState pr_matchTokensSeq (picodata_ProcessingUnit this, pr_subobj_
                                         picokpr_TokSetNP npset, picokpr_TokSetWP wpset)
 {
 
-    register struct pr_PathEle * with__0;
+    struct pr_PathEle * with__0;
     picoos_int32 lulen;
     picokpr_VarStrPtr lstrp;
 
@@ -2662,7 +2662,7 @@ static pr_MatchState pr_matchTokensSeq (picodata_ProcessingUnit this, pr_subobj_
 static pr_MatchState pr_matchTokensChar (picodata_ProcessingUnit this, pr_subobj_t * pr, picoos_int32 cmpres,
                                          picokpr_TokSetNP npset, picokpr_TokSetWP wpset)
 {
-    register struct pr_PathEle * with__0;
+    struct pr_PathEle * with__0;
 
     with__0 = & pr->ractpath.rele[pr->ractpath.rlen - 1];
 
@@ -2683,7 +2683,7 @@ static pr_MatchState pr_matchTokensLetter (picodata_ProcessingUnit this, pr_subo
                                            picokpr_TokSetNP npset, picokpr_TokSetWP wpset)
 {
 
-    register struct pr_PathEle * with__0;
+    struct pr_PathEle * with__0;
     picoos_int32 lulen;
     picoos_int32 lromanval;
 
@@ -2791,7 +2791,7 @@ static pr_MatchState pr_matchTokensEnd (picodata_ProcessingUnit this, pr_subobj_
 static pr_MatchState pr_matchTokens (picodata_ProcessingUnit this, pr_subobj_t * pr, picoos_int16 * cmpres)
 {
 
-    register struct pr_PathEle * with__0;
+    struct pr_PathEle * with__0;
     picokpr_VarStrPtr lstrp;
     picokpr_TokSetNP npset;
     picokpr_TokSetWP wpset;
@@ -2893,7 +2893,7 @@ static void pr_calcPathCost (struct pr_Path * path)
 
 void pr_processToken (picodata_ProcessingUnit this, pr_subobj_t * pr)
 {
-    register struct pr_PathEle * with__0;
+    struct pr_PathEle * with__0;
     picoos_bool ldummy;
     picoos_int32 li;
     picokpr_TokSetNP npset;
@@ -3168,7 +3168,7 @@ extern void pr_treatItem (picodata_ProcessingUnit this, pr_subobj_t * pr, pr_ioI
 /* *****************************************************************************/
 
 
-pico_status_t prReset(register picodata_ProcessingUnit this, picoos_int32 resetMode)
+pico_status_t prReset(picodata_ProcessingUnit this, picoos_int32 resetMode)
 {
 
     picoos_int32 i;
@@ -3244,7 +3244,7 @@ pico_status_t prReset(register picodata_ProcessingUnit this, picoos_int32 resetM
 }
 
 
-pico_status_t prInitialize(register picodata_ProcessingUnit this, picoos_int32 resetMode)
+pico_status_t prInitialize(picodata_ProcessingUnit this, picoos_int32 resetMode)
 {
 /*
     if (NULL == this || NULL == this->subObj) {
@@ -3255,14 +3255,14 @@ pico_status_t prInitialize(register picodata_ProcessingUnit this, picoos_int32 r
 }
 
 
-pico_status_t prTerminate(register picodata_ProcessingUnit this)
+pico_status_t prTerminate(picodata_ProcessingUnit this)
 {
     return PICO_OK;
 }
 
-picodata_step_result_t prStep(register picodata_ProcessingUnit this, picoos_int16 mode, picoos_uint16 * numBytesOutput);
+picodata_step_result_t prStep(picodata_ProcessingUnit this, picoos_int16 mode, picoos_uint16 * numBytesOutput);
 
-pico_status_t prSubObjDeallocate(register picodata_ProcessingUnit this,
+pico_status_t prSubObjDeallocate(picodata_ProcessingUnit this,
         picoos_MemoryManager mm)
 {
     pr_subobj_t * pr;
@@ -3326,10 +3326,10 @@ picodata_ProcessingUnit picopr_newPreprocUnit(picoos_MemoryManager mm, picoos_Co
 /**
  * fill up internal buffer
  */
-picodata_step_result_t prStep(register picodata_ProcessingUnit this,
+picodata_step_result_t prStep(picodata_ProcessingUnit this,
         picoos_int16 mode, picoos_uint16 * numBytesOutput)
 {
-    register pr_subobj_t * pr;
+    pr_subobj_t * pr;
     pr_ioItemPtr it;
     picoos_int32 len, i;
     pico_status_t rv;

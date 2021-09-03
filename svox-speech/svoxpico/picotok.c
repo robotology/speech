@@ -1399,7 +1399,7 @@ static void tok_treatSimpleToken (picodata_ProcessingUnit this, tok_subobj_t * t
 
 /* *****************************************************************************/
 
-static pico_status_t tokReset(register picodata_ProcessingUnit this, picoos_int32 resetMode)
+static pico_status_t tokReset(picodata_ProcessingUnit this, picoos_int32 resetMode)
 {
     tok_subobj_t * tok;
     MarkupId mId;
@@ -1463,7 +1463,7 @@ static pico_status_t tokReset(register picodata_ProcessingUnit this, picoos_int3
     return PICO_OK;
 }
 
-static pico_status_t tokInitialize(register picodata_ProcessingUnit this, picoos_int32 resetMode)
+static pico_status_t tokInitialize(picodata_ProcessingUnit this, picoos_int32 resetMode)
 {
 /*
 
@@ -1478,14 +1478,14 @@ static pico_status_t tokInitialize(register picodata_ProcessingUnit this, picoos
 }
 
 
-static pico_status_t tokTerminate(register picodata_ProcessingUnit this)
+static pico_status_t tokTerminate(picodata_ProcessingUnit this)
 {
     return PICO_OK;
 }
 
-static picodata_step_result_t tokStep(register picodata_ProcessingUnit this, picoos_int16 mode, picoos_uint16 * numBytesOutput);
+static picodata_step_result_t tokStep(picodata_ProcessingUnit this, picoos_int16 mode, picoos_uint16 * numBytesOutput);
 
-static pico_status_t tokSubObjDeallocate(register picodata_ProcessingUnit this,
+static pico_status_t tokSubObjDeallocate(picodata_ProcessingUnit this,
         picoos_MemoryManager mm)
 {
 
@@ -1529,10 +1529,10 @@ picodata_ProcessingUnit picotok_newTokenizeUnit(picoos_MemoryManager mm, picoos_
 /**
  * fill up internal buffer, try to locate token, write token to output
  */
-picodata_step_result_t tokStep(register picodata_ProcessingUnit this,
+picodata_step_result_t tokStep(picodata_ProcessingUnit this,
         picoos_int16 mode, picoos_uint16 * numBytesOutput)
 {
-    register tok_subobj_t * tok;
+    tok_subobj_t * tok;
 
     if (NULL == this || NULL == this->subObj) {
         return PICODATA_PU_ERROR;

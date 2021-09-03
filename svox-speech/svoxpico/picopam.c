@@ -386,22 +386,22 @@ typedef struct pam_subobj
 /*------------------------------------------------------------------
  Service routines :
  ------------------------------------------------------------------*/
-static pico_status_t pam_initialize(register picodata_ProcessingUnit this, picoos_int32 resetMode);
-static pico_status_t pam_terminate(register picodata_ProcessingUnit this);
+static pico_status_t pam_initialize(picodata_ProcessingUnit this, picoos_int32 resetMode);
+static pico_status_t pam_terminate(picodata_ProcessingUnit this);
 static pico_status_t pam_allocate(picoos_MemoryManager mm, pam_subobj_t *pam);
 static void pam_deallocate(picoos_MemoryManager mm, pam_subobj_t *pam);
-static pico_status_t pam_subobj_deallocate(register picodata_ProcessingUnit this,
+static pico_status_t pam_subobj_deallocate(picodata_ProcessingUnit this,
         picoos_MemoryManager mm);
 /*------------------------------------------------------------------
  Processing routines :
  ------------------------------------------------------------------*/
-static picodata_step_result_t pam_step(register picodata_ProcessingUnit this,
+static picodata_step_result_t pam_step(picodata_ProcessingUnit this,
         picoos_int16 mode, picoos_uint16 * numBytesOutput);
 static pico_status_t pam_deal_with(const picoos_uint8 *item);
 /*Utility*/
-static picoos_uint8 pam_get_vowel_name(register picodata_ProcessingUnit this,
+static picoos_uint8 pam_get_vowel_name(picodata_ProcessingUnit this,
         picoos_uint8 *item, picoos_uint8 *pos);
-static picoos_uint8 pam_get_pause_id(register picodata_ProcessingUnit this);
+static picoos_uint8 pam_get_pause_id(picodata_ProcessingUnit this);
 
 static picoos_uint8 pam_map_sentence_type(picoos_uint8 iteminfo1,
         picoos_uint8 iteminfo2);
@@ -409,37 +409,37 @@ static picoos_uint8 pam_map_phrase_type(picoos_uint8 iteminfo1,
         picoos_uint8 iteminfo2);
 
 /*Adapter*/
-static pico_status_t pam_reset_processors(register picodata_ProcessingUnit this);
+static pico_status_t pam_reset_processors(picodata_ProcessingUnit this);
 static pico_status_t pam_reset_processors_back(
-        register picodata_ProcessingUnit this);
-static pico_status_t pam_create_syllable(register picodata_ProcessingUnit this,
+        picodata_ProcessingUnit this);
+static pico_status_t pam_create_syllable(picodata_ProcessingUnit this,
         picoos_uint8 syllType, picoos_uint8 *sContent, picoos_uint8 sentType,
         picoos_uint8 phType, picoos_uint8 uBoundType, picoos_uint16 uMin,
         picoos_uint16 uMax);
 static pico_status_t pam_process_event_feature(
-        register picodata_ProcessingUnit this, picoos_uint8 nFeat,
+        picodata_ProcessingUnit this, picoos_uint8 nFeat,
         picoos_uint8 event_type, picoos_uint8 direction);
-static pico_status_t pam_process_event(register picodata_ProcessingUnit this,
+static pico_status_t pam_process_event(picodata_ProcessingUnit this,
         picoos_uint8 event_type, picoos_uint8 direction);
 static pico_status_t pam_adapter_forward_step(
-        register picodata_ProcessingUnit this, picoos_uint8 *itemBase);
+        picodata_ProcessingUnit this, picoos_uint8 *itemBase);
 static pico_status_t pam_adapter_backward_step(
-        register picodata_ProcessingUnit this);
-static pico_status_t pam_do_pause(register picodata_ProcessingUnit this);
-static pico_status_t pam_adapter_do_pauses(register picodata_ProcessingUnit this);
+        picodata_ProcessingUnit this);
+static pico_status_t pam_do_pause(picodata_ProcessingUnit this);
+static pico_status_t pam_adapter_do_pauses(picodata_ProcessingUnit this);
 /*-------------- tree traversal ---------------------------------------*/
-static pico_status_t pam_expand_vector(register picodata_ProcessingUnit this);
-static picoos_uint8 pam_do_tree(register picodata_ProcessingUnit this,
+static pico_status_t pam_expand_vector(picodata_ProcessingUnit this);
+static picoos_uint8 pam_do_tree(picodata_ProcessingUnit this,
         const picokdt_DtPAM dtpam, const picoos_uint8 *invec,
         const picoos_uint8 inveclen, picokdt_classify_result_t *dtres);
-static pico_status_t pam_get_f0(register picodata_ProcessingUnit this,
+static pico_status_t pam_get_f0(picodata_ProcessingUnit this,
         picoos_uint16 *lf0Index, picoos_uint8 nState, picoos_single *phonF0);
-static pico_status_t pam_get_duration(register picodata_ProcessingUnit this,
+static pico_status_t pam_get_duration(picodata_ProcessingUnit this,
         picoos_uint16 durIndex, picoos_uint16 *phonDur,
         picoos_uint8 *numFramesState);
-static pico_status_t pam_update_vector(register picodata_ProcessingUnit this);
+static pico_status_t pam_update_vector(picodata_ProcessingUnit this);
 /*-------------- FINAL ITEM FEEDING -----------------------------------------*/
-static pico_status_t pam_put_item(register picodata_ProcessingUnit this,
+static pico_status_t pam_put_item(picodata_ProcessingUnit this,
                 picoos_uint8 *outBuff, picoos_uint16 outWritePos,
                 picoos_uint8 *bytesWr);
 
@@ -556,7 +556,7 @@ static void pam_deallocate(picoos_MemoryManager mm, pam_subobj_t *pam)
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_initialize(register picodata_ProcessingUnit this, picoos_int32 resetMode)
+static pico_status_t pam_initialize(picodata_ProcessingUnit this, picoos_int32 resetMode)
 {
     pico_status_t nI, nJ;
     pam_subobj_t *pam;
@@ -714,7 +714,7 @@ static pico_status_t pam_initialize(register picodata_ProcessingUnit this, picoo
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_terminate(register picodata_ProcessingUnit this)
+static pico_status_t pam_terminate(picodata_ProcessingUnit this)
 {
 
     pam_subobj_t *pam;
@@ -735,7 +735,7 @@ static pico_status_t pam_terminate(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_subobj_deallocate(register picodata_ProcessingUnit this,
+static pico_status_t pam_subobj_deallocate(picodata_ProcessingUnit this,
         picoos_MemoryManager mm)
 {
 
@@ -785,7 +785,7 @@ picodata_ProcessingUnit picopam_newPamUnit(picoos_MemoryManager mm,
         picodata_CharBuffer cbOut, picorsrc_Voice voice)
 {
 
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
 
     picodata_ProcessingUnit this = picodata_newProcessingUnit(mm, common, cbIn,
             cbOut, voice);
@@ -924,9 +924,9 @@ static pico_status_t check_syllables_size(pam_subobj_t *pam,
  * @callergraph
  */
 static pico_status_t pamCheckResourceLimits(
-        register picodata_ProcessingUnit this, const picoos_uint8 *item)
+        picodata_ProcessingUnit this, const picoos_uint8 *item)
 {
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
     picodata_itemhead_t head;
     pico_status_t sResult;
     if (NULL == this || NULL == this->subObj) {
@@ -989,10 +989,10 @@ static pico_status_t pamCheckResourceLimits(
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_check_immediate(register picodata_ProcessingUnit this,
+static pico_status_t pam_check_immediate(picodata_ProcessingUnit this,
         const picoos_uint8 *item)
 {
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
     if (NULL == this || NULL == this->subObj) {
         return PICODATA_PU_ERROR;
     }
@@ -1022,10 +1022,10 @@ static pico_status_t pam_check_immediate(register picodata_ProcessingUnit this,
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_hastobe_queued(register picodata_ProcessingUnit this,
+static pico_status_t pam_hastobe_queued(picodata_ProcessingUnit this,
         const picoos_uint8 *item)
 {
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
     picodata_itemhead_t head;
     if (NULL == this || NULL == this->subObj) {
         return PICODATA_PU_ERROR;
@@ -1066,10 +1066,10 @@ static pico_status_t pam_hastobe_queued(register picodata_ProcessingUnit this,
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_queue(register picodata_ProcessingUnit this,
+static pico_status_t pam_queue(picodata_ProcessingUnit this,
         const picoos_uint8 *item)
 {
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
     picodata_itemhead_t head;
     picoos_uint8 nI;
     pico_status_t sResult;
@@ -1158,9 +1158,9 @@ static pico_status_t pam_deal_with(const picoos_uint8 *item)
  * @callgraph
  * @callergraph
  */
-static picoos_uint8 pamHasToProcess(register picodata_ProcessingUnit this)
+static picoos_uint8 pamHasToProcess(picodata_ProcessingUnit this)
 {
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
     picoos_uint8 nCond1, nCond2, nCond3;
 
     if (NULL == this || NULL == this->subObj) {
@@ -1187,9 +1187,9 @@ static picoos_uint8 pamHasToProcess(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static pico_status_t pamUpdateProcess(register picodata_ProcessingUnit this)
+static pico_status_t pamUpdateProcess(picodata_ProcessingUnit this)
 {
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
 
     if (NULL == this || NULL == this->subObj) {
         return PICODATA_PU_ERROR;
@@ -1249,9 +1249,9 @@ static pico_status_t pamUpdateProcess(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static picoos_uint8 pamHasToPop(register picodata_ProcessingUnit this)
+static picoos_uint8 pamHasToPop(picodata_ProcessingUnit this)
 {
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
 
     if (NULL == this || NULL == this->subObj) {
         return PICODATA_PU_ERROR;
@@ -1287,9 +1287,9 @@ static picoos_uint8 pamHasToPop(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static picoos_uint8 *pamPopItem(register picodata_ProcessingUnit this)
+static picoos_uint8 *pamPopItem(picodata_ProcessingUnit this)
 {
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
     picoos_uint8 nItem;
     if (NULL == this || NULL == this->subObj) {
         return NULL;
@@ -1331,9 +1331,9 @@ static picoos_uint8 *pamPopItem(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static picoos_uint8 *pamPopAttachedSy0(register picodata_ProcessingUnit this)
+static picoos_uint8 *pamPopAttachedSy0(picodata_ProcessingUnit this)
 {
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
     picoos_uint8 nItem;
     if (NULL == this || NULL == this->subObj) {
         return NULL;
@@ -1374,7 +1374,7 @@ static picoos_uint8 *pamPopAttachedSy0(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_get_duration(register picodata_ProcessingUnit this,
+static pico_status_t pam_get_duration(picodata_ProcessingUnit this,
         picoos_uint16 durIndex, picoos_uint16 *phonDur,
         picoos_uint8 *numFramesState)
 {
@@ -1436,7 +1436,7 @@ static pico_status_t pam_get_duration(register picodata_ProcessingUnit this,
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_get_f0(register picodata_ProcessingUnit this,
+static pico_status_t pam_get_f0(picodata_ProcessingUnit this,
         picoos_uint16 *lf0Index, picoos_uint8 nI, picoos_single *phonF0)
 {
     pam_subobj_t *pam;
@@ -1515,7 +1515,7 @@ static picoos_single f_round(picoos_single fIn)
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_update_vector(register picodata_ProcessingUnit this)
+static pico_status_t pam_update_vector(picodata_ProcessingUnit this)
 {
     pam_subobj_t *pam;
     picoos_uint8 numstates, nI;
@@ -1602,7 +1602,7 @@ static picoos_uint8 pamCompressComponent(picoos_uint8 inVal)
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_expand_vector(register picodata_ProcessingUnit this)
+static pico_status_t pam_expand_vector(picodata_ProcessingUnit this)
 {
     pam_subobj_t *pam;
     picoos_uint8 *inVect, *phonVect, *outVect, nI;
@@ -1674,7 +1674,7 @@ static pico_status_t pam_expand_vector(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static pico_status_t pamCompressVector(register picodata_ProcessingUnit this)
+static pico_status_t pamCompressVector(picodata_ProcessingUnit this)
 {
     pam_subobj_t *pam;
     picoos_uint8 *outVect, nI;
@@ -1718,7 +1718,7 @@ static pico_status_t pamCompressVector(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static pico_status_t pamReorgVector(register picodata_ProcessingUnit this)
+static pico_status_t pamReorgVector(picodata_ProcessingUnit this)
 {
     pam_subobj_t *pam;
     picoos_uint8 *outVect, inVect[60], nI;
@@ -1893,7 +1893,7 @@ static pico_status_t pamReorgVector(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_put_item(register picodata_ProcessingUnit this,
+static pico_status_t pam_put_item(picodata_ProcessingUnit this,
         picoos_uint8 *outBuff, picoos_uint16 outWritePos, picoos_uint8 *bytesWr)
 {
     pam_subobj_t *pam;
@@ -2061,7 +2061,7 @@ static pico_status_t is_pam_play_command(picoos_uint8 *qItem)
  * @callgraph
  * @callergraph
  */
-static pico_status_t pamDoCommand(register picodata_ProcessingUnit this,
+static pico_status_t pamDoCommand(picodata_ProcessingUnit this,
         picoos_uint8 *qItem)
 {
     pam_subobj_t *pam;
@@ -2184,7 +2184,7 @@ static pico_status_t pam_put_term(picoos_uint8 *outBuff,
  * @callgraph
  * @callergraph
  */
-static pico_status_t pamPhoneProcess(register picodata_ProcessingUnit this)
+static pico_status_t pamPhoneProcess(picodata_ProcessingUnit this)
 {
     pam_subobj_t *pam;
     pico_status_t sResult;
@@ -2256,7 +2256,7 @@ static pico_status_t pamPhoneProcess(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static pico_status_t pamDoPreSyll(register picodata_ProcessingUnit this)
+static pico_status_t pamDoPreSyll(picodata_ProcessingUnit this)
 {
     pam_subobj_t *pam;
     pico_status_t sResult;
@@ -2312,11 +2312,11 @@ static pico_status_t pamDoPreSyll(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static picodata_step_result_t pam_step(register picodata_ProcessingUnit this,
+static picodata_step_result_t pam_step(picodata_ProcessingUnit this,
         picoos_int16 mode, picoos_uint16 * numBytesOutput)
 {
 
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
 
     pico_status_t sResult;
     picoos_uint16 blen, numinb, numoutb;
@@ -2777,7 +2777,7 @@ static picodata_step_result_t pam_step(register picodata_ProcessingUnit this,
  * @callgraph
  * @callergraph
  */
-static picoos_uint8 pam_do_tree(register picodata_ProcessingUnit this,
+static picoos_uint8 pam_do_tree(picodata_ProcessingUnit this,
         const picokdt_DtPAM dtpam, const picoos_uint8 *invec,
         const picoos_uint8 inveclen, picokdt_classify_result_t *dtres)
 {
@@ -2821,7 +2821,7 @@ static picoos_uint8 pam_do_tree(register picodata_ProcessingUnit this,
  * @callgraph
  * @callergraph
  */
-static picoos_uint8 pam_get_vowel_name(register picodata_ProcessingUnit this,
+static picoos_uint8 pam_get_vowel_name(picodata_ProcessingUnit this,
         picoos_uint8 *item, picoos_uint8 *pos)
 {
     pam_subobj_t *pam;
@@ -2854,7 +2854,7 @@ static picoos_uint8 pam_get_vowel_name(register picodata_ProcessingUnit this,
  * @callgraph
  * @callergraph
  */
-static picoos_uint8 pam_get_pause_id(register picodata_ProcessingUnit this)
+static picoos_uint8 pam_get_pause_id(picodata_ProcessingUnit this)
 {
     picoos_uint8 nVal1;
     /*picoos_uint8 nVal2; */
@@ -2955,7 +2955,7 @@ static picoos_uint8 pam_map_phrase_type(picoos_uint8 iteminfo1,
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_reset_processors(register picodata_ProcessingUnit this)
+static pico_status_t pam_reset_processors(picodata_ProcessingUnit this)
 {
     pam_subobj_t *pam;
     if (NULL == this || NULL == this->subObj) {
@@ -3010,7 +3010,7 @@ static pico_status_t pam_reset_processors(register picodata_ProcessingUnit this)
  * @callergraph
  */
 static pico_status_t pam_reset_processors_back(
-        register picodata_ProcessingUnit this)
+        picodata_ProcessingUnit this)
 {
     pam_subobj_t *pam;
     if (NULL == this || NULL == this->subObj) {
@@ -3098,7 +3098,7 @@ static pico_status_t pam_reset_processors_back(
  * @callergraph
  */
 static pico_status_t pam_process_event_feature(
-        register picodata_ProcessingUnit this, picoos_uint8 nFeat,
+        picodata_ProcessingUnit this, picoos_uint8 nFeat,
         picoos_uint8 event_type, picoos_uint8 direction)
 {
     picoos_uint8 sDest, nI;
@@ -4175,7 +4175,7 @@ static pico_status_t pam_process_event_feature(
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_process_event(register picodata_ProcessingUnit this,
+static pico_status_t pam_process_event(picodata_ProcessingUnit this,
         picoos_uint8 event_type, picoos_uint8 direction)
 {
     picoos_uint8 nFeat;
@@ -4220,7 +4220,7 @@ static pico_status_t pam_process_event(register picodata_ProcessingUnit this,
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_create_syllable(register picodata_ProcessingUnit this,
+static pico_status_t pam_create_syllable(picodata_ProcessingUnit this,
         picoos_uint8 syllType, picoos_uint8 *sContent, picoos_uint8 sentType,
         picoos_uint8 phType, picoos_uint8 uBoundType, picoos_uint16 uMinDur,
         picoos_uint16 uMaxDur)
@@ -4397,9 +4397,9 @@ static pico_status_t pam_create_syllable(register picodata_ProcessingUnit this,
  * @callergraph
  */
 static pico_status_t pam_adapter_forward_step(
-        register picodata_ProcessingUnit this, picoos_uint8 *itemBase)
+        picodata_ProcessingUnit this, picoos_uint8 *itemBase)
 {
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
     pico_status_t sResult;
     picoos_uint16 uMinDur, uMaxDur;
     picoos_uint32 nPos;
@@ -4589,9 +4589,9 @@ static pico_status_t pam_adapter_forward_step(
  * @callergraph
  */
 static pico_status_t pam_adapter_backward_step(
-        register picodata_ProcessingUnit this)
+        picodata_ProcessingUnit this)
 {
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
     picoos_uint8 nProcessed;
     picoos_uint16 nSyll;
 
@@ -4657,7 +4657,7 @@ static pico_status_t pam_adapter_backward_step(
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_do_pause(register picodata_ProcessingUnit this)
+static pico_status_t pam_do_pause(picodata_ProcessingUnit this)
 {
     picoos_uint16 syllCurr;
     pam_subobj_t *pam;
@@ -4779,9 +4779,9 @@ static pico_status_t pam_do_pause(register picodata_ProcessingUnit this)
  * @callgraph
  * @callergraph
  */
-static pico_status_t pam_adapter_do_pauses(register picodata_ProcessingUnit this)
+static pico_status_t pam_adapter_do_pauses(picodata_ProcessingUnit this)
 {
-    register pam_subobj_t * pam;
+    pam_subobj_t * pam;
     picoos_uint16 nSyll;
 
     if (NULL == this || NULL == this->subObj) {

@@ -145,7 +145,7 @@ typedef struct klex_subobj
 } klex_subobj_t;
 
 
-static pico_status_t klexInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t klexInitialize(picoknow_KnowledgeBase this,
                                     picoos_Common common)
 {
     picoos_uint32 curpos = 0;
@@ -179,7 +179,7 @@ static pico_status_t klexInitialize(register picoknow_KnowledgeBase this,
 }
 
 
-static pico_status_t klexSubObjDeallocate(register picoknow_KnowledgeBase this,
+static pico_status_t klexSubObjDeallocate(picoknow_KnowledgeBase this,
                                           picoos_MemoryManager mm)
 {
     if (NULL != this) {

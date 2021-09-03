@@ -141,7 +141,7 @@ static void BytesToNum (picoos_uint8 * stream, picoos_uint32 * pos, picoos_int32
 /* setting up FST from byte stream */
 /* ************************************************************/
 
-static pico_status_t kfstInitialize(register picoknow_KnowledgeBase this,
+static pico_status_t kfstInitialize(picoknow_KnowledgeBase this,
         picoos_Common common)
 {
     picoos_uint32 curpos;
@@ -181,7 +181,7 @@ static pico_status_t kfstInitialize(register picoknow_KnowledgeBase this,
 }
 
 
-static pico_status_t kfstSubObjDeallocate(register picoknow_KnowledgeBase this,
+static pico_status_t kfstSubObjDeallocate(picoknow_KnowledgeBase this,
         picoos_MemoryManager mm)
 {
     if (NULL != this) {
