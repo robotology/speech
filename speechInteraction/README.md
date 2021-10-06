@@ -4,7 +4,7 @@ This folder includes different modules which use Google Cloud Services.
 - **googleSpeechProcess**: it reveals the structure and the syntax of your textual or vocal input by analyzing also the sentiments of your phrases;
 - **googleSpeech**: it performs speech-to-text;
 - **googleSynthesis**: it performs text-to-speech;
-- **googleDialog**: it allows to carry on a conversation about a specific world, corresponding to your own dialog flow created in your Google project.
+- **googleDialog**: it allows to carry on a conversation about a specific theme, corresponding to your own dialog flow created in your Google project.
 
 
 In order to use them, the user have to register, create and download a _private key_ from Google Cloud. Below the instructions on how to do:

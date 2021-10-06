@@ -248,7 +248,6 @@ public:
         yInfo() << "getBytesPerSamples " << sound.getBytesPerSample();
         
         auto vec_i = sound.getNonInterleavedAudioRawData();
-        //auto vec_i = sound.getInterleavedAudioRawData();
         auto s1 = std::vector<short>(vec_i.begin(), vec_i.end());
         
         yInfo() << "AudioRawData s1.size()" << s1.size();
