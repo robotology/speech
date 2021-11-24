@@ -238,7 +238,7 @@ void STARTManager::onRead(yarp::os::Bottle &bot)
                         {
                             std::string::size_type sz;   // alias of size_t
                             int i_dec = std::stoi (words,&sz);
-                            finalTmp.addInt(i_dec);
+                            finalTmp.addInt32(i_dec);
                         }
                     }
                     answer.erase(answer.find_first_of("["), answer.find_first_of("]"));

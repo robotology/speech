@@ -53,7 +53,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 bool SpeechRecognizerModule::configure(ResourceFinder &rf )
 {
     setName( rf.check("name",Value("speechRecognizer")).asString().c_str() );
-    m_timeout = rf.check("timeout",Value(10000)).asInt();
+    m_timeout = rf.check("timeout",Value(10000)).asInt32();
     USE_LEGACY = !rf.check("noLegacy");
     m_forwardSound = rf.check("forwardSound");
     m_tmpFileFolder = rf.getHomeContextPath();
@@ -265,7 +265,7 @@ bool SpeechRecognizerModule::updateModule()
                         //Send over yarp
                         Bottle bOut;
                         bOut.addString(fullSentence);
-                        bOut.addInt(confidence);
+                        bOut.addInt32(confidence);
                         m_portContinuousRecognition.write(bOut);
 
                         //Treat the semantic
@@ -644,7 +644,7 @@ string SpeechRecognizerModule::getFromDictaction(int timeout, LPCWSTR options )
         for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
         {
             botTmp.addString(it->first);
-            //botTmp.addDouble(it->second);
+            //botTmp.addFloat64(it->second);
         }
     }
     yInfo() <<"Dictation is off...";
@@ -662,8 +662,8 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
 
     if (firstVocab == "timeout")
     {
-        m_timeout = cmd.get(1).asInt();
-        //reply.addInt(true);
+        m_timeout = cmd.get(1).asInt32();
+        //reply.addInt32(true);
         return false;
     }
 
@@ -684,7 +684,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
                 for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
                 {
                     reply.addString(it->first);
-                    reply.addDouble(it->second);
+                    reply.addFloat64(it->second);
                 }
             else
                 reply.addString("-1");
@@ -694,7 +694,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
         //Turn off dictation and go back to the file grammar
         everythingIsFine &= SUCCEEDED(m_cpGrammarDictation->SetDictationState( SPRS_INACTIVE ));
         everythingIsFine &=SUCCEEDED(m_cpGrammarFromFile->SetGrammarState(SPGS_ENABLED));  
-        //reply.addInt(true);
+        //reply.addInt32(true);
         return true;
     }    
     // If we are not in dictation then we set and switch to the runtimeGrammar
@@ -716,7 +716,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
 
         refreshFromVocabulories(m_cpGrammarRuntime);
 
-        //reply.addInt(everythingIsFine);
+        //reply.addInt32(everythingIsFine);
     }
 
     else if (firstVocab == "choices")
@@ -758,7 +758,7 @@ bool SpeechRecognizerModule::handleRecognitionCmd(const Bottle& cmd, Bottle& rep
             for(list< pair<string, double> >::iterator it = results.begin(); it != results.end(); it++)
             {
                 reply.addString(it->first);
-                reply.addDouble(it->second);
+                reply.addFloat64(it->second);
             }
         else
             reply.addString("-1");
@@ -882,7 +882,7 @@ void SpeechRecognizerModule::say(string s, bool wait)
     if(wait)
     {
         yarp::os::Bottle cmd,reply;
-        cmd.addVocab(VOCAB('s','t','a','t'));
+        cmd.addVocab32(VOCAB('s','t','a','t'));
         std::string status = "speaking";
         bool speechStarted = false;
         while(wait&&(!speechStarted ||status=="speaking"))
