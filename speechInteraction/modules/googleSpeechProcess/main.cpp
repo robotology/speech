@@ -382,11 +382,11 @@ public:
         yarp::os::Bottle &sentiment_score = sentiment.addList();   
         sentiment_score.addString("Score");
         std::pair<float,float> sentiment_result = read_sentiment( sentiment_sentences );
-        sentiment_score.addDouble(sentiment_result.second);
+        sentiment_score.addFloat64(sentiment_result.second);
 
         yarp::os::Bottle &sentiment_magnitude = sentiment.addList();   
         sentiment_magnitude.addString("Magnitude");
-        sentiment_magnitude.addDouble(sentiment_result.first);
+        sentiment_magnitude.addFloat64(sentiment_result.first);
 
         yInfo() << "wordList " << wordList.toString().c_str();
        
@@ -618,15 +618,15 @@ public:
         sentiment_analysis.addString(sentence); //add the sentence
         yarp::os::Bottle* sentiment = wordList.get(0).asList()->get(element-1).asList(); 
         //yInfo() << "sentiment " << sentiment->toString();//Sentiment (Score 0.100000001490116119385) (Magnitude 0.100000001490116119385) 
-        double score = sentiment->get(1).asList()->get(1).asDouble();
-        double magnitude = sentiment->get(2).asList()->get(1).asDouble();
+        double score = sentiment->get(1).asList()->get(1).asFloat64();
+        double magnitude = sentiment->get(2).asList()->get(1).asFloat64();
         //printf("Values: %f %f\n", score, magnitude);
         yarp::os::Bottle &each_score = sentiment_analysis.addList();
         each_score.addString("Score"); //add the corresponding score
-        each_score.addDouble(score);
+        each_score.addFloat64(score);
         yarp::os::Bottle &each_magnitude = sentiment_analysis.addList();
         each_magnitude.addString("Magnitude"); //add the corresponding magnitude
-        each_magnitude.addDouble(magnitude);
+        each_magnitude.addFloat64(magnitude);
         
 
 

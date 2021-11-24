@@ -109,9 +109,9 @@ class MouthHandler : public PeriodicThread
         if (emotions.getOutputCount()>0)
         {
             Bottle cmd, reply;
-            cmd.addVocab(Vocab::encode("set"));
-            cmd.addVocab(Vocab::encode("mou"));
-            cmd.addVocab(Vocab::encode(state));
+            cmd.addVocab32("set");
+            cmd.addVocab32("mou");
+            cmd.addVocab32(state);
             emotions.write(cmd,reply);
         }
     }
@@ -141,7 +141,7 @@ class MouthHandler : public PeriodicThread
         if (r1.getOutputCount()>0)
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("tstart"));
+            cmd.addVocab32("tstart");
             r1.write(cmd,rep);
         }
 
@@ -170,7 +170,7 @@ public:
         r1.open("/"+name+"/r1:rpc");
 
         state="sur";
-        setPeriod((double)rf.check("period",Value(200)).asInt()/1000.0);
+        setPeriod((double)rf.check("period",Value(200)).asInt32()/1000.0);
     }
 
     /************************************************************************/
@@ -185,7 +185,7 @@ public:
         if (r1.getOutputCount()>0)
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("tstart"));
+            cmd.addVocab32("tstart");
             r1.write(cmd,rep);
         }
 
@@ -208,7 +208,7 @@ public:
         if (r1.getOutputCount()>0)
         {
             Bottle cmd,rep;
-            cmd.addVocab(Vocab::encode("tstop"));
+            cmd.addVocab32("tstop");
             r1.write(cmd,rep);
         }
     }
@@ -335,17 +335,17 @@ class iSpeak : protected BufferedPort<Bottle>,
             {
                 if (request.get(0).isString())
                     phrase=request.get(0).asString();
-                else if (request.get(0).isDouble() || request.get(0).isInt())
+                else if (request.get(0).isFloat64() || request.get(0).isInt32())
                 {
-                    time=request.get(0).asDouble();
+                    time=request.get(0).asFloat64();
                     onlyMouth=true;
                 }
 
                 if (request.size()>1)
                 {
-                    if (request.get(1).isInt())
+                    if (request.get(1).isInt32())
                     {
-                        int newRate=request.get(1).asInt();
+                        int newRate=request.get(1).asInt32();
                         if (newRate>0)
                         {
                             mouth.setPeriod((double)newRate/1000.0);
@@ -354,8 +354,8 @@ class iSpeak : protected BufferedPort<Bottle>,
                     }
 
                     if ((request.size()>2) && request.get(0).isString())
-                        if (request.get(2).isDouble() || request.get(2).isInt())
-                            duration=request.get(2).asDouble();
+                        if (request.get(2).isFloat64() || request.get(2).isInt32())
+                            duration=request.get(2).asFloat64();
                 }
             }
         }
@@ -474,8 +474,8 @@ public:
     /************************************************************************/
     bool respond(const Bottle &command, Bottle &reply)
     {
-        int cmd0=command.get(0).asVocab();
-        if (cmd0==Vocab::encode("stat"))
+        int cmd0=command.get(0).asVocab32();
+        if (cmd0==Vocab32::encode("stat"))
         {
             reply.addString(speaker.isSpeaking()?"speaking":"quiet");
             return true;
@@ -483,10 +483,10 @@ public:
 
         if (command.size()>1)
         {
-            int cmd1=command.get(1).asVocab();
-            if (cmd1==Vocab::encode("opt"))
+            int cmd1=command.get(1).asVocab32();
+            if (cmd1==Vocab32::encode("opt"))
             {
-                if (cmd0==Vocab::encode("set"))
+                if (cmd0==Vocab32::encode("set"))
                 {
                     if (command.size()>2)
                     {
@@ -496,7 +496,7 @@ public:
                         return true;
                     }
                 }
-                else if (cmd0==Vocab::encode("get"))
+                else if (cmd0==Vocab32::encode("get"))
                 {
                     reply.addString(speaker.get_package_options());
                     return true;

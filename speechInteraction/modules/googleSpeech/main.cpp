@@ -332,7 +332,7 @@ public:
     {           
         std::lock_guard<std::mutex> lg(mtx); 
         yarp::os::Bottle cmd, rep;
-        //cmd.addVocab(yarp::os::Vocab::encode("start"));
+        //cmd.addVocab32("start");
         cmd.addString("start");
         if (audioCommand.write(cmd, rep))
         {
@@ -405,7 +405,7 @@ public:
 
         std::string moduleName = rf.check("name", yarp::os::Value("googleSpeech"), "module name (string)").asString();
         std::string language = rf.check("language_code", yarp::os::Value("en-US"), "language (string)").asString();
-        int sample_rate = rf.check("sample_rate_hertz", yarp::os::Value(16000), "sample rate (int)").asInt();
+        int sample_rate = rf.check("sample_rate_hertz", yarp::os::Value(16000), "sample rate (int)").asInt32();
         
         if (rf.check("uniqueSound", "use a yarp::sig::Sound instead of a microphone"))
             uniqueSound = true;

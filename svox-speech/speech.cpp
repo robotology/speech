@@ -82,8 +82,8 @@ bool Speech::open(yarp::os::Searchable &config)
             return false;
         }
 
-    setPitch(config.check("pitch",Value(90)).asInt());
-    setSpeed(config.check("speed",Value(105)).asInt());
+    setPitch(config.check("pitch",Value(90)).asInt32());
+    setSpeed(config.check("speed",Value(105)).asInt32());
 
     lingwareRF.setDefaultContext(config.check("lingware-context",Value("speech")).asString());
     lingwareRF.configure(0,NULL);

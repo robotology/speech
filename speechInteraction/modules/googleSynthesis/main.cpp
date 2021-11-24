@@ -316,8 +316,8 @@ public:
         std::string language = rf.check("language", yarp::os::Value("en-US"), "language to use (string)").asString();
         std::string voice = rf.check("voice", yarp::os::Value("en-US-Wavenet-D"), "voice to use (string)").asString();
 
-        double speed = rf.check("speed", yarp::os::Value(1.0), "speed to use (double)").asDouble();
-        double pitch = rf.check("pitch", yarp::os::Value(0.0), "pitch to use (double)").asDouble();
+        double speed = rf.check("speed", yarp::os::Value(1.0), "speed to use (double)").asFloat64();
+        double pitch = rf.check("pitch", yarp::os::Value(0.0), "pitch to use (double)").asFloat64();
 
         if (rf.check("languageCodes", "Getting language codes"))
         {

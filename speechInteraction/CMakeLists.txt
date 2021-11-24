@@ -20,7 +20,7 @@ find_package(ICUBcontrib REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
 find_package(GOOGLEAPIS REQUIRED)
-find_package(YARP 3.2.1 REQUIRED COMPONENTS OS sig dev math)
+find_package(YARP 3.5.1 REQUIRED COMPONENTS OS sig dev math)
 
 include_directories(${googleapis_INCLUDE_DIR})
 
