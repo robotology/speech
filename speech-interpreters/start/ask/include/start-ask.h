@@ -20,6 +20,8 @@
 
 #include <algorithm>
 #include <cstring>
+#include <string>
+#include <vector>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Network.h>
