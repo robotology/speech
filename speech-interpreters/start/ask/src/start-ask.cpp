@@ -18,6 +18,7 @@
 #include "start-ask.h"
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
+#include <vector>
 
 /**********************************************************/
 bool STARTModule::configure(yarp::os::ResourceFinder &rf)
