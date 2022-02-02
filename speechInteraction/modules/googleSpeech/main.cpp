@@ -325,6 +325,14 @@ public:
         config->set_language_code(language.c_str());
         config->set_sample_rate_hertz(sample_rate);
         config->set_encoding(RecognitionConfig::LINEAR16);
+
+        config->set_use_enhanced(true); // Can be used with the correct model. If true but no model specified, it does nothing.
+        auto metadata = config->mutable_metadata();
+
+        metadata->set_microphone_distance(google::cloud::speech::v1::RecognitionMetadata_MicrophoneDistance_MIDFIELD);
+        metadata->set_recording_device_type(google::cloud::speech::v1::RecognitionMetadata_RecordingDeviceType_OTHER_INDOOR_DEVICE);
+        metadata->set_interaction_type(google::cloud::speech::v1::RecognitionMetadata_InteractionType_VOICE_COMMAND);
+        metadata->set_original_media_type(google::cloud::speech::v1::RecognitionMetadata_OriginalMediaType_AUDIO);
     }
 
     /********************************************************/
