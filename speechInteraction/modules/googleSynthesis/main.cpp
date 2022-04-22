@@ -45,7 +45,8 @@
 
 using namespace google::cloud::language::v1;
 using namespace google::cloud::texttospeech::v1;
-bool is_changed;
+bool  is_changed;
+using namespace std;
 
 
 static const std::map<grpc::StatusCode, std::string> status_code_to_string {
@@ -79,17 +80,27 @@ class Processing : public yarp::os::BufferedPort<yarp::os::Bottle>
     double pitch;
     yarp::os::RpcServer handlerPort;
     yarp::os::Port syncPort;
-
+    yarp::os::Port soundOutputPort;
+    enum playbackmode_t
+    {
+        playFromDisk=0,
+        sendToPort_compressed=1,
+        sendToPort_uncompressed=2
+    } playbackmode;
+    
 public:
     /********************************************************/
 
-    Processing( const std::string &moduleName, const std::string &language, const std::string &voice, const double &speed, const double &pitch, std::string &state ): state(state)
+    Processing( const std::string &moduleName, const std::string &language, const std::string &voice, const double &speed, const double &pitch, std::string &state, string playmode ): state(state)
     {
         this->moduleName = moduleName;
         this->language = language;
         this->voice = voice;
         this->speed = speed;
         this->pitch = pitch;
+             if (playmode=="playFromDisk")             {playbackmode=playbackmode_t::playFromDisk;}
+        else if (playmode=="sendToPort_compressed")    {playbackmode=playbackmode_t::sendToPort_compressed;}
+        else if (playmode=="sendToPort_uncompressed")  {playbackmode=playbackmode_t::sendToPort_uncompressed;}
     }
 
     /********************************************************/
@@ -104,7 +115,13 @@ public:
         this->useCallback();
         yarp::os::BufferedPort<yarp::os::Bottle >::open( "/" + moduleName + "/text:i" );
         syncPort.open( "/" + moduleName + "/sync:o" );
-
+        
+        if (playbackmode==playbackmode_t::sendToPort_compressed ||
+            playbackmode==playbackmode_t::sendToPort_uncompressed)
+        {
+            soundOutputPort.open("/"+moduleName+"/sound:o");
+        }
+        
         return true;
     }
 
@@ -113,6 +130,11 @@ public:
     {
         yarp::os::BufferedPort<yarp::os::Bottle >::close();
         syncPort.close();
+        if (playbackmode==playbackmode_t::sendToPort_compressed ||
+            playbackmode==playbackmode_t::sendToPort_uncompressed)
+        {
+            soundOutputPort.close();
+        }
     }
 
     /********************************************************/
@@ -130,81 +152,105 @@ public:
         sendDone();
     }
 
-    /********************************************************/
-    void queryGoogleSynthesis(yarp::os::Bottle& text)
-    {
-        yDebug() << "in queryGoogleSynthesis";
+   /********************************************************/
+   void queryGoogleSynthesis(yarp::os::Bottle& text)
+   {
+       yDebug() << "in queryGoogleSynthesis";
 
-        yDebug() << "Phrase is " << text.toString().c_str();
+       yDebug() << "Phrase is " << text.toString().c_str();
 
-        std::string tmp = text.toString();
+       std::string tmp = text.toString();
 
-        tmp.erase(std::remove(tmp.begin(),tmp.end(),'\"'),tmp.end());
+       tmp.erase(std::remove(tmp.begin(),tmp.end(),'\"'),tmp.end());
 
-        yDebug() << "Phrase is now " << tmp.c_str();
+       yDebug() << "Phrase is now " << tmp.c_str();
 
-        std::string content = tmp;
+       std::string content = tmp;
 
-        if (content.size()>0){
-            SynthesizeSpeechRequest request;
-            SynthesizeSpeechResponse response;
+       if (content.size()>0)
+       {
+           SynthesizeSpeechRequest request;
+           SynthesizeSpeechResponse response;
 
-            grpc::Status status;
-            grpc::ClientContext context;
+           grpc::Status status;
+           grpc::ClientContext context;
 
-            auto creds = grpc::GoogleDefaultCredentials();
-            auto channel = grpc::CreateChannel("texttospeech.googleapis.com", creds);
-            std::unique_ptr<TextToSpeech::Stub> tts(TextToSpeech::NewStub(channel));
+           auto creds = grpc::GoogleDefaultCredentials();
+           auto channel = grpc::CreateChannel("texttospeech.googleapis.com", creds);
+           std::unique_ptr<TextToSpeech::Stub> tts(TextToSpeech::NewStub(channel));
 
-            AudioConfig audio_config;
-            VoiceSelectionParams params;
+           AudioConfig audio_config;
+           VoiceSelectionParams params;
 
-            SynthesisInput input;
-            input.set_text(content);
+           SynthesisInput input;
+           input.set_text(content);
 
-            audio_config.set_audio_encoding(MP3);
-            params.set_language_code(language);
-            params.set_ssml_gender(NEUTRAL);
-            params.set_name(voice);
-            audio_config.set_speaking_rate(speed);
-            audio_config.set_pitch(pitch);
+           audio_config.set_audio_encoding(MP3);
+           params.set_language_code(language);
+           params.set_ssml_gender(NEUTRAL);
+           params.set_name(voice);
+           audio_config.set_speaking_rate(speed);
+           audio_config.set_pitch(pitch);
 
-            request.set_allocated_input(&input);
-            request.set_allocated_voice(&params);
-            request.set_allocated_audio_config(&audio_config);
+           request.set_allocated_input(&input);
+           request.set_allocated_voice(&params);
+           request.set_allocated_audio_config(&audio_config);
 
-            checkState("Busy");
-            yarp::os::Time::delay(0.2);
-            grpc::Status tts_status = tts->SynthesizeSpeech(&context, request, &response);
-            std::string status_string = status_code_to_string.at(tts_status.error_code());
-            yInfo() << "Status string:" << status_string;
-            checkState("Done");
-            if ( tts_status.ok() ) {
-                yInfo() << "Status returned OK";
-                yInfo() << "\n------Response------\n";
+           checkState("Busy");
+           yarp::os::Time::delay(0.2);
+           grpc::Status tts_status = tts->SynthesizeSpeech(&context, request, &response);
+           std::string status_string = status_code_to_string.at(tts_status.error_code());
+           yInfo() << "Status string:" << status_string;
+           checkState("Done");
+           
+           if ( tts_status.ok() )
+           {
+               yInfo() << "Status returned OK";
+               yInfo() << "\n------Response------\n";
 
-                std::string file = "test.mp3";
-                std::ofstream mp3File(file, std::ios::out | std::ios::binary);
+               if (playbackmode==playbackmode_t::playFromDisk)
+               {
+                   std::string file = "test.mp3";
+                   std::ofstream mp3File(file, std::ios::out | std::ios::binary);
 
-                mp3File.write( response.audio_content().data(), response.audio_content().size());
+               mp3File.write( response.audio_content().data(), response.audio_content().size());
 
-                std::string command = "play test.mp3";// + file;
+                   std::string command = "play test.mp3";// + file;
 
-                system(command.c_str());    
+                   system(command.c_str());
+               }
+               else if (playbackmode==playbackmode_t::sendToPort_compressed)
+               {
+                    yarp::os::Value v (response.audio_content().data(), response.audio_content().size());
+                    yarp::os::Bottle bot; bot.add(v);
+                    soundOutputPort.write(bot);
+               }
+               else if (playbackmode==playbackmode_t::sendToPort_uncompressed)
+               {
+                    yarp::sig::Sound snd;
+                    yarp::sig::file::read_bytestream(snd, response.audio_content().data(), response.audio_content().size(), ".mp3");
+                    soundOutputPort.write(snd);
+               }
+               else
+               {
+                   yError() << "Invalid playbackmode";
+               }
+           }
+           else
+           {
+               yError() << "Status Returned Cancelled";
+               checkState("Failure_" + status_string); 
+               yInfo() << tts_status.error_message();
+           }
 
-            } 
-            else {
-                yError() << "Status Returned Cancelled";
-                checkState("Failure_" + status_string); 
-                yInfo() << tts_status.error_message();
-            }
-            request.release_input();
-            request.release_voice();
-            request.release_audio_config();
+           request.release_input();
+           request.release_voice();
+           request.release_audio_config();
 
-            yInfo() << "\n------finished google query------\n";
+           yInfo() << "\n------finished google query------\n";
         }
-        else if (content.size()==0) {
+        else if (content.size()==0)
+        {
             checkState("Empty_input");
         }
     }
@@ -274,7 +320,7 @@ public:
 
     /********************************************************/
     bool checkState(std::string new_state)
-    {
+    {   
         if(new_state!=state){
             is_changed=true;
             state=new_state;
@@ -293,7 +339,7 @@ class Module : public yarp::os::RFModule, public googleSynthesis_IDL
     yarp::os::RpcServer         rpcPort;
     yarp::os::BufferedPort<yarp::os::Bottle> statePort;
     std::string state;
-     
+
     Processing                  *processing;
     friend class                processing;
 
@@ -318,6 +364,8 @@ public:
 
         double speed = rf.check("speed", yarp::os::Value(1.0), "speed to use (double)").asFloat64();
         double pitch = rf.check("pitch", yarp::os::Value(0.0), "pitch to use (double)").asFloat64();
+
+        string playmode_string = rf.check("playbackmode", yarp::os::Value("playFromDisk"), "can be one of the following: `playFromDisk`(default), `sendToPort_compressed`, `sendToPort_uncompressed`").asString();
 
         if (rf.check("languageCodes", "Getting language codes"))
         {
@@ -344,7 +392,7 @@ public:
 
         closing = false;
 
-        processing = new Processing( moduleName, language, voice, speed, pitch, state );
+        processing = new Processing( moduleName, language, voice, speed, pitch, state, playmode_string);
 
         /* now start the thread to do the work */
         processing->open();
@@ -359,9 +407,9 @@ public:
 
     /************************************************************************/
     bool attach(yarp::os::RpcServer &source)
-    {
+        {
         return this->yarp().attachAsServer(source);
-    }
+        }
 
     /**********************************************************/
     bool close()
@@ -471,12 +519,12 @@ public:
     {
         if(is_changed){
             is_changed=false;
-            yarp::os::Bottle &outTargets = statePort.prepare();
-            outTargets.clear();
+            yarp::os::Bottle &outTargets = statePort.prepare();   
+            outTargets.clear();  
             outTargets.addString(state);
             yDebug() << "outTarget:" << outTargets.toString().c_str();
             statePort.write();
-        }
+        }  
         return !closing;
     }
 };
