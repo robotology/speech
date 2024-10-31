@@ -38,6 +38,10 @@ detail.\n
 --period \e T
 - The period given in [ms] for controlling the mouth.
 
+--equalize_time \e time
+- The time given in [s] for equalizing the start of facial expressions control
+  with the start of speech synthesis. Default value is 0.0 [s].
+
 --package \e pck
 - The parameter \e pck specifies the package used for utterance;
   e.g. "speech-dev", "festival", "acapela-tts", "espeak", ...\n
@@ -88,6 +92,7 @@ Linux and Windows.
 #include <mutex>
 #include <string>
 #include <deque>
+#include <algorithm>
 
 #include <yarp/os/all.h>
 
@@ -101,7 +106,8 @@ class MouthHandler : public PeriodicThread
     string state;
     RpcClient emotions,r1;
     mutex mtx;
-    double t0, duration;
+    double t0, duration, equalize_time;
+    bool equalize;
 
     /************************************************************************/
     void send()
@@ -119,6 +125,13 @@ class MouthHandler : public PeriodicThread
     /************************************************************************/
     void run()
     {
+        if (equalize)
+        {
+            if (equalize_time>0.)
+                Time::delay(equalize_time);
+            equalize=false;
+        }
+
         mtx.lock();
 
         if (state=="sur")
@@ -138,6 +151,7 @@ class MouthHandler : public PeriodicThread
     /************************************************************************/
     bool threadInit()
     {
+        equalize=true;
         if (r1.getOutputCount()>0)
         {
             Bottle cmd,rep;
@@ -160,12 +174,14 @@ class MouthHandler : public PeriodicThread
 
 public:
     /************************************************************************/
-    MouthHandler() : PeriodicThread(1.0), duration(-1.0) { }
+    MouthHandler() : PeriodicThread(1.0), duration(-1.0), equalize(false) { }
 
     /************************************************************************/
     void configure(ResourceFinder &rf)
     {
         string name=rf.find("name").asString();
+        equalize_time=rf.check("equalize_time",Value(0.)).asFloat64();
+		equalize_time=std::max(0.,equalize_time);
         emotions.open("/"+name+"/emotions:o");
         r1.open("/"+name+"/r1:rpc");
 
@@ -182,6 +198,7 @@ public:
     /************************************************************************/
     void resume()
     {
+        equalize=true;
         if (r1.getOutputCount()>0)
         {
             Bottle cmd,rep;
